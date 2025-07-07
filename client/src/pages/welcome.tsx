@@ -93,16 +93,7 @@ export default function Welcome() {
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
 
-        {/* Already Member */}
-        <div className="text-center mt-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/pods")}
-            className="text-sm text-gray-600 hover:text-gray-800"
-          >
-            Already a member? Browse pods
-          </Button>
-        </div>
+
       </div>
     </div>
   );
