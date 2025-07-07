@@ -135,12 +135,11 @@ Changelog:
   - Built 4-step pod leader registration with progress tracking
   - Customized onboarding flow based on user type (seeker vs lead)
   - Integrated form validation and comprehensive member requirements
-- July 07, 2025. Integrated complete authentic Bay Club data (26 locations, 10 campuses)
-  - All 26 Bay Club locations organized by region (Northern CA, Southern CA, Pacific NW)
+- July 07, 2025. Integrated authentic Bay Club membership types by location with real pricing
   - Dynamic membership options based on selected club location
-  - Authentic pricing from $227/mo (Single Site) to $445/mo (Club West Gold)
-  - Location-specific membership tiers reflecting real Bay Club structure
-  - Complete campus structure: SF, Marin, East Bay, Peninsula, Santa Clara, San Jose, LA, San Diego, Oregon, Washington
+  - Club location drives available membership tiers (Single Site, Campus, Executive levels)
+  - Authentic Bay Club pricing from $227/mo to $445/mo based on membership tier
+  - Location-specific membership options reflecting real Bay Club structure
 ```
 
 ## User Preferences

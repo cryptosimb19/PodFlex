@@ -67,49 +67,30 @@ export default function PodLeaderRegistration() {
   const getAvailableMembershipTypes = () => {
     const location = formData.clubLocation;
     
-    // Bay Club authentic membership structure based on location (26 locations across 10 campuses)
+    // Bay Club authentic membership structure based on location
     const membershipsByLocation: Record<string, Array<{value: string, label: string, description: string}>> = {
-      // Northern California - San Francisco Campus
-      "San Francisco": [
+      "Fremont": [
+        { value: "Single Site", label: "Single Site", description: "$227/mo - Bay Club Fremont only" },
+        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Fremont + Santa Clara" },
+        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Financial District": [
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
+      "Santa Clara": [
+        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Santa Clara + Fremont" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Gateway": [
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
+      "Courtside": [
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "South San Francisco": [
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
+      "Redwood Shores": [
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      
-      // Northern California - Marin Campus
-      "Marin": [
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "Ross Valley": [
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "Rolling Hills": [
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "StoneTree": [
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      
-      // Northern California - East Bay Campus
       "Walnut Creek": [
         { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
         { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
@@ -123,93 +104,22 @@ export default function PodLeaderRegistration() {
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Fremont": [
-        { value: "Single Site", label: "Single Site", description: "$227/mo - Bay Club Fremont only" },
-        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Fremont + Santa Clara" },
-        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
-        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
+      "San Francisco": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Crow Canyon": [
-        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
-        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
+      "Financial District": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      
-      // Northern California - Peninsula Campus
-      "Redwood Shores": [
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "Broadway Tennis": [
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      
-      // Northern California - Santa Clara Campus
-      "Santa Clara": [
-        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Santa Clara + Fremont" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      
-      // Northern California - San Jose Campus
-      "Courtside": [
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
+      "Marin": [
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Boulder Ridge": [
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      
-      // Southern California - Los Angeles Campus
-      "Santa Monica": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "El Segundo": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "Manhattan Beach": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "Redondo Beach": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      
-      // Southern California - San Diego Campus
-      "Carmel Valley": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "Fairbanks Ranch": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      
-      // Pacific Northwest - Oregon Campus
-      "Portland": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      
-      // Pacific Northwest - Washington Campus
-      "PRO Club Bellevue": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "PRO Club Seattle": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "Harbor Square": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "425 Fitness Bothell": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "425 Fitness Redmond": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
-      ],
-      "425 Fitness Issaquah": [
+      "Ross Valley": [
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ]
     };
@@ -335,42 +245,16 @@ export default function PodLeaderRegistration() {
                     <SelectValue placeholder="Select your primary club" />
                   </SelectTrigger>
                   <SelectContent>
-                    <optgroup label="Northern California">
-                      <SelectItem value="San Francisco">Bay Club San Francisco</SelectItem>
-                      <SelectItem value="Financial District">Bay Club Financial District</SelectItem>
-                      <SelectItem value="Gateway">Bay Club Gateway</SelectItem>
-                      <SelectItem value="South San Francisco">Bay Club South San Francisco Tennis & Pickleball</SelectItem>
-                      <SelectItem value="Marin">Bay Club Marin</SelectItem>
-                      <SelectItem value="Ross Valley">Bay Club Ross Valley</SelectItem>
-                      <SelectItem value="Rolling Hills">Bay Club Rolling Hills</SelectItem>
-                      <SelectItem value="StoneTree">StoneTree Golf Club</SelectItem>
-                      <SelectItem value="Walnut Creek">Bay Club Walnut Creek</SelectItem>
-                      <SelectItem value="Pleasanton">Bay Club Pleasanton</SelectItem>
-                      <SelectItem value="Fremont">Bay Club Fremont</SelectItem>
-                      <SelectItem value="Crow Canyon">Crow Canyon Country Club</SelectItem>
-                      <SelectItem value="Redwood Shores">Bay Club Redwood Shores</SelectItem>
-                      <SelectItem value="Broadway Tennis">Bay Club Broadway Pickleball & Tennis</SelectItem>
-                      <SelectItem value="Santa Clara">Bay Club Santa Clara</SelectItem>
-                      <SelectItem value="Courtside">Bay Club Courtside</SelectItem>
-                      <SelectItem value="Boulder Ridge">Boulder Ridge Golf Club</SelectItem>
-                    </optgroup>
-                    <optgroup label="Southern California">
-                      <SelectItem value="Santa Monica">Bay Club Santa Monica</SelectItem>
-                      <SelectItem value="El Segundo">Bay Club El Segundo</SelectItem>
-                      <SelectItem value="Manhattan Beach">Manhattan Country Club</SelectItem>
-                      <SelectItem value="Redondo Beach">Bay Club Redondo Beach</SelectItem>
-                      <SelectItem value="Carmel Valley">Bay Club Carmel Valley</SelectItem>
-                      <SelectItem value="Fairbanks Ranch">Fairbanks Ranch Country Club</SelectItem>
-                    </optgroup>
-                    <optgroup label="Pacific Northwest">
-                      <SelectItem value="Portland">Bay Club Portland</SelectItem>
-                      <SelectItem value="PRO Club Bellevue">PRO Club Bellevue</SelectItem>
-                      <SelectItem value="PRO Club Seattle">PRO Club Seattle</SelectItem>
-                      <SelectItem value="Harbor Square">Harbor Square Athletic Club</SelectItem>
-                      <SelectItem value="425 Fitness Bothell">425 Fitness Bothell</SelectItem>
-                      <SelectItem value="425 Fitness Redmond">425 Fitness Redmond</SelectItem>
-                      <SelectItem value="425 Fitness Issaquah">425 Fitness Issaquah</SelectItem>
-                    </optgroup>
+                    <SelectItem value="Fremont">Bay Club Fremont</SelectItem>
+                    <SelectItem value="Santa Clara">Bay Club Santa Clara</SelectItem>
+                    <SelectItem value="Courtside">Bay Club Courtside (San Jose)</SelectItem>
+                    <SelectItem value="Redwood Shores">Bay Club Redwood Shores</SelectItem>
+                    <SelectItem value="Walnut Creek">Bay Club Walnut Creek</SelectItem>
+                    <SelectItem value="Pleasanton">Bay Club Pleasanton</SelectItem>
+                    <SelectItem value="San Francisco">Bay Club San Francisco</SelectItem>
+                    <SelectItem value="Financial District">Bay Club Financial District</SelectItem>
+                    <SelectItem value="Marin">Bay Club Marin</SelectItem>
+                    <SelectItem value="Ross Valley">Bay Club Ross Valley</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
