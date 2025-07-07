@@ -48,8 +48,8 @@ export default function Welcome() {
         {/* Hero Message */}
         <div className="text-center mb-8">
           <p className="text-gray-600 leading-relaxed text-lg">
-            Join thousands of members who share premium fitness memberships, 
-            making high-end gym access accessible to everyone.
+            Connect with fitness enthusiasts to share premium Bay Club memberships 
+            and discover new workout partners in your area.
           </p>
         </div>
 
