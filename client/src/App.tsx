@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import Welcome from "@/pages/welcome";
 import OnboardingWizard from "@/pages/onboarding";
 import UserTypeSelection from "@/pages/user-type-selection";
 import SearchScreen from "@/pages/search";
@@ -13,7 +14,8 @@ import { useEffect } from "react";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={UserTypeSelection} />
+      <Route path="/" component={Welcome} />
+      <Route path="/user-type" component={UserTypeSelection} />
       <Route path="/onboarding" component={OnboardingWizard} />
       <Route path="/pods" component={SearchScreen} />
       <Route path="/pod/:id" component={PodDetail} />

@@ -1,0 +1,122 @@
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Zap, Users, DollarSign, Shield, ArrowRight, CheckCircle } from "lucide-react";
+
+export default function Welcome() {
+  const [, navigate] = useLocation();
+  const [currentFeature, setCurrentFeature] = useState(0);
+
+  const features = [
+    {
+      icon: <Users className="w-8 h-8" />,
+      title: "Connect with Members",
+      description: "Find trustworthy Bay Club members to share membership costs"
+    },
+    {
+      icon: <DollarSign className="w-8 h-8" />,
+      title: "Save Money",
+      description: "Cut your membership costs by up to 75% through pod sharing"
+    },
+    {
+      icon: <Shield className="w-8 h-8" />,
+      title: "Secure & Safe",
+      description: "Verified members only, with secure payment handling"
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentFeature((prev) => (prev + 1) % features.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo Section */}
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Zap className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">FlexAccess</h1>
+          <p className="text-lg text-gray-600 font-medium">Fun is better when Shared</p>
+        </div>
+
+        {/* Hero Message */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+            Make Bay Club Membership Affordable
+          </h2>
+          <p className="text-gray-600 leading-relaxed">
+            Join thousands of members who share premium fitness memberships, 
+            making high-end gym access accessible to everyone.
+          </p>
+        </div>
+
+        {/* Rotating Features */}
+        <Card className="mb-8 border-none shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4 transition-all duration-500">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="text-purple-600">
+                  {features[currentFeature].icon}
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-800 mb-1">
+                  {features[currentFeature].title}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {features[currentFeature].description}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Benefits List */}
+        <div className="space-y-3 mb-8">
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">Access to all Bay Club locations</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">Verified members only</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">Secure payment handling</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <span className="text-sm text-gray-700">24/7 support</span>
+          </div>
+        </div>
+
+        {/* Get Started Button */}
+        <Button 
+          onClick={() => navigate("/user-type")}
+          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-4 rounded-lg text-lg shadow-lg"
+        >
+          Get Started
+          <ArrowRight className="w-5 h-5 ml-2" />
+        </Button>
+
+        {/* Already Member */}
+        <div className="text-center mt-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/pods")}
+            className="text-sm text-gray-600 hover:text-gray-800"
+          >
+            Already a member? Browse pods
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
