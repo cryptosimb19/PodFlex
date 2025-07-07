@@ -50,7 +50,7 @@ export default function OnboardingWizard() {
               </div>
               <CardTitle className="text-2xl">Welcome to FlexAccess</CardTitle>
               <p className="text-muted-foreground">
-                Share Bay Club membership costs with like-minded fitness enthusiasts
+                Fun is better when Shared
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
