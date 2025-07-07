@@ -103,16 +103,7 @@ export default function UserTypeSelection() {
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
 
-        {/* Skip for now */}
-        <div className="text-center mt-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/pods")}
-            className="text-sm text-gray-600 hover:text-gray-800"
-          >
-            Skip for now, browse pods
-          </Button>
-        </div>
+
       </div>
     </div>
   );
