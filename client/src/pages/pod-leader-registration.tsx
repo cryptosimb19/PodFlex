@@ -75,17 +75,21 @@ export default function PodLeaderRegistration() {
         { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
         { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
       "Santa Clara": [
         { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Santa Clara + Fremont" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
       "Courtside": [
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" }
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
       "Redwood Shores": [
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" }
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
       "Walnut Creek": [
         { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
@@ -100,7 +104,8 @@ export default function PodLeaderRegistration() {
       ],
       "San Francisco": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
       "Financial District": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
