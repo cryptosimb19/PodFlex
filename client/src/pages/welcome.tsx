@@ -47,10 +47,7 @@ export default function Welcome() {
 
         {/* Hero Message */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-3">
-            Make Bay Club Membership Affordable
-          </h2>
-          <p className="text-gray-600 leading-relaxed">
+          <p className="text-gray-600 leading-relaxed text-lg">
             Join thousands of members who share premium fitness memberships, 
             making high-end gym access accessible to everyone.
           </p>
