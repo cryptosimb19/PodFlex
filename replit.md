@@ -2,7 +2,16 @@
 
 ## Overview
 
-FlexAccess is a mobile-first web application designed to make high-end gym memberships (starting with Bay Club) more affordable and accessible by connecting people who want to share membership costs. The platform replaces ad-hoc WhatsApp coordination with a secure, streamlined experience for discovering and joining membership "pods."
+FlexAccess is a mobile-first web application designed to make high-end gym memberships (starting with Bay Club) more affordable by connecting people who want to share membership costs. The platform replaces ad-hoc WhatsApp coordination with a secure, streamlined experience for discovering and joining membership "pods."
+
+**Core Problem**: Pods (shared memberships) are scattered across chats, pricing is unclear, and trust/payment handling is manual.
+
+**Primary Users**: 
+- Pod seekers who want lower monthly fees
+- Pod leads who own a primary account and need members  
+- Fitness enthusiasts who value tennis, multi-club access, or family plans
+
+**Value Proposition**: Discover the right pod, request to join in two taps, and manage the shared membership—all in one app.
 
 ## System Architecture
 

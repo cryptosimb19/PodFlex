@@ -1,49 +1,78 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, User, Accessibility } from "lucide-react";
-import { PodCard } from "@/components/pod-card";
-import { BottomNavigation } from "@/components/bottom-navigation";
-import { usePods } from "@/hooks/use-pods";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Filter, MapPin, Users, DollarSign, Star } from "lucide-react";
 import { useLocation } from "wouter";
+import type { Pod } from "@shared/schema";
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const { pods, isLoading, searchPods, filterPods } = usePods();
+  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedMembershipType, setSelectedMembershipType] = useState("");
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
   const [, navigate] = useLocation();
 
-  useEffect(() => {
-    const handleOnlineStatus = () => {
-      setIsOffline(!navigator.onLine);
-    };
+  // Fetch pods
+  const { data: pods = [], isLoading, refetch } = useQuery<Pod[]>({
+    queryKey: ['/api/pods', searchQuery, selectedRegion, selectedMembershipType, selectedAmenities],
+    queryFn: async () => {
+      // If we have filters, use the filter endpoint
+      if (selectedRegion || selectedMembershipType || selectedAmenities.length > 0) {
+        const response = await fetch('/api/pods/filter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            region: selectedRegion || undefined,
+            membershipType: selectedMembershipType || undefined,
+            amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
+          }),
+        });
+        return response.json();
+      }
+      
+      // If we have a search query, use the search endpoint
+      if (searchQuery.trim()) {
+        const response = await fetch(`/api/pods/search/${encodeURIComponent(searchQuery)}`);
+        return response.json();
+      }
+      
+      // Otherwise get all pods
+      const response = await fetch('/api/pods');
+      return response.json();
+    },
+  });
 
-    window.addEventListener('online', handleOnlineStatus);
-    window.addEventListener('offline', handleOnlineStatus);
-
-    return () => {
-      window.removeEventListener('online', handleOnlineStatus);
-      window.removeEventListener('offline', handleOnlineStatus);
-    };
-  }, []);
+  const regions = ["San Jose", "San Francisco", "Peninsula", "Marin", "East Bay", "South Bay"];
+  const membershipTypes = ["Single-Club", "Multi-Club", "Family"];
+  const amenities = ["tennis", "pickleball", "pool", "spa", "gym", "kids_club", "sauna"];
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim()) {
-      searchPods(query);
-    }
+    refetch();
   };
 
-  const handleFilterToggle = (filter: string) => {
-    let newFilters;
-    if (selectedFilters.includes(filter)) {
-      newFilters = selectedFilters.filter(f => f !== filter);
-    } else {
-      newFilters = [...selectedFilters, filter];
-    }
-    setSelectedFilters(newFilters);
-    filterPods(newFilters);
+  const handleAmenityToggle = (amenity: string) => {
+    setSelectedAmenities(prev => 
+      prev.includes(amenity) 
+        ? prev.filter(a => a !== amenity)
+        : [...prev, amenity]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedRegion("");
+    setSelectedMembershipType("");
+    setSelectedAmenities([]);
+    setSearchQuery("");
+  };
+
+  const formatPrice = (cents: number) => {
+    return `$${(cents / 100).toFixed(0)}/month`;
   };
 
   const handlePodClick = (podId: number) => {
@@ -51,113 +80,189 @@ export default function SearchScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20">
-      {/* Offline Banner */}
-      {isOffline && (
-        <div className="offline-indicator text-white text-center py-2 px-4 text-sm font-medium">
-          <i className="fas fa-wifi-slash mr-2"></i>
-          You're offline. Some features may be limited.
-        </div>
-      )}
-
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm safe-area-top">
+      <header className="bg-white shadow-sm border-b">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <Accessibility className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-neutral-900">FlexAccess</h1>
-                <p className="text-sm text-neutral-600">Downtown, Portland</p>
+                <h1 className="text-xl font-bold text-gray-900">FlexAccess</h1>
+                <p className="text-sm text-gray-600">Bay Club Pod Sharing</p>
               </div>
             </div>
-            <Button size="sm" variant="outline" className="w-10 h-10 bg-neutral-100 rounded-full p-0">
-              <User className="w-5 h-5 text-neutral-600" />
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center space-x-2"
+            >
+              <Filter className="w-4 h-4" />
+              <span>Filters</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Search Bar */}
-      <div className="px-4 py-4 bg-white border-b border-neutral-200">
+      <div className="px-4 py-4 bg-white border-b">
         <div className="relative">
           <Input
             type="text"
-            placeholder="Search for accessible pods..."
+            placeholder="Search for pods, clubs, or amenities..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-neutral-100 rounded-xl border-0 focus:ring-2 focus:ring-primary focus:bg-white transition-colors"
+            className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
           />
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="px-4 py-4 bg-white border-b border-neutral-200">
-        <div className="flex space-x-2 overflow-x-auto">
-          <Button
-            size="sm"
-            variant={selectedFilters.length === 0 ? "default" : "outline"}
-            onClick={() => {
-              setSelectedFilters([]);
-              filterPods([]);
-            }}
-            className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium touch-target"
-          >
-            All
-          </Button>
-          <Button
-            size="sm"
-            variant={selectedFilters.includes('mobility') ? "default" : "outline"}
-            onClick={() => handleFilterToggle('mobility')}
-            className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium touch-target"
-          >
-            <i className="fas fa-wheelchair mr-2"></i>Mobility
-          </Button>
-          <Button
-            size="sm"
-            variant={selectedFilters.includes('visual') ? "default" : "outline"}
-            onClick={() => handleFilterToggle('visual')}
-            className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium touch-target"
-          >
-            <i className="fas fa-eye mr-2"></i>Visual
-          </Button>
-          <Button
-            size="sm"
-            variant={selectedFilters.includes('audio') ? "default" : "outline"}
-            onClick={() => handleFilterToggle('audio')}
-            className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium touch-target"
-          >
-            <i className="fas fa-volume-up mr-2"></i>Audio
-          </Button>
+      {/* Filters */}
+      {showFilters && (
+        <div className="px-4 py-4 bg-white border-b space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Region</label>
+              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Any region</SelectItem>
+                  {regions.map(region => (
+                    <SelectItem key={region} value={region}>
+                      {region}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Membership Type</label>
+              <Select value={selectedMembershipType} onValueChange={setSelectedMembershipType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Any type</SelectItem>
+                  {membershipTypes.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-end">
+              <Button 
+                variant="outline" 
+                onClick={clearFilters}
+                className="w-full"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Amenities</label>
+            <div className="flex flex-wrap gap-2">
+              {amenities.map(amenity => (
+                <Badge
+                  key={amenity}
+                  variant={selectedAmenities.includes(amenity) ? "default" : "outline"}
+                  className="cursor-pointer capitalize"
+                  onClick={() => handleAmenityToggle(amenity)}
+                >
+                  {amenity.replace('_', ' ')}
+                </Badge>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Results */}
-      <div className="px-4 py-4 space-y-4">
+      <div className="px-4 py-6">
         {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-neutral-600 mt-2">Loading pods...</p>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading pods...</p>
           </div>
         ) : pods.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-neutral-600">No accessible pods found matching your criteria.</p>
+          <div className="text-center py-12">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No pods found matching your criteria</p>
+            <p className="text-gray-500 text-sm mt-2">Try adjusting your filters or search terms</p>
           </div>
         ) : (
-          pods.map(pod => (
-            <PodCard
-              key={pod.id}
-              pod={pod}
-              onClick={() => handlePodClick(pod.id)}
-            />
-          ))
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Found {pods.length} pod{pods.length !== 1 ? 's' : ''} available
+            </p>
+            
+            {pods.map(pod => (
+              <Card 
+                key={pod.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handlePodClick(pod.id)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        {pod.title}
+                      </h3>
+                      <div className="flex items-center text-sm text-gray-600 space-x-4">
+                        <span className="flex items-center">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {pod.clubName}, {pod.clubRegion}
+                        </span>
+                        <Badge variant="secondary" className="text-xs">
+                          {pod.membershipType}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-blue-600">
+                        {formatPrice(pod.costPerPerson)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {pod.availableSpots} of {pod.totalSpots} spots left
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-700 text-sm mb-4 line-clamp-2">
+                    {pod.description}
+                  </p>
+
+                  {pod.amenities && pod.amenities.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {pod.amenities.slice(0, 4).map(amenity => (
+                        <Badge key={amenity} variant="outline" className="text-xs capitalize">
+                          {amenity.replace('_', ' ')}
+                        </Badge>
+                      ))}
+                      {pod.amenities.length > 4 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{pod.amenities.length - 4} more
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
-
-      <BottomNavigation currentPage="search" />
     </div>
   );
 }

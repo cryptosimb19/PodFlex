@@ -1,221 +1,191 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useUserPreferences } from "@/hooks/use-user-preferences";
-import { Accessibility, Search, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dumbbell, Users, MapPin } from "lucide-react";
 
-interface UserPreferences {
-  mobilityAssistance: boolean;
-  visualImpairment: boolean;
-  hearingImpairment: boolean;
-  cognitiveSupport: boolean;
-  location?: string;
+interface UserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  membershipId: string;
+  preferredRegion: string;
 }
 
 export default function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    mobilityAssistance: false,
-    visualImpairment: false,
-    hearingImpairment: false,
-    cognitiveSupport: false,
+  const [userData, setUserData] = useState<UserData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    membershipId: "",
+    preferredRegion: "",
   });
   const [, navigate] = useLocation();
-  const { savePreferences } = useUserPreferences();
 
-  const handlePreferenceChange = (key: keyof UserPreferences, value: boolean) => {
-    setPreferences(prev => ({ ...prev, [key]: value }));
+  const handleInputChange = (key: keyof UserData, value: string) => {
+    setUserData(prev => ({ ...prev, [key]: value }));
   };
 
   const handleFinish = async () => {
-    try {
-      await savePreferences(preferences);
-      navigate("/search");
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-      // Still navigate to search even if saving fails
-      navigate("/search");
-    }
+    // In a real app, this would save user data to backend
+    console.log("User data:", userData);
+    navigate("/pods");
   };
 
-  const handleEnableLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setPreferences(prev => ({ ...prev, location: `${position.coords.latitude},${position.coords.longitude}` }));
-          handleFinish();
-        },
-        (error) => {
-          console.error("Location access denied:", error);
-          handleFinish();
-        }
-      );
-    } else {
-      handleFinish();
-    }
-  };
+  const canProceedToStep2 = userData.firstName && userData.lastName && userData.email;
+  const canProceedToStep3 = userData.membershipId;
+  const canFinish = userData.preferredRegion;
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-primary to-blue-600 flex flex-col items-center justify-center px-6 text-white fade-in">
-            <div className="text-center space-y-6">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto">
-                <Accessibility className="w-12 h-12" />
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Dumbbell className="w-8 h-8 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">Welcome to FlexAccess</h1>
-              <p className="text-lg text-blue-100 max-w-sm">Find accessible pods and locations that meet your specific needs</p>
-              
-              <div className="space-y-3 mt-8">
-                <div className="flex items-center space-x-3 bg-white/10 rounded-lg p-3">
-                  <i className="fas fa-wheelchair text-xl"></i>
-                  <span className="text-left">Wheelchair accessible entrances</span>
-                </div>
-                <div className="flex items-center space-x-3 bg-white/10 rounded-lg p-3">
-                  <i className="fas fa-eye text-xl"></i>
-                  <span className="text-left">Visual accessibility features</span>
-                </div>
-                <div className="flex items-center space-x-3 bg-white/10 rounded-lg p-3">
-                  <i className="fas fa-volume-up text-xl"></i>
-                  <span className="text-left">Audio accessibility support</span>
-                </div>
+              <CardTitle className="text-2xl">Welcome to FlexAccess</CardTitle>
+              <p className="text-muted-foreground">
+                Share Bay Club membership costs with like-minded fitness enthusiasts
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">First Name</label>
+                <Input
+                  value={userData.firstName}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  placeholder="Enter your first name"
+                />
               </div>
-            </div>
-            
-            <div className="mt-12 w-full max-w-sm">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Last Name</label>
+                <Input
+                  value={userData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  placeholder="Enter your last name"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={userData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="Enter your email"
+                />
+              </div>
               <Button 
                 onClick={() => setCurrentStep(2)}
-                className="w-full bg-white text-primary font-semibold py-4 px-6 rounded-xl touch-target hover:bg-neutral-100 transition-colors"
+                disabled={!canProceedToStep2}
+                className="w-full"
               >
-                Get Started
+                Continue
               </Button>
-              <div className="flex justify-center space-x-2 mt-6">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         );
 
       case 2:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-secondary to-green-600 flex flex-col items-center justify-center px-6 text-white fade-in">
-            <div className="text-center space-y-6">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto">
-                <Search className="w-12 h-12" />
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-secondary" />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">Personalized Search</h1>
-              <p className="text-lg text-green-100 max-w-sm">Tell us about your accessibility needs for better recommendations</p>
-              
-              <div className="space-y-3 mt-8">
-                <label className="flex items-center space-x-3 bg-white/10 rounded-lg p-3 cursor-pointer touch-target">
-                  <Checkbox 
-                    checked={preferences.mobilityAssistance}
-                    onCheckedChange={(checked) => handlePreferenceChange('mobilityAssistance', checked as boolean)}
-                    className="border-white text-white"
-                  />
-                  <span className="text-left">Mobility assistance required</span>
-                </label>
-                <label className="flex items-center space-x-3 bg-white/10 rounded-lg p-3 cursor-pointer touch-target">
-                  <Checkbox 
-                    checked={preferences.visualImpairment}
-                    onCheckedChange={(checked) => handlePreferenceChange('visualImpairment', checked as boolean)}
-                    className="border-white text-white"
-                  />
-                  <span className="text-left">Visual impairment support</span>
-                </label>
-                <label className="flex items-center space-x-3 bg-white/10 rounded-lg p-3 cursor-pointer touch-target">
-                  <Checkbox 
-                    checked={preferences.hearingImpairment}
-                    onCheckedChange={(checked) => handlePreferenceChange('hearingImpairment', checked as boolean)}
-                    className="border-white text-white"
-                  />
-                  <span className="text-left">Hearing impairment support</span>
-                </label>
-                <label className="flex items-center space-x-3 bg-white/10 rounded-lg p-3 cursor-pointer touch-target">
-                  <Checkbox 
-                    checked={preferences.cognitiveSupport}
-                    onCheckedChange={(checked) => handlePreferenceChange('cognitiveSupport', checked as boolean)}
-                    className="border-white text-white"
-                  />
-                  <span className="text-left">Cognitive support needed</span>
-                </label>
+              <CardTitle className="text-2xl">Bay Club Membership</CardTitle>
+              <p className="text-muted-foreground">
+                Help us verify your Bay Club membership
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Bay Club Membership ID</label>
+                <Input
+                  value={userData.membershipId}
+                  onChange={(e) => handleInputChange('membershipId', e.target.value)}
+                  placeholder="BC123456"
+                  className="font-mono"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Found on your Bay Club membership card or app
+                </p>
               </div>
-            </div>
-            
-            <div className="mt-12 w-full max-w-sm space-y-4">
-              <Button 
-                onClick={() => setCurrentStep(3)}
-                className="w-full bg-white text-secondary font-semibold py-4 px-6 rounded-xl touch-target hover:bg-neutral-100 transition-colors"
-              >
-                Continue
-              </Button>
-              <Button 
-                onClick={() => setCurrentStep(1)}
-                variant="outline"
-                className="w-full bg-transparent border-2 border-white text-white font-semibold py-4 px-6 rounded-xl touch-target hover:bg-white/10 transition-colors"
-              >
-                Back
-              </Button>
-              <div className="flex justify-center space-x-2 mt-6">
-                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => setCurrentStep(1)}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={() => setCurrentStep(3)}
+                  disabled={!canProceedToStep3}
+                  className="flex-1"
+                >
+                  Continue
+                </Button>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         );
 
       case 3:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-accent to-orange-600 flex flex-col items-center justify-center px-6 text-white fade-in">
-            <div className="text-center space-y-6">
-              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto">
-                <MapPin className="w-12 h-12" />
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="w-8 h-8 text-accent" />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">Location Services</h1>
-              <p className="text-lg text-orange-100 max-w-sm">Enable location access to find accessible pods near you</p>
-              
-              <div className="space-y-3 mt-8">
-                <div className="flex items-center space-x-3 bg-white/10 rounded-lg p-3">
-                  <i className="fas fa-crosshairs text-xl"></i>
-                  <span className="text-left">Find nearby accessible locations</span>
-                </div>
-                <div className="flex items-center space-x-3 bg-white/10 rounded-lg p-3">
-                  <i className="fas fa-route text-xl"></i>
-                  <span className="text-left">Get accessibility-focused directions</span>
-                </div>
-                <div className="flex items-center space-x-3 bg-white/10 rounded-lg p-3">
-                  <i className="fas fa-clock text-xl"></i>
-                  <span className="text-left">Real-time availability updates</span>
-                </div>
+              <CardTitle className="text-2xl">Preferred Region</CardTitle>
+              <p className="text-muted-foreground">
+                Choose your preferred Bay Club region to see relevant pods
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Region</label>
+                <Select value={userData.preferredRegion} onValueChange={(value) => handleInputChange('preferredRegion', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your preferred region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="San Jose">San Jose</SelectItem>
+                    <SelectItem value="San Francisco">San Francisco</SelectItem>
+                    <SelectItem value="Peninsula">Peninsula</SelectItem>
+                    <SelectItem value="Marin">Marin</SelectItem>
+                    <SelectItem value="East Bay">East Bay</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-            
-            <div className="mt-12 w-full max-w-sm space-y-4">
-              <Button 
-                onClick={handleEnableLocation}
-                className="w-full bg-white text-accent font-semibold py-4 px-6 rounded-xl touch-target hover:bg-neutral-100 transition-colors"
-              >
-                Enable Location & Start
-              </Button>
-              <Button 
-                onClick={handleFinish}
-                variant="outline"
-                className="w-full bg-transparent border-2 border-white text-white font-semibold py-4 px-6 rounded-xl touch-target hover:bg-white/10 transition-colors"
-              >
-                Skip for Now
-              </Button>
-              <div className="flex justify-center space-x-2 mt-6">
-                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  You'll see pods in your preferred region first, but can browse all available pods.
+                </p>
               </div>
-            </div>
-          </div>
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => setCurrentStep(2)}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleFinish}
+                  disabled={!canFinish}
+                  className="flex-1"
+                >
+                  Get Started
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         );
 
       default:
@@ -223,5 +193,21 @@ export default function OnboardingWizard() {
     }
   };
 
-  return renderStep();
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center px-4">
+      {renderStep()}
+      
+      {/* Progress indicator */}
+      <div className="flex space-x-2 mt-6">
+        {[1, 2, 3].map((step) => (
+          <div
+            key={step}
+            className={`w-2 h-2 rounded-full transition-colors ${
+              step <= currentStep ? 'bg-primary' : 'bg-primary/30'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }

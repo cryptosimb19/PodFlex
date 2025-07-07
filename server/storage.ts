@@ -1,172 +1,136 @@
-import { users, pods, type User, type Pod, type InsertUser, type InsertPod } from "@shared/schema";
+import { users, pods, joinRequests, podMembers, type User, type Pod, type InsertUser, type InsertPod, type JoinRequest, type InsertJoinRequest, type PodMember } from "@shared/schema";
 
 export interface IStorage {
+  // User operations
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUserPreferences(id: number, preferences: any): Promise<User | undefined>;
   
+  // Pod operations
   getPods(): Promise<Pod[]>;
   getPod(id: number): Promise<Pod | undefined>;
   searchPods(query: string): Promise<Pod[]>;
-  filterPods(filters: string[]): Promise<Pod[]>;
+  filterPods(filters: { region?: string; membershipType?: string; amenities?: string[] }): Promise<Pod[]>;
   createPod(pod: InsertPod): Promise<Pod>;
+  updatePodAvailability(id: number, availableSpots: number): Promise<Pod | undefined>;
+  
+  // Join request operations
+  createJoinRequest(request: InsertJoinRequest): Promise<JoinRequest>;
+  getJoinRequestsForPod(podId: number): Promise<JoinRequest[]>;
+  getJoinRequestsForUser(userId: number): Promise<JoinRequest[]>;
+  updateJoinRequestStatus(id: number, status: "accepted" | "rejected"): Promise<JoinRequest | undefined>;
+  
+  // Pod member operations
+  getPodMembers(podId: number): Promise<PodMember[]>;
+  addPodMember(podId: number, userId: number): Promise<PodMember>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private pods: Map<number, Pod>;
+  private joinRequests: Map<number, JoinRequest>;
+  private podMembers: Map<number, PodMember>;
   private currentUserId: number;
   private currentPodId: number;
+  private currentJoinRequestId: number;
+  private currentPodMemberId: number;
 
   constructor() {
     this.users = new Map();
     this.pods = new Map();
+    this.joinRequests = new Map();
+    this.podMembers = new Map();
     this.currentUserId = 1;
     this.currentPodId = 1;
-    this.initializePods();
+    this.currentJoinRequestId = 1;
+    this.currentPodMemberId = 1;
+    this.initializeSampleData();
   }
 
-  private initializePods() {
-    const samplePods: Pod[] = [
+  private initializeSampleData() {
+    // Create sample users
+    const sampleUsers: User[] = [
       {
         id: 1,
-        name: "Tech Hub Pod #1",
-        description: "Modern workspace with full accessibility features including adjustable desks, accessible restrooms, and assistive technology support.",
-        imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=200",
-        address: "Downtown, Portland",
-        distance: "0.3 miles",
-        availability: "Available now",
-        rating: "4.8 (124 reviews)",
-        verified: true,
-        contact: {
-          phone: "(555) 123-4567",
-          email: "techhub@example.com"
-        },
-        hours: "Monday - Friday: 7:00 AM - 10:00 PM\nWeekend: 8:00 AM - 8:00 PM",
-        amenities: ["WiFi", "Printing", "Coffee", "Parking"],
-        accessibilityFeatures: {
-          mobility: true,
-          visual: true,
-          audio: true,
-          wheelchairAccessible: true,
-          adjustableDesks: true,
-          screenReader: true,
-          hearingLoop: true,
-          accessibleRestrooms: true
-        },
-        detailedFeatures: [
-          {
-            title: "Wheelchair Accessible Entrance",
-            description: "Automatic door with 36\" wide opening",
-            verified: true
-          },
-          {
-            title: "Adjustable Height Desks",
-            description: "Electric sit-stand desks available",
-            verified: true
-          },
-          {
-            title: "Screen Reader Compatible",
-            description: "JAWS and NVDA supported systems",
-            verified: true
-          },
-          {
-            title: "Hearing Loop System",
-            description: "Induction loop for hearing aids",
-            verified: true
-          },
-          {
-            title: "Accessible Restrooms",
-            description: "ADA compliant facilities nearby",
-            verified: true
-          }
-        ]
+        email: "john.doe@example.com",
+        firstName: "John",
+        lastName: "Doe",
+        membershipId: "BC12345",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        preferredRegion: "San Jose",
+        createdAt: new Date(),
       },
       {
         id: 2,
-        name: "Library Study Pod #2",
-        description: "Quiet study space with assistive technology",
-        imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=200",
-        address: "Central Library, Portland",
-        distance: "0.8 miles",
-        availability: "Available in 30 min",
-        rating: "4.6 (89 reviews)",
-        verified: true,
-        contact: {
-          phone: "(555) 234-5678",
-          email: "library@example.com"
-        },
-        hours: "Monday - Saturday: 9:00 AM - 9:00 PM\nSunday: 12:00 PM - 6:00 PM",
-        amenities: ["WiFi", "Quiet Zone", "Research Materials", "Printing"],
-        accessibilityFeatures: {
-          mobility: true,
-          visual: true,
-          audio: false,
-          wheelchairAccessible: true,
-          adjustableDesks: false,
-          screenReader: true,
-          hearingLoop: false,
-          accessibleRestrooms: true
-        },
-        detailedFeatures: [
-          {
-            title: "Wheelchair Accessible Entrance",
-            description: "Ramp access with wide doorways",
-            verified: true
-          },
-          {
-            title: "Screen Reader Compatible",
-            description: "NVDA and JAWS supported workstations",
-            verified: true
-          },
-          {
-            title: "Accessible Restrooms",
-            description: "ADA compliant facilities on same floor",
-            verified: true
-          }
-        ]
+        email: "jane.smith@example.com",
+        firstName: "Jane",
+        lastName: "Smith",
+        membershipId: "BC67890",
+        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+        preferredRegion: "San Francisco",
+        createdAt: new Date(),
+      }
+    ];
+
+    // Create sample pods
+    const samplePods: Pod[] = [
+      {
+        id: 1,
+        leadId: 1,
+        clubName: "Bay Club Courtside",
+        clubRegion: "San Jose",
+        membershipType: "Multi-Club",
+        title: "Tennis & Pickleball Multi-Club Pod",
+        description: "Looking for 2 more members to share my Bay Club Multi-Club membership. Great for tennis and pickleball enthusiasts. Access to all Bay Club locations.",
+        costPerPerson: 12500,
+        totalSpots: 4,
+        availableSpots: 2,
+        amenities: ["tennis", "pickleball", "pool", "spa", "gym"],
+        rules: "Must be active and use facilities regularly. Prefer serious tennis players.",
+        imageUrl: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 2,
+        leadId: 2,
+        clubName: "Bay Club San Francisco",
+        clubRegion: "San Francisco",
+        membershipType: "Single-Club",
+        title: "Downtown SF Single Club Membership",
+        description: "Sharing single club membership at Bay Club SF. Perfect for downtown workers. Pool and gym access included.",
+        costPerPerson: 8500,
+        totalSpots: 3,
+        availableSpots: 1,
+        amenities: ["pool", "gym", "sauna"],
+        rules: "Please be respectful of equipment and facilities. No guests without prior approval.",
+        imageUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        isActive: true,
+        createdAt: new Date(),
       },
       {
         id: 3,
-        name: "Creative Studio Pod #3",
-        description: "Creative workspace with adjustable equipment",
-        imageUrl: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=200",
-        address: "Arts District, Portland",
-        distance: "1.2 miles",
-        availability: "Available tomorrow",
-        rating: "4.3 (45 reviews)",
-        verified: false,
-        contact: {
-          phone: "(555) 345-6789",
-          email: "creative@example.com"
-        },
-        hours: "Monday - Friday: 10:00 AM - 8:00 PM\nWeekend: 10:00 AM - 6:00 PM",
-        amenities: ["WiFi", "Art Supplies", "Natural Light", "Parking"],
-        accessibilityFeatures: {
-          mobility: true,
-          visual: false,
-          audio: false,
-          wheelchairAccessible: true,
-          adjustableDesks: true,
-          screenReader: false,
-          hearingLoop: false,
-          accessibleRestrooms: true
-        },
-        detailedFeatures: [
-          {
-            title: "Wheelchair Accessible Entrance",
-            description: "Level entrance with accessible parking",
-            verified: false
-          },
-          {
-            title: "Adjustable Height Tables",
-            description: "Manual height adjustment available",
-            verified: false
-          }
-        ]
+        leadId: 1,
+        clubName: "Bay Club Marin",
+        clubRegion: "Marin",
+        membershipType: "Family",
+        title: "Family Membership in Marin",
+        description: "Family with kids looking to share our Bay Club Marin membership. Kid-friendly amenities and family pool access.",
+        costPerPerson: 9500,
+        totalSpots: 2,
+        availableSpots: 1,
+        amenities: ["pool", "kids_club", "tennis", "gym"],
+        rules: "Family-friendly pod. Kids welcome. Please supervise children at all times.",
+        imageUrl: "https://images.unsplash.com/photo-1544006659-f0b21884ce1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+        isActive: true,
+        createdAt: new Date(),
       }
     ];
+
+    sampleUsers.forEach(user => {
+      this.users.set(user.id, user);
+      this.currentUserId = Math.max(this.currentUserId, user.id + 1);
+    });
 
     samplePods.forEach(pod => {
       this.pods.set(pod.id, pod);
@@ -178,30 +142,26 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      createdAt: new Date(),
+      membershipId: insertUser.membershipId || null,
+      avatar: insertUser.avatar || null,
+      preferredRegion: insertUser.preferredRegion || null,
+    };
     this.users.set(id, user);
     return user;
   }
 
-  async updateUserPreferences(id: number, preferences: any): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser: User = { ...user, preferences };
-    this.users.set(id, updatedUser);
-    return updatedUser;
-  }
-
   async getPods(): Promise<Pod[]> {
-    return Array.from(this.pods.values());
+    return Array.from(this.pods.values()).filter(pod => pod.isActive);
   }
 
   async getPod(id: number): Promise<Pod | undefined> {
@@ -209,42 +169,122 @@ export class MemStorage implements IStorage {
   }
 
   async searchPods(query: string): Promise<Pod[]> {
-    const pods = Array.from(this.pods.values());
+    const pods = Array.from(this.pods.values()).filter(pod => pod.isActive);
     if (!query.trim()) return pods;
     
     const lowercaseQuery = query.toLowerCase();
     return pods.filter(pod => 
-      pod.name.toLowerCase().includes(lowercaseQuery) ||
+      pod.title.toLowerCase().includes(lowercaseQuery) ||
       pod.description.toLowerCase().includes(lowercaseQuery) ||
-      pod.address.toLowerCase().includes(lowercaseQuery)
+      pod.clubName.toLowerCase().includes(lowercaseQuery) ||
+      pod.clubRegion.toLowerCase().includes(lowercaseQuery)
     );
   }
 
-  async filterPods(filters: string[]): Promise<Pod[]> {
-    const pods = Array.from(this.pods.values());
-    if (!filters.length) return pods;
+  async filterPods(filters: { region?: string; membershipType?: string; amenities?: string[] }): Promise<Pod[]> {
+    const pods = Array.from(this.pods.values()).filter(pod => pod.isActive);
     
     return pods.filter(pod => {
-      return filters.some(filter => {
-        switch (filter) {
-          case 'mobility':
-            return pod.accessibilityFeatures?.mobility;
-          case 'visual':
-            return pod.accessibilityFeatures?.visual;
-          case 'audio':
-            return pod.accessibilityFeatures?.audio;
-          default:
-            return true;
+      // Filter by region
+      if (filters.region && pod.clubRegion !== filters.region) {
+        return false;
+      }
+      
+      // Filter by membership type
+      if (filters.membershipType && pod.membershipType !== filters.membershipType) {
+        return false;
+      }
+      
+      // Filter by amenities
+      if (filters.amenities && filters.amenities.length > 0) {
+        const podAmenities = pod.amenities || [];
+        const hasRequiredAmenities = filters.amenities.some(amenity => 
+          podAmenities.includes(amenity)
+        );
+        if (!hasRequiredAmenities) {
+          return false;
         }
-      });
+      }
+      
+      return true;
     });
   }
 
   async createPod(insertPod: InsertPod): Promise<Pod> {
     const id = this.currentPodId++;
-    const pod: Pod = { ...insertPod, id };
+    const pod: Pod = { 
+      ...insertPod, 
+      id, 
+      createdAt: new Date(),
+      rules: insertPod.rules || null,
+      amenities: insertPod.amenities || [],
+      isActive: insertPod.isActive ?? true,
+    };
     this.pods.set(id, pod);
     return pod;
+  }
+
+  async updatePodAvailability(id: number, availableSpots: number): Promise<Pod | undefined> {
+    const pod = this.pods.get(id);
+    if (!pod) return undefined;
+    
+    const updatedPod: Pod = { ...pod, availableSpots };
+    this.pods.set(id, updatedPod);
+    return updatedPod;
+  }
+
+  async createJoinRequest(insertRequest: InsertJoinRequest): Promise<JoinRequest> {
+    const id = this.currentJoinRequestId++;
+    const request: JoinRequest = { 
+      ...insertRequest, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      message: insertRequest.message || null,
+      status: "pending",
+    };
+    this.joinRequests.set(id, request);
+    return request;
+  }
+
+  async getJoinRequestsForPod(podId: number): Promise<JoinRequest[]> {
+    return Array.from(this.joinRequests.values()).filter(request => request.podId === podId);
+  }
+
+  async getJoinRequestsForUser(userId: number): Promise<JoinRequest[]> {
+    return Array.from(this.joinRequests.values()).filter(request => request.userId === userId);
+  }
+
+  async updateJoinRequestStatus(id: number, status: "accepted" | "rejected"): Promise<JoinRequest | undefined> {
+    const request = this.joinRequests.get(id);
+    if (!request) return undefined;
+    
+    const updatedRequest: JoinRequest = { 
+      ...request, 
+      status, 
+      updatedAt: new Date() 
+    };
+    this.joinRequests.set(id, updatedRequest);
+    return updatedRequest;
+  }
+
+  async getPodMembers(podId: number): Promise<PodMember[]> {
+    return Array.from(this.podMembers.values()).filter(member => 
+      member.podId === podId && member.isActive
+    );
+  }
+
+  async addPodMember(podId: number, userId: number): Promise<PodMember> {
+    const id = this.currentPodMemberId++;
+    const member: PodMember = {
+      id,
+      podId,
+      userId,
+      joinedAt: new Date(),
+      isActive: true,
+    };
+    this.podMembers.set(id, member);
+    return member;
   }
 }
 

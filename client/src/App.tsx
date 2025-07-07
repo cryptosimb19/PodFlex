@@ -13,7 +13,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={OnboardingWizard} />
-      <Route path="/search" component={SearchScreen} />
+      <Route path="/pods" component={SearchScreen} />
       <Route path="/pod/:id" component={PodDetail} />
       <Route component={NotFound} />
     </Switch>
