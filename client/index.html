@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>FlexAccess - Accessible Pod Finder</title>
+    <meta name="description" content="Find accessible pods and locations that meet your specific accessibility needs. Search for mobility-friendly workspaces, visual accessibility features, and audio support." />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1976D2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="FlexAccess" />
+    <meta name="msapplication-TileColor" content="#1976D2" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg" />
+    <link rel="apple-touch-icon" sizes="167x167" href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg" />
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg" />
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FlexAccess - Accessible Pod Finder" />
+    <meta property="og:description" content="Find accessible pods and locations that meet your specific accessibility needs. Search for mobility-friendly workspaces, visual accessibility features, and audio support." />
+    <meta property="og:site_name" content="FlexAccess" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=630" />
+    <meta property="og:image:alt" content="Modern accessible workspace with assistive technology" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FlexAccess - Accessible Pod Finder" />
+    <meta name="twitter:description" content="Find accessible pods and locations that meet your specific accessibility needs." />
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=630" />
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" />
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    
+    <!-- Accessibility -->
+    <meta name="color-scheme" content="light dark" />
+    
+    <!-- Performance -->
+    <meta name="referrer" content="origin-when-cross-origin" />
+    
+    <!-- Security -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    
+    <!-- Disable automatic phone number detection -->
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Viewport for proper mobile scaling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- iOS Safari specific -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- Disable iOS Safari address bar for fullscreen experience -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "FlexAccess",
+      "description": "Find accessible pods and locations that meet your specific accessibility needs",
+      "url": "https://flexaccess.com",
+      "applicationCategory": "AccessibilityApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "FlexAccess"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>

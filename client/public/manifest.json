@@ -1,0 +1,42 @@
+{
+  "name": "FlexAccess - Accessible Pod Finder",
+  "short_name": "FlexAccess",
+  "description": "Find accessible pods and locations that meet your specific accessibility needs",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAFA",
+  "theme_color": "#1976D2",
+  "orientation": "portrait-primary",
+  "categories": ["accessibility", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcng9IjQiIGZpbGw9IiMxOTc2RDIiLz48cGF0aCBkPSJNMTIgMmE2IDYgMCAwIDEgNiA2djJhNiA2IDAgMCAxLTYgNiA2IDYgMCAwIDEtNi02VjhhNiA2IDAgMCAxIDYtNnptMCA0YTIgMiAwIDAgMC0yIDJ2MmEyIDIgMCAwIDAgMiAyIDIgMiAwIDAgMCAyLTJWOGEyIDIgMCAwIDAtMi0yeiIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik02IDE0aDEydjJINnptMCAyaDEydjJINnoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcng9IjQiIGZpbGw9IiMxOTc2RDIiLz48cGF0aCBkPSJNMTIgMmE2IDYgMCAwIDEgNiA2djJhNiA2IDAgMCAxLTYgNiA2IDYgMCAwIDEtNi02VjhhNiA2IDAgMCAxIDYtNnptMCA0YTIgMiAwIDAgMC0yIDJ2MmEyIDIgMCAwIDAgMiAyIDIgMiAwIDAgMCAyLTJWOGEyIDIgMCAwIDAtMi0yeiIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik02IDE0aDEydjJINnptMCAyaDEydjJINnoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=800",
+      "sizes": "400x800",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    }
+  ],
+  "prefer_related_applications": false,
+  "lang": "en-US",
+  "dir": "ltr",
+  "scope": "/",
+  "id": "flexaccess-pwa"
+}

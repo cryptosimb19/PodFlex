@@ -1,0 +1,33 @@
+## FlexAccess – At-a-Glance
+
+|                     | Details |
+|---------------------|---------|
+| **Purpose** | Make high-end gym memberships (starting with **Bay Club**) affordable and easy to share by replacing ad-hoc WhatsApp coordination with a secure, mobile-first platform. |
+| **Core Problem** | Pods (shared memberships) are scattered across chats, pricing is unclear, and trust/payment handling is manual. |
+| **Primary Users** | • **Pod seekers** like Slaven (want lower monthly fees)<br>• **Pod leads** who own a primary account and need members<br>• Fitness enthusiasts who value tennis, multi-club access, or family plans |
+| **Value Proposition** | *Discover* the right pod, *request* to join in two taps, and *manage* the shared membership—all in one app. |
+
+---
+
+## MVP Feature Set
+
+| # | Feature | Why It Matters |
+|---|---------|----------------|
+| **1** | **Region & Club Selector** | Lets users narrow results to their home campus (e.g., San Jose → Courtside) and see only relevant pods. |
+| **2** | **Pod Discovery & Filtering** | Airbnb-style list grouped by **membership type** (Single-Club, Multi-Club, Family). Filters for price, open spots, amenities (tennis, pickleball). |
+| **3** | **Rich Pod Profile** | Shows club, cost per person, rules, lead info, current members, and availability—so users decide quickly without back-and-forth messages. |
+| **4** | **Join Request Flow** | “Request to Join” button → short form → creates a `join_request` record and notifies the pod lead. |
+| **5** | **Pod Lead Dashboard** | Lead can approve/reject requests and see active members in one place (no spreadsheets). |
+| **6** | **Basic Profile Setup** | First/Last name, Membership ID, avatar, preferred region—captures essential identity for trust and matching. |
+| **7** | **Secure Login & Auth** | Email (magic link) or Google sign-in via Supabase Auth—keeps barrier to entry low. |
+| **8** | **(Optional) Status Notifications** | Email/push alerts when a request is accepted or a new pod opens in a saved region. |
+
+> **Post-MVP Ideas**: in-app chat, ratings & reviews, trust badges, payment splitting, guest-pass trading.
+
+---
+
+### KPI Targets for MVP Validation
+
+1. **Time-to-Match**: ≤ 48 hrs from request to acceptance  
+2. **First-Month Retention**: ≥ 60 % of accepted members still active  
+3. **Net Promoter Score (pilot cohort)**: ≥ 40
