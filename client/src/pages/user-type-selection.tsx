@@ -50,9 +50,6 @@ export default function UserTypeSelection() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <p className="text-sm text-gray-600">
-                Find existing pods with available spots and join premium Bay Club memberships at a fraction of the cost.
-              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Save Money</span>
                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Quick Join</span>
