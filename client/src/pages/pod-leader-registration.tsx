@@ -409,7 +409,7 @@ export default function PodLeaderRegistration() {
               </div>
               <CardTitle className="text-2xl">Bay Club Membership</CardTitle>
               <p className="text-muted-foreground">
-                Verify your existing membership details
+                Enter your membership details
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
