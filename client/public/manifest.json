@@ -1,16 +1,16 @@
 {
-  "name": "FlexAccess - Accessible Pod Finder",
+  "name": "FlexAccess - Fun is better when Shared",
   "short_name": "FlexAccess",
-  "description": "Find accessible pods and locations that meet your specific accessibility needs",
+  "description": "Share Bay Club membership costs with FlexAccess. Find and join premium fitness membership pods to make high-end gym access more affordable.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAFAFA",
-  "theme_color": "#1976D2",
+  "theme_color": "#8B5CF6",
   "orientation": "portrait-primary",
   "categories": ["accessibility", "productivity", "utilities"],
   "icons": [
     {
-      "src": "https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/universal-access.svg",
+      "src": "https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons/bolt.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Users, DollarSign, Filter, Plus } from "lucide-react";
+import { Search, MapPin, Users, DollarSign, Filter, Plus, Zap } from "lucide-react";
 import type { Pod } from "@shared/schema";
 
 export default function PodsPage() {
@@ -77,9 +77,14 @@ export default function PodsPage() {
       <div className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">FlexAccess</h1>
-              <p className="text-sm text-gray-600">Fun is better when Shared</p>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">FlexAccess</h1>
+                <p className="text-sm text-gray-600">Fun is better when Shared</p>
+              </div>
             </div>
             <Button 
               onClick={() => navigate("/create-pod")}

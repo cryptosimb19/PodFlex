@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, Users, MapPin } from "lucide-react";
+import { Zap, Users, MapPin } from "lucide-react";
 
 interface UserData {
   firstName: string;
@@ -45,8 +45,8 @@ export default function OnboardingWizard() {
         return (
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Dumbbell className="w-8 h-8 text-primary" />
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Zap className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-2xl">Welcome to FlexAccess</CardTitle>
               <p className="text-muted-foreground">
