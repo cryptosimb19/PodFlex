@@ -45,13 +45,7 @@ export default function Welcome() {
           <p className="text-lg text-gray-600 font-medium">Fun is better when Shared</p>
         </div>
 
-        {/* Hero Message */}
-        <div className="text-center mb-8">
-          <p className="text-gray-600 leading-relaxed text-lg">
-            Connect with fitness enthusiasts to share premium Bay Club memberships 
-            and discover new workout partners in your area.
-          </p>
-        </div>
+
 
         {/* Rotating Features */}
         <Card className="mb-8 border-none shadow-lg bg-white/80 backdrop-blur-sm">
