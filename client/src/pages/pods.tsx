@@ -57,7 +57,7 @@ export default function PodsPage() {
     }
   };
 
-  const regions = ["San Jose", "San Francisco", "Peninsula", "Marin", "East Bay", "Santa Clara", "Los Angeles", "San Diego"];
+  const regions = ["San Jose", "San Francisco", "Peninsula", "Marin", "East Bay", "Santa Clara", "Los Angeles", "San Diego", "Washington", "Oregon"];
   const membershipTypes = ["Single-Club", "Multi-Club", "Family"];
 
   if (isLoading) {
