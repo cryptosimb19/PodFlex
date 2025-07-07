@@ -47,7 +47,7 @@ export default function SearchScreen() {
     },
   });
 
-  const regions = ["San Jose", "San Francisco", "Peninsula", "Marin", "East Bay", "South Bay"];
+  const regions = ["San Jose", "San Francisco", "Peninsula", "Marin", "East Bay", "Santa Clara", "Los Angeles", "San Diego"];
   const membershipTypes = ["Single-Club", "Multi-Club", "Family"];
   const amenities = ["tennis", "pickleball", "pool", "spa", "gym", "kids_club", "sauna"];
 

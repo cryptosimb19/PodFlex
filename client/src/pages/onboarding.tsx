@@ -155,11 +155,14 @@ export default function OnboardingWizard() {
                     <SelectValue placeholder="Select your preferred region" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="San Jose">San Jose</SelectItem>
-                    <SelectItem value="San Francisco">San Francisco</SelectItem>
-                    <SelectItem value="Peninsula">Peninsula</SelectItem>
-                    <SelectItem value="Marin">Marin</SelectItem>
-                    <SelectItem value="East Bay">East Bay</SelectItem>
+                    <SelectItem value="San Jose">San Jose Campus</SelectItem>
+                    <SelectItem value="San Francisco">San Francisco Campus</SelectItem>
+                    <SelectItem value="Peninsula">Peninsula Campus</SelectItem>
+                    <SelectItem value="Marin">Marin Campus</SelectItem>
+                    <SelectItem value="East Bay">East Bay Campus</SelectItem>
+                    <SelectItem value="Santa Clara">Santa Clara Campus</SelectItem>
+                    <SelectItem value="Los Angeles">Los Angeles Campus</SelectItem>
+                    <SelectItem value="San Diego">San Diego Campus</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
