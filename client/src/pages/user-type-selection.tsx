@@ -45,7 +45,6 @@ export default function UserTypeSelection() {
                 </div>
                 <div>
                   <CardTitle className="text-lg">Join a Pod</CardTitle>
-                  <p className="text-sm text-gray-600">Looking to share membership costs</p>
                 </div>
               </div>
             </CardHeader>
@@ -73,7 +72,6 @@ export default function UserTypeSelection() {
                 </div>
                 <div>
                   <CardTitle className="text-lg">Fill Your Pod</CardTitle>
-                  <p className="text-sm text-gray-600">Have a membership, need members</p>
                 </div>
               </div>
             </CardHeader>
