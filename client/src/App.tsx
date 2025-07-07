@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/welcome";
 import OnboardingWizard from "@/pages/onboarding";
 import UserTypeSelection from "@/pages/user-type-selection";
+import PodLeaderRegistration from "@/pages/pod-leader-registration";
 import SearchScreen from "@/pages/search";
 import PodDetail from "@/pages/pod-detail";
 import { useEffect } from "react";
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/" component={Welcome} />
       <Route path="/user-type" component={UserTypeSelection} />
       <Route path="/onboarding" component={OnboardingWizard} />
+      <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
       <Route path="/pods" component={SearchScreen} />
       <Route path="/pod/:id" component={PodDetail} />
       <Route component={NotFound} />

@@ -12,7 +12,7 @@ export default function UserTypeSelection() {
     if (selectedType === "join") {
       navigate("/onboarding?type=seeker");
     } else if (selectedType === "fill") {
-      navigate("/onboarding?type=lead");
+      navigate("/pod-leader-registration");
     }
   };
 
