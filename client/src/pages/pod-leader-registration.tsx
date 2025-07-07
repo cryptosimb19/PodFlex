@@ -15,12 +15,14 @@ interface PodLeaderData {
   lastName: string;
   email: string;
   phone: string;
+  address: string;
+  dateOfBirth: string;
   
   // Membership Info
   primaryCampus: string;
   primaryClub: string;
   membershipLevel: string;
-  membershipId: string; // Optional - if already a member
+  membershipId: string;
   
   // Pod Details
   podName: string;
@@ -41,10 +43,12 @@ export default function PodLeaderRegistration() {
     lastName: "",
     email: "",
     phone: "",
+    address: "",
+    dateOfBirth: "",
     primaryCampus: "",
     primaryClub: "",
     membershipLevel: "",
-    membershipId: "", // Optional - if already a member
+    membershipId: "",
     podName: "",
     podDescription: "",
     monthlyFee: "",
@@ -356,6 +360,24 @@ export default function PodLeaderRegistration() {
                 />
               </div>
               
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Current Address</label>
+                <Input
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  placeholder="Enter your current address"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Date of Birth</label>
+                <Input
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                />
+              </div>
+              
               <div className="flex space-x-3 pt-4">
                 <Button 
                   variant="outline"
@@ -461,7 +483,7 @@ export default function PodLeaderRegistration() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID <span className="text-muted-foreground">(optional - if already a member)</span></label>
+                <label className="text-sm font-medium">Bay Club Membership ID</label>
                 <Input
                   value={formData.membershipId}
                   onChange={(e) => handleInputChange('membershipId', e.target.value)}
@@ -469,7 +491,7 @@ export default function PodLeaderRegistration() {
                   className="font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app. Leave blank if you don't have a membership yet.
+                  Found on your Bay Club membership card or app.
                 </p>
               </div>
               

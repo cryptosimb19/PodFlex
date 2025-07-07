@@ -14,6 +14,8 @@ interface UserData {
   primaryClub: string;
   membershipLevel: string;
   membershipId: string;
+  address: string;
+  dateOfBirth: string;
 }
 
 export default function OnboardingWizard() {
@@ -26,6 +28,8 @@ export default function OnboardingWizard() {
     primaryClub: "",
     membershipLevel: "",
     membershipId: "",
+    address: "",
+    dateOfBirth: "",
   });
   const [, navigate] = useLocation();
   
@@ -377,7 +381,7 @@ export default function OnboardingWizard() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID <span className="text-muted-foreground">(optional)</span></label>
+                <label className="text-sm font-medium">Bay Club Membership ID</label>
                 <Input
                   value={userData.membershipId}
                   onChange={(e) => handleInputChange('membershipId', e.target.value)}
@@ -385,8 +389,26 @@ export default function OnboardingWizard() {
                   className="font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app. Leave blank if you don't have one yet.
+                  Found on your Bay Club membership card or app.
                 </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Current Address</label>
+                <Input
+                  value={userData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  placeholder="Enter your current address"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Date of Birth</label>
+                <Input
+                  type="date"
+                  value={userData.dateOfBirth}
+                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                />
               </div>
               
               <div className="flex space-x-3">
