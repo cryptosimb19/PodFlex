@@ -71,12 +71,16 @@ export default function PodLeaderRegistration() {
   // Get available campuses
   const getAvailableCampuses = () => {
     return [
-      { value: "San Francisco Campus", label: "San Francisco Campus" },
-      { value: "Marin Campus", label: "Marin Campus" },
-      { value: "East Bay Campus", label: "East Bay Campus" },
-      { value: "Peninsula Campus", label: "Peninsula Campus" },
-      { value: "Santa Clara Campus", label: "Santa Clara Campus" },
-      { value: "San Jose Campus", label: "San Jose Campus" }
+      { value: "San Jose", label: "San Jose" },
+      { value: "East Bay", label: "East Bay" },
+      { value: "San Francisco", label: "San Francisco" },
+      { value: "Marin", label: "Marin" },
+      { value: "Washington", label: "Washington" },
+      { value: "San Diego", label: "San Diego" },
+      { value: "Peninsula", label: "Peninsula" },
+      { value: "Santa Clara", label: "Santa Clara" },
+      { value: "Los Angeles", label: "Los Angeles" },
+      { value: "Oregon", label: "Oregon" }
     ];
   };
 
@@ -84,34 +88,51 @@ export default function PodLeaderRegistration() {
   const getAvailableClubs = () => {
     const campus = formData.primaryCampus;
     const clubsByCampus: Record<string, Array<{value: string, label: string}>> = {
-      "San Francisco Campus": [
+      "San Francisco": [
         { value: "Bay Club San Francisco", label: "Bay Club San Francisco" },
         { value: "Bay Club Financial District", label: "Bay Club Financial District" },
         { value: "Bay Club Gateway", label: "Bay Club Gateway" },
         { value: "Bay Club South San Francisco", label: "Bay Club South San Francisco" }
       ],
-      "Marin Campus": [
+      "Marin": [
         { value: "Bay Club Marin", label: "Bay Club Marin" },
         { value: "Bay Club Ross Valley", label: "Bay Club Ross Valley" },
         { value: "Bay Club Rolling Hills", label: "Bay Club Rolling Hills" },
         { value: "StoneTree Golf Club", label: "StoneTree Golf Club" }
       ],
-      "East Bay Campus": [
+      "East Bay": [
         { value: "Bay Club Walnut Creek", label: "Bay Club Walnut Creek" },
         { value: "Bay Club Pleasanton", label: "Bay Club Pleasanton" },
         { value: "Bay Club Fremont", label: "Bay Club Fremont" },
         { value: "Crow Canyon Country Club", label: "Crow Canyon Country Club" }
       ],
-      "Peninsula Campus": [
+      "Peninsula": [
         { value: "Bay Club Redwood Shores", label: "Bay Club Redwood Shores" },
         { value: "Bay Club Broadway Tennis", label: "Bay Club Broadway Tennis" }
       ],
-      "Santa Clara Campus": [
+      "Santa Clara": [
         { value: "Bay Club Santa Clara", label: "Bay Club Santa Clara" }
       ],
-      "San Jose Campus": [
+      "San Jose": [
         { value: "Bay Club Courtside", label: "Bay Club Courtside" },
         { value: "Boulder Ridge Golf Club", label: "Boulder Ridge Golf Club" }
+      ],
+      "Washington": [
+        { value: "Bay Club Bellevue", label: "Bay Club Bellevue" },
+        { value: "Bay Club Redmond", label: "Bay Club Redmond" },
+        { value: "Bay Club West Seattle", label: "Bay Club West Seattle" }
+      ],
+      "San Diego": [
+        { value: "Bay Club Mission Bay", label: "Bay Club Mission Bay" },
+        { value: "Bay Club Scripps Ranch", label: "Bay Club Scripps Ranch" }
+      ],
+      "Los Angeles": [
+        { value: "Bay Club Manhattan Beach", label: "Bay Club Manhattan Beach" },
+        { value: "Bay Club Santa Monica", label: "Bay Club Santa Monica" }
+      ],
+      "Oregon": [
+        { value: "Bay Club Portland", label: "Bay Club Portland" },
+        { value: "Bay Club Lake Oswego", label: "Bay Club Lake Oswego" }
       ]
     };
     return clubsByCampus[campus] || [];

@@ -36,34 +36,51 @@ export default function OnboardingWizard() {
   // Helper functions for dynamic form options
   const getAvailableClubsForCampus = (campus: string) => {
     const clubsByCampus: Record<string, Array<{value: string, label: string}>> = {
-      "San Francisco Campus": [
+      "San Francisco": [
         { value: "Bay Club San Francisco", label: "Bay Club San Francisco" },
         { value: "Bay Club Financial District", label: "Bay Club Financial District" },
         { value: "Bay Club Gateway", label: "Bay Club Gateway" },
         { value: "Bay Club South San Francisco", label: "Bay Club South San Francisco" }
       ],
-      "Marin Campus": [
+      "Marin": [
         { value: "Bay Club Marin", label: "Bay Club Marin" },
         { value: "Bay Club Ross Valley", label: "Bay Club Ross Valley" },
         { value: "Bay Club Rolling Hills", label: "Bay Club Rolling Hills" },
         { value: "StoneTree Golf Club", label: "StoneTree Golf Club" }
       ],
-      "East Bay Campus": [
+      "East Bay": [
         { value: "Bay Club Walnut Creek", label: "Bay Club Walnut Creek" },
         { value: "Bay Club Pleasanton", label: "Bay Club Pleasanton" },
         { value: "Bay Club Fremont", label: "Bay Club Fremont" },
         { value: "Crow Canyon Country Club", label: "Crow Canyon Country Club" }
       ],
-      "Peninsula Campus": [
+      "Peninsula": [
         { value: "Bay Club Redwood Shores", label: "Bay Club Redwood Shores" },
         { value: "Bay Club Broadway Tennis", label: "Bay Club Broadway Tennis" }
       ],
-      "Santa Clara Campus": [
+      "Santa Clara": [
         { value: "Bay Club Santa Clara", label: "Bay Club Santa Clara" }
       ],
-      "San Jose Campus": [
+      "San Jose": [
         { value: "Bay Club Courtside", label: "Bay Club Courtside" },
         { value: "Boulder Ridge Golf Club", label: "Boulder Ridge Golf Club" }
+      ],
+      "Washington": [
+        { value: "Bay Club Bellevue", label: "Bay Club Bellevue" },
+        { value: "Bay Club Redmond", label: "Bay Club Redmond" },
+        { value: "Bay Club West Seattle", label: "Bay Club West Seattle" }
+      ],
+      "San Diego": [
+        { value: "Bay Club Mission Bay", label: "Bay Club Mission Bay" },
+        { value: "Bay Club Scripps Ranch", label: "Bay Club Scripps Ranch" }
+      ],
+      "Los Angeles": [
+        { value: "Bay Club Manhattan Beach", label: "Bay Club Manhattan Beach" },
+        { value: "Bay Club Santa Monica", label: "Bay Club Santa Monica" }
+      ],
+      "Oregon": [
+        { value: "Bay Club Portland", label: "Bay Club Portland" },
+        { value: "Bay Club Lake Oswego", label: "Bay Club Lake Oswego" }
       ]
     };
     return clubsByCampus[campus] || [];
@@ -192,12 +209,16 @@ export default function OnboardingWizard() {
                     <SelectValue placeholder="Select your primary campus" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="San Francisco Campus">San Francisco Campus</SelectItem>
-                    <SelectItem value="San Jose Campus">San Jose Campus</SelectItem>
-                    <SelectItem value="East Bay Campus">East Bay Campus</SelectItem>
-                    <SelectItem value="Peninsula Campus">Peninsula Campus</SelectItem>
-                    <SelectItem value="Santa Clara Campus">Santa Clara Campus</SelectItem>
-                    <SelectItem value="Marin Campus">Marin Campus</SelectItem>
+                    <SelectItem value="San Jose">San Jose</SelectItem>
+                    <SelectItem value="East Bay">East Bay</SelectItem>
+                    <SelectItem value="San Francisco">San Francisco</SelectItem>
+                    <SelectItem value="Marin">Marin</SelectItem>
+                    <SelectItem value="Washington">Washington</SelectItem>
+                    <SelectItem value="San Diego">San Diego</SelectItem>
+                    <SelectItem value="Peninsula">Peninsula</SelectItem>
+                    <SelectItem value="Santa Clara">Santa Clara</SelectItem>
+                    <SelectItem value="Los Angeles">Los Angeles</SelectItem>
+                    <SelectItem value="Oregon">Oregon</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
