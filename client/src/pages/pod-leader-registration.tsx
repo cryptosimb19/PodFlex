@@ -75,7 +75,7 @@ export default function PodLeaderRegistration() {
   const totalSteps = 4;
 
   const canProceedStep1 = formData.firstName && formData.lastName && formData.email && formData.phone;
-  const canProceedStep2 = formData.membershipId && formData.membershipType && formData.clubLocation;
+  const canProceedStep2 = formData.clubLocation && formData.membershipType && formData.membershipId;
   const canProceedStep3 = formData.podName && formData.podDescription && formData.monthlyFee && formData.availableSpots && formData.startDate;
   const canSubmit = formData.agreesToTerms;
 
@@ -169,16 +169,22 @@ export default function PodLeaderRegistration() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID</label>
-                <Input
-                  value={formData.membershipId}
-                  onChange={(e) => handleInputChange('membershipId', e.target.value)}
-                  placeholder="BC123456"
-                  className="font-mono"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app
-                </p>
+                <label className="text-sm font-medium">Primary Club Location</label>
+                <Select value={formData.clubLocation} onValueChange={(value) => handleInputChange('clubLocation', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your primary club" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Courtside">Courtside (San Jose)</SelectItem>
+                    <SelectItem value="Redwood Shores">Redwood Shores</SelectItem>
+                    <SelectItem value="San Francisco">San Francisco</SelectItem>
+                    <SelectItem value="Walnut Creek">Walnut Creek</SelectItem>
+                    <SelectItem value="Marin">Marin</SelectItem>
+                    <SelectItem value="Santa Clara">Santa Clara</SelectItem>
+                    <SelectItem value="Los Gatos">Los Gatos</SelectItem>
+                    <SelectItem value="Fremont">Fremont</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">
@@ -197,22 +203,16 @@ export default function PodLeaderRegistration() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Primary Club Location</label>
-                <Select value={formData.clubLocation} onValueChange={(value) => handleInputChange('clubLocation', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your primary club" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Courtside">Courtside (San Jose)</SelectItem>
-                    <SelectItem value="Redwood Shores">Redwood Shores</SelectItem>
-                    <SelectItem value="San Francisco">San Francisco</SelectItem>
-                    <SelectItem value="Walnut Creek">Walnut Creek</SelectItem>
-                    <SelectItem value="Marin">Marin</SelectItem>
-                    <SelectItem value="Santa Clara">Santa Clara</SelectItem>
-                    <SelectItem value="Los Gatos">Los Gatos</SelectItem>
-                    <SelectItem value="Fremont">Fremont</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium">Bay Club Membership ID</label>
+                <Input
+                  value={formData.membershipId}
+                  onChange={(e) => handleInputChange('membershipId', e.target.value)}
+                  placeholder="BC123456"
+                  className="font-mono"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Found on your Bay Club membership card or app
+                </p>
               </div>
               
               <div className="flex space-x-3 pt-4">
