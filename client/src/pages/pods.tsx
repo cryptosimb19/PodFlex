@@ -79,7 +79,7 @@ export default function PodsPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">FlexAccess</h1>
-              <p className="text-sm text-gray-600">Find Bay Club membership pods</p>
+              <p className="text-sm text-gray-600">Fun is better when Shared</p>
             </div>
             <Button 
               onClick={() => navigate("/create-pod")}

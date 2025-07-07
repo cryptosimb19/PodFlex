@@ -91,7 +91,7 @@ export default function SearchScreen() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">FlexAccess</h1>
-                <p className="text-sm text-gray-600">Bay Club Pod Sharing</p>
+                <p className="text-sm text-gray-600">Fun is better when Shared</p>
               </div>
             </div>
             <Button 
