@@ -34,8 +34,8 @@ export default function PodsPage() {
       pod.clubName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pod.description.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesRegion = !selectedRegion || pod.clubRegion === selectedRegion;
-    const matchesType = !selectedType || pod.membershipType === selectedType;
+    const matchesRegion = !selectedRegion || selectedRegion === 'all' || pod.clubRegion === selectedRegion;
+    const matchesType = !selectedType || selectedType === 'all' || pod.membershipType === selectedType;
     
     return matchesSearch && matchesRegion && matchesType;
   });
@@ -109,7 +109,7 @@ export default function PodsPage() {
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Regions</SelectItem>
+                <SelectItem value="all">All Regions</SelectItem>
                 {regions.map(region => (
                   <SelectItem key={region} value={region}>{region}</SelectItem>
                 ))}
@@ -121,7 +121,7 @@ export default function PodsPage() {
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 {membershipTypes.map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}

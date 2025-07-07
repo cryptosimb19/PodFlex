@@ -65,8 +65,8 @@ export default function SearchScreen() {
   };
 
   const clearFilters = () => {
-    setSelectedRegion("");
-    setSelectedMembershipType("");
+    setSelectedRegion("any");
+    setSelectedMembershipType("any");
     setSelectedAmenities([]);
     setSearchQuery("");
   };
@@ -132,7 +132,7 @@ export default function SearchScreen() {
                   <SelectValue placeholder="Any region" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any region</SelectItem>
+                  <SelectItem value="any">Any region</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>
                       {region}
@@ -149,7 +149,7 @@ export default function SearchScreen() {
                   <SelectValue placeholder="Any type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any type</SelectItem>
+                  <SelectItem value="any">Any type</SelectItem>
                   {membershipTypes.map(type => (
                     <SelectItem key={type} value={type}>
                       {type}
