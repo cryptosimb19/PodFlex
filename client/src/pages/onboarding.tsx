@@ -89,36 +89,36 @@ export default function OnboardingWizard() {
   const getAvailableMembershipLevelsForClub = (club: string) => {
     const membershipsByClub: Record<string, Array<{value: string, label: string, description: string}>> = {
       "Boulder Ridge Golf Club": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" }
       ],
       "Bay Club Courtside": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" }
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay access" }
       ],
       "Bay Club Pleasanton": [
-        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
-        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
-        { value: "Single Site", label: "Single Site", description: "$227/mo - Bay Club Pleasanton only" },
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
+        { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" },
+        { value: "Single Site", label: "Single Site", description: "Bay Club Pleasanton only" },
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" }
       ],
       "Bay Club Fremont": [
-        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
-        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
-        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
-        { value: "Single Site", label: "Single Site", description: "$227/mo - Bay Club Fremont only" }
+        { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" },
+        { value: "Single Site", label: "Single Site", description: "Bay Club Fremont only" }
       ],
       "Crow Canyon Country Club": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" },
-        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
-        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
-        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" }
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" }
       ],
       "Bay Club Walnut Creek": [
-        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" },
-        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" }
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" }
       ]
     };
     return membershipsByClub[club] || [];
