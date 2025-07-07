@@ -37,50 +37,49 @@ export default function OnboardingWizard() {
   const getAvailableClubsForCampus = (campus: string) => {
     const clubsByCampus: Record<string, Array<{value: string, label: string}>> = {
       "San Francisco": [
-        { value: "Bay Club San Francisco", label: "Bay Club San Francisco" },
-        { value: "Bay Club Financial District", label: "Bay Club Financial District" },
-        { value: "Bay Club Gateway", label: "Bay Club Gateway" },
-        { value: "Bay Club South San Francisco", label: "Bay Club South San Francisco" }
+        { value: "Financial District", label: "Financial District" },
+        { value: "Gateway", label: "Gateway" },
+        { value: "San Francisco", label: "San Francisco" },
+        { value: "South San Francisco", label: "South San Francisco" }
       ],
       "Marin": [
-        { value: "Bay Club Marin", label: "Bay Club Marin" },
-        { value: "Bay Club Ross Valley", label: "Bay Club Ross Valley" },
-        { value: "Bay Club Rolling Hills", label: "Bay Club Rolling Hills" },
-        { value: "StoneTree Golf Club", label: "StoneTree Golf Club" }
+        { value: "Marin", label: "Marin" },
+        { value: "StoneTree Golf Club", label: "StoneTree Golf Club" },
+        { value: "Rolling Hills", label: "Rolling Hills" },
+        { value: "Ross Valley", label: "Ross Valley" }
       ],
       "East Bay": [
-        { value: "Bay Club Walnut Creek", label: "Bay Club Walnut Creek" },
-        { value: "Bay Club Pleasanton", label: "Bay Club Pleasanton" },
-        { value: "Bay Club Fremont", label: "Bay Club Fremont" },
-        { value: "Crow Canyon Country Club", label: "Crow Canyon Country Club" }
+        { value: "Pleasanton", label: "Pleasanton" },
+        { value: "Fremont", label: "Fremont" },
+        { value: "Crow Canyon Country Club", label: "Crow Canyon Country Club" },
+        { value: "Walnut Creek", label: "Walnut Creek" }
       ],
       "Peninsula": [
-        { value: "Bay Club Redwood Shores", label: "Bay Club Redwood Shores" },
-        { value: "Bay Club Broadway Tennis", label: "Bay Club Broadway Tennis" }
+        { value: "Broadway Tennis", label: "Broadway Tennis" },
+        { value: "Redwood Shores", label: "Redwood Shores" }
       ],
       "Santa Clara": [
-        { value: "Bay Club Santa Clara", label: "Bay Club Santa Clara" }
+        { value: "Santa Clara", label: "Santa Clara" }
       ],
       "San Jose": [
-        { value: "Bay Club Courtside", label: "Bay Club Courtside" },
-        { value: "Boulder Ridge Golf Club", label: "Boulder Ridge Golf Club" }
+        { value: "Boulder Ridge Golf Club", label: "Boulder Ridge Golf Club" },
+        { value: "Courtside", label: "Courtside" }
       ],
       "Washington": [
-        { value: "Bay Club Bellevue", label: "Bay Club Bellevue" },
-        { value: "Bay Club Redmond", label: "Bay Club Redmond" },
-        { value: "Bay Club West Seattle", label: "Bay Club West Seattle" }
+        { value: "PRO Club Seattle", label: "PRO Club Seattle" },
+        { value: "PRO Club Bellevue", label: "PRO Club Bellevue" }
       ],
       "San Diego": [
-        { value: "Bay Club Mission Bay", label: "Bay Club Mission Bay" },
-        { value: "Bay Club Scripps Ranch", label: "Bay Club Scripps Ranch" }
+        { value: "Carmel Valley", label: "Carmel Valley" },
+        { value: "Fairbanks Ranch Country Club", label: "Fairbanks Ranch Country Club" }
       ],
       "Los Angeles": [
-        { value: "Bay Club Manhattan Beach", label: "Bay Club Manhattan Beach" },
-        { value: "Bay Club Santa Monica", label: "Bay Club Santa Monica" }
+        { value: "El Segundo", label: "El Segundo" },
+        { value: "Redondo Beach", label: "Redondo Beach" },
+        { value: "Santa Monica", label: "Santa Monica" }
       ],
       "Oregon": [
-        { value: "Bay Club Portland", label: "Bay Club Portland" },
-        { value: "Bay Club Lake Oswego", label: "Bay Club Lake Oswego" }
+        { value: "Portland", label: "Portland" }
       ]
     };
     return clubsByCampus[campus] || [];
@@ -88,27 +87,29 @@ export default function OnboardingWizard() {
   
   const getAvailableMembershipLevelsForClub = (club: string) => {
     const membershipsByClub: Record<string, Array<{value: string, label: string, description: string}>> = {
+      // San Jose
       "Boulder Ridge Golf Club": [
         { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" }
       ],
-      "Bay Club Courtside": [
+      "Courtside": [
         { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay access" }
       ],
-      "Bay Club Pleasanton": [
+      // East Bay
+      "Pleasanton": [
         { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" },
         { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "East Bay + Tennis access" },
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" },
-        { value: "Single Site", label: "Single Site", description: "Bay Club Pleasanton only" },
+        { value: "Single Site", label: "Single Site", description: "Pleasanton only" },
         { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" }
       ],
-      "Bay Club Fremont": [
+      "Fremont": [
         { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" },
         { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "East Bay + Tennis access" },
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" },
-        { value: "Single Site", label: "Single Site", description: "Bay Club Fremont only" }
+        { value: "Single Site", label: "Single Site", description: "Fremont only" }
       ],
       "Crow Canyon Country Club": [
         { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
@@ -116,9 +117,107 @@ export default function OnboardingWizard() {
         { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "East Bay + Tennis access" },
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" }
       ],
-      "Bay Club Walnut Creek": [
+      "Walnut Creek": [
         { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
-        { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" }
+        { value: "East Bay Campus", label: "East Bay Campus", description: "East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" },
+        { value: "Single Site", label: "Single Site", description: "Walnut Creek only" }
+      ],
+      // San Francisco
+      "Financial District": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" },
+        { value: "Single Site", label: "Single Site", description: "Financial District only" }
+      ],
+      "Gateway": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" }
+      ],
+      "San Francisco": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" }
+      ],
+      "South San Francisco": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" }
+      ],
+      // Peninsula
+      "Broadway Tennis": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" }
+      ],
+      "Redwood Shores": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" }
+      ],
+      // Oregon
+      "Portland": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Single Site", label: "Single Site", description: "Portland only" }
+      ],
+      // Los Angeles
+      "El Segundo": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club LA", label: "Executive Club LA", description: "Los Angeles area locations" },
+        { value: "Executive Club Southern CA", label: "Executive Club Southern CA", description: "Southern California locations" }
+      ],
+      "Redondo Beach": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club LA", label: "Executive Club LA", description: "Los Angeles area locations" },
+        { value: "Executive Club Southern CA", label: "Executive Club Southern CA", description: "Southern California locations" }
+      ],
+      "Santa Monica": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club LA", label: "Executive Club LA", description: "Los Angeles area locations" },
+        { value: "Executive Club Southern CA", label: "Executive Club Southern CA", description: "Southern California locations" },
+        { value: "Single Site", label: "Single Site", description: "Santa Monica only" }
+      ],
+      // Santa Clara
+      "Santa Clara": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "South Bay + SF + East Bay" },
+        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "Santa Clara campus locations" }
+      ],
+      // San Diego
+      "Carmel Valley": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club Southern CA", label: "Executive Club Southern CA", description: "Southern California locations" }
+      ],
+      "Fairbanks Ranch Country Club": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" }
+      ],
+      // Washington
+      "PRO Club Seattle": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Single Site", label: "Single Site", description: "PRO Club Seattle only" },
+        { value: "Campus", label: "Campus", description: "Washington campus locations" }
+      ],
+      "PRO Club Bellevue": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Single Site", label: "Single Site", description: "PRO Club Bellevue only" },
+        { value: "Campus", label: "Campus", description: "Washington campus locations" }
+      ],
+      // Marin
+      "Marin": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" }
+      ],
+      "StoneTree Golf Club": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" }
+      ],
+      "Rolling Hills": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "SF + Marin + East Bay markets" },
+        { value: "Single Site", label: "Single Site", description: "Rolling Hills only" }
+      ],
+      "Ross Valley": [
+        { value: "Club West Gold", label: "Club West Gold", description: "All Bay Club locations + 4-day sports booking" }
       ]
     };
     return membershipsByClub[club] || [];

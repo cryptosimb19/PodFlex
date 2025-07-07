@@ -1,0 +1,74 @@
+| Campus        | Club                         | Membership Level              |
+|---------------|------------------------------|-------------------------------|
+| San Jose      | Boulder Ridge Golf Club      | Club West Gold                |
+| San Jose      | Courtside                    | Club West Gold                |
+| San Jose      | Courtside                    | Executive Club South Bay      |
+| East Bay      | Pleasanton                   | East Bay Campus               |
+| East Bay      | Pleasanton                   | Executive Club East Bay       |
+| East Bay      | Pleasanton                   | Executive Club North Bay      |
+| East Bay      | Pleasanton                   | Executive Club South Bay      |
+| East Bay      | Pleasanton                   | Single Site                   |
+| East Bay      | Pleasanton                   | Club West Gold                |
+| East Bay      | Fremont                      | East Bay Campus               |
+| East Bay      | Fremont                      | Executive Club East Bay       |
+| East Bay      | Fremont                      | Executive Club North Bay      |
+| East Bay      | Fremont                      | Executive Club South Bay      |
+| East Bay      | Fremont                      | Single Site                   |
+| East Bay      | Crow Canyon Country Club     | Club West Gold                |
+| East Bay      | Crow Canyon Country Club     | East Bay Campus               |
+| East Bay      | Crow Canyon Country Club     | Executive Club East Bay       |
+| East Bay      | Crow Canyon Country Club     | Executive Club North Bay      |
+| East Bay      | Walnut Creek                 | Club West Gold                |
+| East Bay      | Walnut Creek                 | East Bay Campus               |
+| East Bay      | Walnut Creek                 | Executive Club East Bay       |
+| East Bay      | Walnut Creek                 | Executive Club North Bay      |
+| East Bay      | Walnut Creek                 | Executive Club South Bay      |
+| East Bay      | Walnut Creek                 | Single Site                   |
+| San Francisco | Financial District           | Club West Gold                |
+| San Francisco | Financial District           | Executive Club North Bay      |
+| San Francisco | Financial District           | Executive Club South Bay      |
+| San Francisco | Financial District           | Single Site                   |
+| San Francisco | Gateway                      | Club West Gold                |
+| San Francisco | Gateway                      | Executive Club North Bay      |
+| San Francisco | San Francisco                | Club West Gold                |
+| San Francisco | San Francisco                | Executive Club North Bay      |
+| San Francisco | San Francisco                | Executive Club South Bay      |
+| San Francisco | South San Francisco          | Club West Gold                |
+| San Francisco | South San Francisco          | Executive Club North Bay      |
+| San Francisco | South San Francisco          | Executive Club South Bay      |
+| Peninsula     | Broadway Tennis              | Club West Gold                |
+| Peninsula     | Broadway Tennis              | Executive Club South Bay      |
+| Peninsula     | Redwood Shores               | Club West Gold                |
+| Peninsula     | Redwood Shores               | Executive Club South Bay      |
+| Oregon        | Portland                     | Club West Gold                |
+| Oregon        | Portland                     | Single Site                   |
+| Los Angeles   | El Segundo                   | Club West Gold                |
+| Los Angeles   | El Segundo                   | Executive Club LA             |
+| Los Angeles   | El Segundo                   | Executive Club Southern CA    |
+| Los Angeles   | Redondo Beach                | Club West Gold                |
+| Los Angeles   | Redondo Beach                | Executive Club LA             |
+| Los Angeles   | Redondo Beach                | Executive Club Southern CA    |
+| Los Angeles   | Santa Monica                 | Club West Gold                |
+| Los Angeles   | Santa Monica                 | Executive Club LA             |
+| Los Angeles   | Santa Monica                 | Executive Club Southern CA    |
+| Los Angeles   | Santa Monica                 | Single Site                   |
+| Santa Clara   | Santa Clara                  | Club West Gold                |
+| Santa Clara   | Santa Clara                  | Executive Club South Bay      |
+| Santa Clara   | Santa Clara                  | Santa Clara Campus            |
+| San Diego     | Carmel Valley                | Club West Gold                |
+| San Diego     | Carmel Valley                | Executive Club Southern CA    |
+| San Diego     | Fairbanks Ranch Country Club | Club West Gold                |
+| Washington    | PRO Club Seattle             | Club West Gold                |
+| Washington    | PRO Club Seattle             | Single Site                   |
+| Washington    | PRO Club Seattle             | Campus                        |
+| Washington    | PRO Club Bellevue            | Club West Gold                |
+| Washington    | PRO Club Bellevue            | Single Site                   |
+| Washington    | PRO Club Bellevue            | Campus                        |
+| Marin         | Marin                        | Club West Gold                |
+| Marin         | Marin                        | Executive Club North Bay      |
+| Marin         | StoneTree Golf Club          | Club West Gold                |
+| Marin         | StoneTree Golf Club          | Executive Club North Bay      |
+| Marin         | Rolling Hills                | Club West Gold                |
+| Marin         | Rolling Hills                | Executive Club North Bay      |
+| Marin         | Rolling Hills                | Single Site                   |
+| Marin         | Ross Valley                  | Club West Gold                |

@@ -145,6 +145,12 @@ Changelog:
   - Hierarchical campus-club-membership selection with authentic Bay Club data
   - Membership ID field made optional for users without existing memberships
   - Simplified onboarding flow by consolidating membership info into single step
+- July 07, 2025. Integrated complete authentic Bay Club membership data across all 10 campuses
+  - Updated club names to match official Bay Club naming (removed "Bay Club" prefix)
+  - Added San Francisco campus with 4 locations (Financial District, Gateway, San Francisco, South San Francisco)
+  - Expanded to include all authentic membership levels per location from official data
+  - Added new membership types: Executive Club LA, Executive Club Southern CA, Campus (Washington)
+  - Removed promotional messaging from welcome and user selection pages for cleaner UX
 ```
 
 ## User Preferences
