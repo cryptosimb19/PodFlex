@@ -10,8 +10,10 @@ interface UserData {
   firstName: string;
   lastName: string;
   email: string;
+  primaryCampus: string;
+  primaryClub: string;
+  membershipLevel: string;
   membershipId: string;
-  preferredRegion: string;
 }
 
 export default function OnboardingWizard() {
@@ -20,17 +22,88 @@ export default function OnboardingWizard() {
     firstName: "",
     lastName: "",
     email: "",
+    primaryCampus: "",
+    primaryClub: "",
+    membershipLevel: "",
     membershipId: "",
-    preferredRegion: "",
   });
   const [, navigate] = useLocation();
   
   // Get user type from URL parameters
   const searchParams = new URLSearchParams(window.location.search);
   const userType = searchParams.get('type') || 'seeker'; // 'seeker' or 'lead'
+  
+  // Helper functions for dynamic form options
+  const getAvailableClubsForCampus = (campus: string) => {
+    const clubsByCampus: Record<string, Array<{value: string, label: string}>> = {
+      "San Francisco Campus": [
+        { value: "Bay Club San Francisco", label: "Bay Club San Francisco" },
+        { value: "Bay Club Financial District", label: "Bay Club Financial District" },
+        { value: "Bay Club Gateway", label: "Bay Club Gateway" },
+        { value: "Bay Club South San Francisco", label: "Bay Club South San Francisco" }
+      ],
+      "Marin Campus": [
+        { value: "Bay Club Marin", label: "Bay Club Marin" },
+        { value: "Bay Club Ross Valley", label: "Bay Club Ross Valley" },
+        { value: "Bay Club Rolling Hills", label: "Bay Club Rolling Hills" },
+        { value: "StoneTree Golf Club", label: "StoneTree Golf Club" }
+      ],
+      "East Bay Campus": [
+        { value: "Bay Club Walnut Creek", label: "Bay Club Walnut Creek" },
+        { value: "Bay Club Pleasanton", label: "Bay Club Pleasanton" },
+        { value: "Bay Club Fremont", label: "Bay Club Fremont" },
+        { value: "Crow Canyon Country Club", label: "Crow Canyon Country Club" }
+      ],
+      "Peninsula Campus": [
+        { value: "Bay Club Redwood Shores", label: "Bay Club Redwood Shores" },
+        { value: "Bay Club Broadway Tennis", label: "Bay Club Broadway Tennis" }
+      ],
+      "Santa Clara Campus": [
+        { value: "Bay Club Santa Clara", label: "Bay Club Santa Clara" }
+      ],
+      "San Jose Campus": [
+        { value: "Bay Club Courtside", label: "Bay Club Courtside" },
+        { value: "Boulder Ridge Golf Club", label: "Boulder Ridge Golf Club" }
+      ]
+    };
+    return clubsByCampus[campus] || [];
+  };
+  
+  const getAvailableMembershipLevelsForClub = (club: string) => {
+    const membershipsByClub: Record<string, Array<{value: string, label: string, description: string}>> = {
+      "Bay Club Fremont": [
+        { value: "Single Site", label: "Single Site", description: "$227/mo - Bay Club Fremont only" },
+        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Fremont + Santa Clara" },
+        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
+      ],
+      "Bay Club Santa Clara": [
+        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Santa Clara + Fremont" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
+      ],
+      "Bay Club Courtside": [
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
+        { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
+      ]
+    };
+    return membershipsByClub[club] || [];
+  };
 
   const handleInputChange = (key: keyof UserData, value: string) => {
-    setUserData(prev => ({ ...prev, [key]: value }));
+    setUserData(prev => {
+      // Reset dependent fields when campus or club changes
+      if (key === 'primaryCampus') {
+        return { ...prev, [key]: value, primaryClub: "", membershipLevel: "" };
+      }
+      if (key === 'primaryClub') {
+        return { ...prev, [key]: value, membershipLevel: "" };
+      }
+      return { ...prev, [key]: value };
+    });
   };
 
   const handleFinish = async () => {
@@ -40,8 +113,8 @@ export default function OnboardingWizard() {
   };
 
   const canProceedToStep2 = userData.firstName && userData.lastName && userData.email;
-  const canProceedToStep3 = userData.membershipId;
-  const canFinish = userData.preferredRegion;
+  const canProceedToStep3 = userData.primaryCampus && userData.primaryClub && userData.membershipLevel;
+  const canFinish = true; // No additional step needed
 
   const renderStep = () => {
     switch (currentStep) {
@@ -113,7 +186,67 @@ export default function OnboardingWizard() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID</label>
+                <label className="text-sm font-medium">Primary Campus</label>
+                <Select value={userData.primaryCampus} onValueChange={(value) => handleInputChange('primaryCampus', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your primary campus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="San Francisco Campus">San Francisco Campus</SelectItem>
+                    <SelectItem value="San Jose Campus">San Jose Campus</SelectItem>
+                    <SelectItem value="East Bay Campus">East Bay Campus</SelectItem>
+                    <SelectItem value="Peninsula Campus">Peninsula Campus</SelectItem>
+                    <SelectItem value="Santa Clara Campus">Santa Clara Campus</SelectItem>
+                    <SelectItem value="Marin Campus">Marin Campus</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Primary Club</label>
+                <Select 
+                  value={userData.primaryClub} 
+                  onValueChange={(value) => handleInputChange('primaryClub', value)}
+                  disabled={!userData.primaryCampus}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={userData.primaryCampus ? "Select your primary club" : "Select campus first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableClubsForCampus(userData.primaryCampus).map((club) => (
+                      <SelectItem key={club.value} value={club.value}>
+                        {club.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Membership Level</label>
+                <Select 
+                  value={userData.membershipLevel} 
+                  onValueChange={(value) => handleInputChange('membershipLevel', value)}
+                  disabled={!userData.primaryClub}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={userData.primaryClub ? "Select membership level" : "Select club first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableMembershipLevelsForClub(userData.primaryClub).map((membership) => (
+                      <SelectItem key={membership.value} value={membership.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{membership.label}</span>
+                          <span className="text-xs text-gray-500">{membership.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Bay Club Membership ID <span className="text-muted-foreground">(optional)</span></label>
                 <Input
                   value={userData.membershipId}
                   onChange={(e) => handleInputChange('membershipId', e.target.value)}
@@ -121,9 +254,10 @@ export default function OnboardingWizard() {
                   className="font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app
+                  Found on your Bay Club membership card or app. Leave blank if you don't have one yet.
                 </p>
               </div>
+              
               <div className="flex space-x-3">
                 <Button 
                   variant="outline"
@@ -133,77 +267,18 @@ export default function OnboardingWizard() {
                   Back
                 </Button>
                 <Button 
-                  onClick={() => setCurrentStep(3)}
+                  onClick={handleFinish}
                   disabled={!canProceedToStep3}
                   className="flex-1"
                 >
-                  Continue
+                  Complete Registration
                 </Button>
               </div>
             </CardContent>
           </Card>
         );
 
-      case 3:
-        return (
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="w-8 h-8 text-accent" />
-              </div>
-              <CardTitle className="text-2xl">
-                {userType === 'lead' ? 'Pod Region' : 'Preferred Region'}
-              </CardTitle>
-              <p className="text-muted-foreground">
-                {userType === 'lead' 
-                  ? 'Select the region where your pod will be based' 
-                  : 'Choose your preferred Bay Club region to see relevant pods'
-                }
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Region</label>
-                <Select value={userData.preferredRegion} onValueChange={(value) => handleInputChange('preferredRegion', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your preferred region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="San Jose">San Jose Campus</SelectItem>
-                    <SelectItem value="San Francisco">San Francisco Campus</SelectItem>
-                    <SelectItem value="Peninsula">Peninsula Campus</SelectItem>
-                    <SelectItem value="Marin">Marin Campus</SelectItem>
-                    <SelectItem value="East Bay">East Bay Campus</SelectItem>
-                    <SelectItem value="Santa Clara">Santa Clara Campus</SelectItem>
-                    <SelectItem value="Los Angeles">Los Angeles Campus</SelectItem>
-                    <SelectItem value="San Diego">San Diego Campus</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  You'll see pods in your preferred region first, but can browse all available pods.
-                </p>
-              </div>
-              <div className="flex space-x-3">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCurrentStep(2)}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button 
-                  onClick={handleFinish}
-                  disabled={!canFinish}
-                  className="flex-1"
-                >
-                  {userType === 'lead' ? 'Create Pod Dashboard' : 'Find Pods'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
+
 
       default:
         return null;

@@ -140,6 +140,11 @@ Changelog:
   - Club location drives available membership tiers (Single Site, Campus, Executive levels)
   - Authentic Bay Club pricing from $227/mo to $445/mo based on membership tier
   - Location-specific membership options reflecting real Bay Club structure
+- July 07, 2025. Updated membership page structure to new 4-field format
+  - Primary Campus → Primary Club → Membership Level → Bay Club Membership ID (optional)
+  - Hierarchical campus-club-membership selection with authentic Bay Club data
+  - Membership ID field made optional for users without existing memberships
+  - Simplified onboarding flow by consolidating membership info into single step
 ```
 
 ## User Preferences

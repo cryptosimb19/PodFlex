@@ -17,9 +17,10 @@ interface PodLeaderData {
   phone: string;
   
   // Membership Info
-  membershipId: string;
-  membershipType: string;
-  clubLocation: string;
+  primaryCampus: string;
+  primaryClub: string;
+  membershipLevel: string;
+  membershipId: string; // Optional - if already a member
   
   // Pod Details
   podName: string;
@@ -40,9 +41,10 @@ export default function PodLeaderRegistration() {
     lastName: "",
     email: "",
     phone: "",
-    membershipId: "",
-    membershipType: "",
-    clubLocation: "",
+    primaryCampus: "",
+    primaryClub: "",
+    membershipLevel: "",
+    membershipId: "", // Optional - if already a member
     podName: "",
     podDescription: "",
     monthlyFee: "",
@@ -55,21 +57,73 @@ export default function PodLeaderRegistration() {
 
   const handleInputChange = (key: keyof PodLeaderData, value: string | boolean | string[]) => {
     setFormData(prev => {
-      // Reset membership type when club location changes
-      if (key === 'clubLocation') {
-        return { ...prev, [key]: value, membershipType: "" };
+      // Reset dependent fields when campus or club changes
+      if (key === 'primaryCampus') {
+        return { ...prev, [key]: value, primaryClub: "", membershipLevel: "" };
+      }
+      if (key === 'primaryClub') {
+        return { ...prev, [key]: value, membershipLevel: "" };
       }
       return { ...prev, [key]: value };
     });
   };
 
-  // Get available membership types based on selected club location
-  const getAvailableMembershipTypes = () => {
-    const location = formData.clubLocation;
+  // Get available campuses
+  const getAvailableCampuses = () => {
+    return [
+      { value: "San Francisco Campus", label: "San Francisco Campus" },
+      { value: "Marin Campus", label: "Marin Campus" },
+      { value: "East Bay Campus", label: "East Bay Campus" },
+      { value: "Peninsula Campus", label: "Peninsula Campus" },
+      { value: "Santa Clara Campus", label: "Santa Clara Campus" },
+      { value: "San Jose Campus", label: "San Jose Campus" }
+    ];
+  };
+
+  // Get available clubs based on selected campus
+  const getAvailableClubs = () => {
+    const campus = formData.primaryCampus;
+    const clubsByCampus: Record<string, Array<{value: string, label: string}>> = {
+      "San Francisco Campus": [
+        { value: "Bay Club San Francisco", label: "Bay Club San Francisco" },
+        { value: "Bay Club Financial District", label: "Bay Club Financial District" },
+        { value: "Bay Club Gateway", label: "Bay Club Gateway" },
+        { value: "Bay Club South San Francisco", label: "Bay Club South San Francisco" }
+      ],
+      "Marin Campus": [
+        { value: "Bay Club Marin", label: "Bay Club Marin" },
+        { value: "Bay Club Ross Valley", label: "Bay Club Ross Valley" },
+        { value: "Bay Club Rolling Hills", label: "Bay Club Rolling Hills" },
+        { value: "StoneTree Golf Club", label: "StoneTree Golf Club" }
+      ],
+      "East Bay Campus": [
+        { value: "Bay Club Walnut Creek", label: "Bay Club Walnut Creek" },
+        { value: "Bay Club Pleasanton", label: "Bay Club Pleasanton" },
+        { value: "Bay Club Fremont", label: "Bay Club Fremont" },
+        { value: "Crow Canyon Country Club", label: "Crow Canyon Country Club" }
+      ],
+      "Peninsula Campus": [
+        { value: "Bay Club Redwood Shores", label: "Bay Club Redwood Shores" },
+        { value: "Bay Club Broadway Tennis", label: "Bay Club Broadway Tennis" }
+      ],
+      "Santa Clara Campus": [
+        { value: "Bay Club Santa Clara", label: "Bay Club Santa Clara" }
+      ],
+      "San Jose Campus": [
+        { value: "Bay Club Courtside", label: "Bay Club Courtside" },
+        { value: "Boulder Ridge Golf Club", label: "Boulder Ridge Golf Club" }
+      ]
+    };
+    return clubsByCampus[campus] || [];
+  };
+
+  // Get available membership levels based on selected club
+  const getAvailableMembershipLevels = () => {
+    const club = formData.primaryClub;
     
-    // Bay Club authentic membership structure based on location
-    const membershipsByLocation: Record<string, Array<{value: string, label: string, description: string}>> = {
-      "Fremont": [
+    // Bay Club authentic membership levels based on club
+    const membershipsByClub: Record<string, Array<{value: string, label: string, description: string}>> = {
+      "Bay Club Fremont": [
         { value: "Single Site", label: "Single Site", description: "$227/mo - Bay Club Fremont only" },
         { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Fremont + Santa Clara" },
         { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
@@ -78,53 +132,53 @@ export default function PodLeaderRegistration() {
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Santa Clara": [
+      "Bay Club Santa Clara": [
         { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Santa Clara + Fremont" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Courtside": [
+      "Bay Club Courtside": [
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Redwood Shores": [
+      "Bay Club Redwood Shores": [
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Walnut Creek": [
+      "Bay Club Walnut Creek": [
         { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
         { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Pleasanton": [
+      "Bay Club Pleasanton": [
         { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
         { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "San Francisco": [
+      "Bay Club San Francisco": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Financial District": [
+      "Bay Club Financial District": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Marin": [
+      "Bay Club Marin": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ],
-      "Ross Valley": [
+      "Bay Club Ross Valley": [
         { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
         { value: "Club West Gold", label: "Club West Gold", description: "$445/mo - All Bay Club locations + 4-day sports booking" }
       ]
     };
 
-    return membershipsByLocation[location] || [];
+    return membershipsByClub[club] || [];
   };
 
   const handleRequirementToggle = (requirement: string) => {
@@ -145,7 +199,7 @@ export default function PodLeaderRegistration() {
   const totalSteps = 4;
 
   const canProceedStep1 = formData.firstName && formData.lastName && formData.email && formData.phone;
-  const canProceedStep2 = formData.clubLocation && formData.membershipType && formData.membershipId;
+  const canProceedStep2 = formData.primaryCampus && formData.primaryClub && formData.membershipLevel;
   const canProceedStep3 = formData.podName && formData.podDescription && formData.monthlyFee && formData.availableSpots && formData.startDate;
   const canSubmit = formData.agreesToTerms;
 
@@ -239,38 +293,58 @@ export default function PodLeaderRegistration() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Primary Club Location</label>
-                <Select value={formData.clubLocation} onValueChange={(value) => handleInputChange('clubLocation', value)}>
+                <label className="text-sm font-medium">Primary Campus</label>
+                <Select value={formData.primaryCampus} onValueChange={(value) => handleInputChange('primaryCampus', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select your primary club" />
+                    <SelectValue placeholder="Select your primary campus" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Fremont">Bay Club Fremont</SelectItem>
-                    <SelectItem value="Santa Clara">Bay Club Santa Clara</SelectItem>
-                    <SelectItem value="Courtside">Bay Club Courtside (San Jose)</SelectItem>
-                    <SelectItem value="Redwood Shores">Bay Club Redwood Shores</SelectItem>
-                    <SelectItem value="Walnut Creek">Bay Club Walnut Creek</SelectItem>
-                    <SelectItem value="Pleasanton">Bay Club Pleasanton</SelectItem>
-                    <SelectItem value="San Francisco">Bay Club San Francisco</SelectItem>
-                    <SelectItem value="Financial District">Bay Club Financial District</SelectItem>
-                    <SelectItem value="Marin">Bay Club Marin</SelectItem>
-                    <SelectItem value="Ross Valley">Bay Club Ross Valley</SelectItem>
+                    {getAvailableCampuses().map((campus) => (
+                      <SelectItem key={campus.value} value={campus.value}>
+                        {campus.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Membership Type</label>
+                <label className="text-sm font-medium">Primary Club</label>
                 <Select 
-                  value={formData.membershipType} 
-                  onValueChange={(value) => handleInputChange('membershipType', value)}
-                  disabled={!formData.clubLocation}
+                  value={formData.primaryClub} 
+                  onValueChange={(value) => handleInputChange('primaryClub', value)}
+                  disabled={!formData.primaryCampus}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={formData.clubLocation ? "Select membership type" : "Select club location first"} />
+                    <SelectValue placeholder={formData.primaryCampus ? "Select your primary club" : "Select campus first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {getAvailableMembershipTypes().map((membership) => (
+                    {getAvailableClubs().map((club) => (
+                      <SelectItem key={club.value} value={club.value}>
+                        {club.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.primaryCampus && getAvailableClubs().length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No clubs available for this campus
+                  </p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Membership Level</label>
+                <Select 
+                  value={formData.membershipLevel} 
+                  onValueChange={(value) => handleInputChange('membershipLevel', value)}
+                  disabled={!formData.primaryClub}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.primaryClub ? "Select membership level" : "Select club first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableMembershipLevels().map((membership) => (
                       <SelectItem key={membership.value} value={membership.value}>
                         <div className="flex flex-col">
                           <span className="font-medium">{membership.label}</span>
@@ -280,15 +354,15 @@ export default function PodLeaderRegistration() {
                     ))}
                   </SelectContent>
                 </Select>
-                {formData.clubLocation && getAvailableMembershipTypes().length === 0 && (
+                {formData.primaryClub && getAvailableMembershipLevels().length === 0 && (
                   <p className="text-xs text-muted-foreground">
-                    No membership options available for this location
+                    No membership levels available for this club
                   </p>
                 )}
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID</label>
+                <label className="text-sm font-medium">Bay Club Membership ID <span className="text-muted-foreground">(optional - if already a member)</span></label>
                 <Input
                   value={formData.membershipId}
                   onChange={(e) => handleInputChange('membershipId', e.target.value)}
@@ -296,7 +370,7 @@ export default function PodLeaderRegistration() {
                   className="font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app
+                  Found on your Bay Club membership card or app. Leave blank if you don't have a membership yet.
                 </p>
               </div>
               
