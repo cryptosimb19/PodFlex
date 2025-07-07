@@ -54,7 +54,67 @@ export default function PodLeaderRegistration() {
   const [, navigate] = useLocation();
 
   const handleInputChange = (key: keyof PodLeaderData, value: string | boolean | string[]) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormData(prev => {
+      // Reset membership type when club location changes
+      if (key === 'clubLocation') {
+        return { ...prev, [key]: value, membershipType: "" };
+      }
+      return { ...prev, [key]: value };
+    });
+  };
+
+  // Get available membership types based on selected club location
+  const getAvailableMembershipTypes = () => {
+    const location = formData.clubLocation;
+    
+    // Bay Club authentic membership structure based on location
+    const membershipsByLocation: Record<string, Array<{value: string, label: string, description: string}>> = {
+      "Fremont": [
+        { value: "Single Site", label: "Single Site", description: "$227/mo - Bay Club Fremont only" },
+        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Fremont + Santa Clara" },
+        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+      ],
+      "Santa Clara": [
+        { value: "Santa Clara Campus", label: "Santa Clara Campus", description: "$304/mo - Santa Clara + Fremont" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+      ],
+      "Courtside": [
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" }
+      ],
+      "Redwood Shores": [
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay access" }
+      ],
+      "Walnut Creek": [
+        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" }
+      ],
+      "Pleasanton": [
+        { value: "East Bay Campus", label: "East Bay Campus", description: "$265/mo - East Bay locations + Crow Canyon CC" },
+        { value: "Executive Club East Bay", label: "Executive Club East Bay", description: "$355/mo - East Bay + Tennis access" },
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+      ],
+      "San Francisco": [
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+      ],
+      "Financial District": [
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" },
+        { value: "Executive Club South Bay", label: "Executive Club South Bay", description: "$375/mo - South Bay + SF + East Bay" }
+      ],
+      "Marin": [
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" }
+      ],
+      "Ross Valley": [
+        { value: "Executive Club North Bay", label: "Executive Club North Bay", description: "$335/mo - SF + Marin + East Bay markets" }
+      ]
+    };
+
+    return membershipsByLocation[location] || [];
   };
 
   const handleRequirementToggle = (requirement: string) => {
@@ -175,31 +235,46 @@ export default function PodLeaderRegistration() {
                     <SelectValue placeholder="Select your primary club" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Courtside">Courtside (San Jose)</SelectItem>
-                    <SelectItem value="Redwood Shores">Redwood Shores</SelectItem>
-                    <SelectItem value="San Francisco">San Francisco</SelectItem>
-                    <SelectItem value="Walnut Creek">Walnut Creek</SelectItem>
-                    <SelectItem value="Marin">Marin</SelectItem>
-                    <SelectItem value="Santa Clara">Santa Clara</SelectItem>
-                    <SelectItem value="Los Gatos">Los Gatos</SelectItem>
-                    <SelectItem value="Fremont">Fremont</SelectItem>
+                    <SelectItem value="Fremont">Bay Club Fremont</SelectItem>
+                    <SelectItem value="Santa Clara">Bay Club Santa Clara</SelectItem>
+                    <SelectItem value="Courtside">Bay Club Courtside (San Jose)</SelectItem>
+                    <SelectItem value="Redwood Shores">Bay Club Redwood Shores</SelectItem>
+                    <SelectItem value="Walnut Creek">Bay Club Walnut Creek</SelectItem>
+                    <SelectItem value="Pleasanton">Bay Club Pleasanton</SelectItem>
+                    <SelectItem value="San Francisco">Bay Club San Francisco</SelectItem>
+                    <SelectItem value="Financial District">Bay Club Financial District</SelectItem>
+                    <SelectItem value="Marin">Bay Club Marin</SelectItem>
+                    <SelectItem value="Ross Valley">Bay Club Ross Valley</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Membership Type</label>
-                <Select value={formData.membershipType} onValueChange={(value) => handleInputChange('membershipType', value)}>
+                <Select 
+                  value={formData.membershipType} 
+                  onValueChange={(value) => handleInputChange('membershipType', value)}
+                  disabled={!formData.clubLocation}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select membership type" />
+                    <SelectValue placeholder={formData.clubLocation ? "Select membership type" : "Select club location first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Single-Club">Single-Club</SelectItem>
-                    <SelectItem value="Multi-Club">Multi-Club</SelectItem>
-                    <SelectItem value="Family">Family</SelectItem>
-                    <SelectItem value="Corporate">Corporate</SelectItem>
+                    {getAvailableMembershipTypes().map((membership) => (
+                      <SelectItem key={membership.value} value={membership.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{membership.label}</span>
+                          <span className="text-xs text-gray-500">{membership.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                {formData.clubLocation && getAvailableMembershipTypes().length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No membership options available for this location
+                  </p>
+                )}
               </div>
               
               <div className="space-y-2">

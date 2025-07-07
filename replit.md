@@ -135,6 +135,9 @@ Changelog:
   - Built 4-step pod leader registration with progress tracking
   - Customized onboarding flow based on user type (seeker vs lead)
   - Integrated form validation and comprehensive member requirements
+  - Integrated authentic Bay Club membership types by location with real pricing
+  - Dynamic membership options based on selected club location
+  - Club location drives available membership tiers (Single Site, Campus, Executive levels)
 ```
 
 ## User Preferences
