@@ -141,6 +141,23 @@ export default function PodLeaderRegistration() {
     return clubsByCampus[campus] || [];
   };
 
+  // Get membership description based on selected membership level
+  const getMembershipDescription = (membershipLevel: string) => {
+    const descriptions: Record<string, string> = {
+      "Club West Gold": "Club West Gold unlocks full access to all Bay Club locations (excluding Manhattan Country Club). Members can take advantage of a 4-day advanced booking window for all Sports with complimentary Racquet Sports at all locations (excluding PRO Club) and pay-to-play golf access with 10% off greens fees. 2 complimentary childcare hours per day per child on the membership at participating locations.",
+      "Executive Club South Bay": "Our premiere membership for fitness, group exercise, aquatics, pickleball, family – and more! – with full access to Santa Clara, Redwood Shores, and Courtside locations, as well as access to San Francisco campus and East Bay campus.",
+      "East Bay Campus": "East Bay Campus membership includes access to Walnut Creek, Pleasanton, Fremont, and Crow Canyon Country Club. Enjoy extensive amenities within the campus.",
+      "Executive Club East Bay": "Your East Bay membership that unlocks Executive Club East Bay includes access to Walnut Creek, Pleasanton, Fremont, and Crow Canyon Country Club. Enjoy amenities like aquatics, fitness, and group exercise.",
+      "Executive Club North Bay": "Our premier fitness membership in the North Bay unlocks access to San Francisco, Marin, and East Bay markets, featuring spacious athletics clubs, sports resorts, and two 18-hole golf courses.",
+      "Single Site": "Single-site membership grants access to one specific club with standard amenities. Ideal for those looking for a local option with fitness, aquatics, and group exercise programs.",
+      "Executive Club LA": "Ideal for individuals and families with varied interests, this versatile membership offers fitness, aquatics, basketball, and social at our Los Angeles clubs up and down the coast.",
+      "Executive Club Southern CA": "Includes fitness access to San Diego Campus, Los Angeles Campus, and Bay Club Financial District. Members will experience Fitness, Aquatics, Basketball, Group Fitness Programs, Social Programming, Mind-Body Programs, Family amenities, and more.",
+      "Santa Clara Campus": "Sitting on 8 acres, our expansive sports resort in the heart of Silicon Valley features fitness, aquatics, basketball, pickleball, group fitness programs, social programming, and more.",
+      "Campus": "Athletic club access to PRO Club Bellevue. Enjoy access to 12,000 sq/ft free weight center, 4 fitness centers, 4 indoor pools, 4 basketball courts, 9 squash courts, and more."
+    };
+    return descriptions[membershipLevel] || "";
+  };
+
   // Get available membership levels based on selected club
   const getAvailableMembershipLevels = () => {
     const club = formData.primaryClub;
@@ -530,6 +547,14 @@ export default function PodLeaderRegistration() {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Membership Description Display */}
+              {formData.membershipLevel && (
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-2">{formData.membershipLevel}</h4>
+                  <p className="text-sm text-blue-800">{getMembershipDescription(formData.membershipLevel)}</p>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <label className="text-sm font-medium">Pod Name</label>
                 <Input
