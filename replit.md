@@ -122,6 +122,13 @@ Changelog:
   - Updated pod descriptions with accurate club details and amenities
   - Enhanced region filtering with authentic Bay Club campus structure
   - Implemented realistic pricing based on Bay Club membership tiers
+- July 07, 2025. Updated branding with vibrant, fun logo design
+  - Replaced dumbbell icon with lightning bolt (Zap) icon
+  - Added purple-to-pink gradient backgrounds for all logo instances
+  - Updated favicon and app icons to match new lightning bolt design
+  - Changed theme colors to vibrant purple (#8B5CF6)
+  - Enhanced with shadow effects for modern, polished appearance
+  - Updated PWA manifest with new branding
 ```
 
 ## User Preferences
