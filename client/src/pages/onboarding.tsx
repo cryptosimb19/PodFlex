@@ -308,10 +308,7 @@ export default function OnboardingWizard() {
                 {userType === 'lead' ? 'Bay Club Membership Details' : 'Bay Club Membership'}
               </CardTitle>
               <p className="text-muted-foreground">
-                {userType === 'lead' 
-                  ? 'Verify your membership to create and manage pods' 
-                  : 'Help us verify your Bay Club membership'
-                }
+                Select the Location and Membership Level you are looking to join
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
