@@ -24,6 +24,10 @@ export default function OnboardingWizard() {
     preferredRegion: "",
   });
   const [, navigate] = useLocation();
+  
+  // Get user type from URL parameters
+  const searchParams = new URLSearchParams(window.location.search);
+  const userType = searchParams.get('type') || 'seeker'; // 'seeker' or 'lead'
 
   const handleInputChange = (key: keyof UserData, value: string) => {
     setUserData(prev => ({ ...prev, [key]: value }));
@@ -50,7 +54,7 @@ export default function OnboardingWizard() {
               </div>
               <CardTitle className="text-2xl">Welcome to FlexAccess</CardTitle>
               <p className="text-muted-foreground">
-                Fun is better when Shared
+                {userType === 'lead' ? 'Let\'s set up your pod leadership profile' : 'Let\'s find you the perfect pod'}
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -97,9 +101,14 @@ export default function OnboardingWizard() {
               <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-secondary" />
               </div>
-              <CardTitle className="text-2xl">Bay Club Membership</CardTitle>
+              <CardTitle className="text-2xl">
+                {userType === 'lead' ? 'Bay Club Membership Details' : 'Bay Club Membership'}
+              </CardTitle>
               <p className="text-muted-foreground">
-                Help us verify your Bay Club membership
+                {userType === 'lead' 
+                  ? 'Verify your membership to create and manage pods' 
+                  : 'Help us verify your Bay Club membership'
+                }
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -142,9 +151,14 @@ export default function OnboardingWizard() {
               <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-8 h-8 text-accent" />
               </div>
-              <CardTitle className="text-2xl">Preferred Region</CardTitle>
+              <CardTitle className="text-2xl">
+                {userType === 'lead' ? 'Pod Region' : 'Preferred Region'}
+              </CardTitle>
               <p className="text-muted-foreground">
-                Choose your preferred Bay Club region to see relevant pods
+                {userType === 'lead' 
+                  ? 'Select the region where your pod will be based' 
+                  : 'Choose your preferred Bay Club region to see relevant pods'
+                }
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -184,7 +198,7 @@ export default function OnboardingWizard() {
                   disabled={!canFinish}
                   className="flex-1"
                 >
-                  Get Started
+                  {userType === 'lead' ? 'Create Pod Dashboard' : 'Find Pods'}
                 </Button>
               </div>
             </CardContent>

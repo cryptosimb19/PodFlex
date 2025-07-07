@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import OnboardingWizard from "@/pages/onboarding";
+import UserTypeSelection from "@/pages/user-type-selection";
 import SearchScreen from "@/pages/search";
 import PodDetail from "@/pages/pod-detail";
 import { useEffect } from "react";
@@ -12,7 +13,8 @@ import { useEffect } from "react";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={OnboardingWizard} />
+      <Route path="/" component={UserTypeSelection} />
+      <Route path="/onboarding" component={OnboardingWizard} />
       <Route path="/pods" component={SearchScreen} />
       <Route path="/pod/:id" component={PodDetail} />
       <Route component={NotFound} />
