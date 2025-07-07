@@ -78,9 +78,6 @@ export default function UserTypeSelection() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <p className="text-sm text-gray-600">
-                Already have a Bay Club membership? Find trustworthy members to share costs and make your membership more affordable.
-              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Reduce Costs</span>
                 <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Lead Pod</span>
