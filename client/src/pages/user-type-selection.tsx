@@ -77,9 +77,9 @@ export default function UserTypeSelection() {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="mt-3 flex flex-wrap gap-2">
+                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Find Members</span>
+                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Manage Pod</span>
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Reduce Costs</span>
-                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Lead Pod</span>
-                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Manage Members</span>
               </div>
             </CardContent>
           </Card>
