@@ -645,30 +645,53 @@ export default function PodLeaderRegistration() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-                <label className="text-sm font-medium">Member Requirements (Optional)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    "Background Check",
-                    "Deposit Required",
-                    "Minimum Age 21",
-                    "Local Residents Only",
-                    "Active Lifestyle",
-                    "Professional References"
-                  ].map((requirement) => (
-                    <div key={requirement} className="flex items-center space-x-2">
+                <label className="text-sm font-medium">Payment Schedule</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div 
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      formData.requirements.includes("Monthly Payment") 
+                        ? "border-purple-500 bg-purple-50" 
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => {
+                      const newRequirements = formData.requirements.filter(r => r !== "Annual Payment");
+                      if (!formData.requirements.includes("Monthly Payment")) {
+                        newRequirements.push("Monthly Payment");
+                      }
+                      setFormData(prev => ({...prev, requirements: newRequirements}));
+                    }}
+                  >
+                    <div className="flex items-center space-x-2">
                       <Checkbox
-                        id={requirement}
-                        checked={formData.requirements.includes(requirement)}
-                        onCheckedChange={() => handleRequirementToggle(requirement)}
+                        checked={formData.requirements.includes("Monthly Payment")}
+                        readOnly
                       />
-                      <label
-                        htmlFor={requirement}
-                        className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {requirement}
-                      </label>
+                      <span className="text-sm font-medium">Monthly Payment</span>
                     </div>
-                  ))}
+                  </div>
+                  
+                  <div 
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      formData.requirements.includes("Annual Payment") 
+                        ? "border-purple-500 bg-purple-50" 
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => {
+                      const newRequirements = formData.requirements.filter(r => r !== "Monthly Payment");
+                      if (!formData.requirements.includes("Annual Payment")) {
+                        newRequirements.push("Annual Payment");
+                      }
+                      setFormData(prev => ({...prev, requirements: newRequirements}));
+                    }}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={formData.requirements.includes("Annual Payment")}
+                        readOnly
+                      />
+                      <span className="text-sm font-medium">Annual Payment</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               
