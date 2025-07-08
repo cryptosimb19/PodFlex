@@ -50,9 +50,9 @@ export default function UserTypeSelection() {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Save Money</span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Quick Join</span>
-                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Premium Access</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Quick find</span>
+                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Premium access</span>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Save money</span>
               </div>
             </CardContent>
           </Card>
