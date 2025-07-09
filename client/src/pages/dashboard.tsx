@@ -149,9 +149,6 @@ export default function Dashboard() {
               <Button onClick={() => navigate('/pods')} variant="outline">
                 Browse Pods
               </Button>
-              <Button onClick={() => navigate('/pod-leader-dashboard')} variant="outline">
-                Pod Leader Dashboard
-              </Button>
             </div>
           </div>
         </div>

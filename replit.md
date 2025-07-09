@@ -165,6 +165,13 @@ Changelog:
   - Created tabbed interface for managing join requests and viewing pod details
   - Added modal dialogs for reviewing join request details and applicant contact information
   - Enhanced navigation to route pod leaders to appropriate dashboard after registration
+- July 09, 2025. Enhanced UI polish and improved role-based dashboard navigation
+  - Updated primary color to vibrant purple (#8B5CF6) with smooth animations throughout
+  - Added hover effects, gradient text, glass effects, and staggered animations
+  - Enhanced pod cards with better visual hierarchy and modern transitions
+  - Improved welcome page and user type selection with polished button interactions
+  - Added custom scrollbar styling and focus states for accessibility
+  - Removed pod leader dashboard link from regular user dashboard for cleaner role separation
 ```
 
 ## User Preferences
