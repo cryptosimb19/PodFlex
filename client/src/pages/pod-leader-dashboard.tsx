@@ -46,12 +46,18 @@ interface JoinRequestWithUser extends JoinRequest {
   userPhone?: string;
 }
 
+interface PodMemberWithUser extends PodMember {
+  user: UserData | null;
+}
+
 export default function PodLeaderDashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<JoinRequestWithUser | null>(null);
+  const [selectedMember, setSelectedMember] = useState<PodMemberWithUser | null>(null);
+  const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
 
   // Load user data from localStorage
   useEffect(() => {
@@ -101,6 +107,18 @@ export default function PodLeaderDashboard() {
       return requests.flat();
     },
     enabled: !!leaderPods && leaderPods.length > 0,
+  });
+
+  // Fetch pod members for a specific pod
+  const { data: podMembers, isLoading: membersLoading } = useQuery<PodMemberWithUser[]>({
+    queryKey: ['/api/pods', selectedPodForMembers, 'members'],
+    queryFn: async () => {
+      if (!selectedPodForMembers) return [];
+      const response = await fetch(`/api/pods/${selectedPodForMembers}/members`);
+      if (!response.ok) throw new Error('Failed to fetch pod members');
+      return response.json();
+    },
+    enabled: !!selectedPodForMembers
   });
 
   // Mutation to update join request status
@@ -322,7 +340,7 @@ export default function PodLeaderDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="requests" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="requests">
                   Join Requests
                   {pendingRequests.length > 0 && (
@@ -331,6 +349,7 @@ export default function PodLeaderDashboard() {
                     </Badge>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="members">Pod Members</TabsTrigger>
                 <TabsTrigger value="pods">My Pods</TabsTrigger>
               </TabsList>
 
@@ -430,6 +449,202 @@ export default function PodLeaderDashboard() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="members" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Users className="w-5 h-5" />
+                      <span>Pod Members</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {!leaderPods || leaderPods.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Pods Created</h3>
+                        <p className="text-gray-600">Create a pod first to see members</p>
+                      </div>
+                    ) : !selectedPodForMembers ? (
+                      <div className="space-y-4">
+                        <p className="text-gray-600 mb-4">Select a pod to view its members:</p>
+                        <div className="grid grid-cols-1 gap-3">
+                          {leaderPods.map((pod) => (
+                            <div
+                              key={pod.id}
+                              className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                              onClick={() => setSelectedPodForMembers(pod.id)}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <h4 className="font-semibold">{pod.clubName}</h4>
+                                  <p className="text-sm text-gray-600">{pod.clubRegion}</p>
+                                </div>
+                                <div className="text-right">
+                                  <div className="flex items-center space-x-1 text-sm text-gray-600">
+                                    <Users className="w-4 h-4" />
+                                    <span>{(pod.totalSpots || pod.maxMembers || 0) - pod.availableSpots} members</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold">
+                              {leaderPods?.find(p => p.id === selectedPodForMembers)?.clubName} Members
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {leaderPods?.find(p => p.id === selectedPodForMembers)?.clubRegion}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedPodForMembers(null)}
+                          >
+                            Back to Pods
+                          </Button>
+                        </div>
+
+                        {membersLoading ? (
+                          <div className="text-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto loading-spin"></div>
+                            <p className="text-gray-600 mt-2">Loading members...</p>
+                          </div>
+                        ) : !podMembers || podMembers.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No Members Yet</h3>
+                            <p className="text-gray-600">This pod doesn't have any members yet</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {podMembers.map((member) => (
+                              <div
+                                key={member.id}
+                                className="border rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                                onClick={() => setSelectedMember(member)}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-center space-x-3">
+                                    <Avatar className="w-10 h-10">
+                                      <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                                        {member.user ? getUserInitials(member.user.firstName, member.user.lastName) : 'U'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <h4 className="font-semibold">
+                                        {member.user ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
+                                      </h4>
+                                      <p className="text-sm text-gray-600">
+                                        {member.user?.email || 'No email'}
+                                      </p>
+                                      <p className="text-sm text-gray-500">
+                                        Joined {formatDate(member.joinedAt)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <Badge variant="outline" className="mb-1">
+                                      {member.userId === leaderPods?.find(p => p.id === selectedPodForMembers)?.leadId ? 'Leader' : 'Member'}
+                                    </Badge>
+                                    <div className="text-sm text-gray-600">
+                                      {member.user?.membershipId || 'No membership ID'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            
+                            {/* Member Details Modal */}
+                            <Dialog open={selectedMember !== null} onOpenChange={() => setSelectedMember(null)}>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Member Details</DialogTitle>
+                                </DialogHeader>
+                                {selectedMember && (
+                                  <div className="space-y-4">
+                                    <div className="flex items-center space-x-4">
+                                      <Avatar className="w-16 h-16">
+                                        <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg">
+                                          {selectedMember.user ? getUserInitials(selectedMember.user.firstName, selectedMember.user.lastName) : 'U'}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <h3 className="text-xl font-semibold">
+                                          {selectedMember.user ? `${selectedMember.user.firstName} ${selectedMember.user.lastName}` : 'Unknown User'}
+                                        </h3>
+                                        <Badge variant="outline" className="mt-1">
+                                          {selectedMember.userId === leaderPods?.find(p => p.id === selectedPodForMembers)?.leadId ? 'Pod Leader' : 'Member'}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 gap-4">
+                                      <div>
+                                        <h4 className="font-semibold mb-2">Contact Information</h4>
+                                        <div className="space-y-2 text-sm">
+                                          <div className="flex items-center space-x-2">
+                                            <Mail className="w-4 h-4 text-gray-500" />
+                                            <span>{selectedMember.user?.email || 'No email'}</span>
+                                          </div>
+                                          <div className="flex items-center space-x-2">
+                                            <Phone className="w-4 h-4 text-gray-500" />
+                                            <span>{selectedMember.user?.phone || 'No phone'}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div>
+                                        <h4 className="font-semibold mb-2">Membership Details</h4>
+                                        <div className="space-y-2 text-sm">
+                                          <div className="flex items-center space-x-2">
+                                            <MapPin className="w-4 h-4 text-gray-500" />
+                                            <span>{selectedMember.user?.primaryClub || 'No primary club'}</span>
+                                          </div>
+                                          <div className="flex items-center space-x-2">
+                                            <Users className="w-4 h-4 text-gray-500" />
+                                            <span>{selectedMember.user?.membershipLevel || 'No membership level'}</span>
+                                          </div>
+                                          <div className="flex items-center space-x-2">
+                                            <UserCheck className="w-4 h-4 text-gray-500" />
+                                            <span>{selectedMember.user?.membershipId || 'No membership ID'}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div>
+                                        <h4 className="font-semibold mb-2">Pod Activity</h4>
+                                        <div className="space-y-2 text-sm">
+                                          <div className="flex justify-between">
+                                            <span>Joined Date:</span>
+                                            <span>{formatDate(selectedMember.joinedAt)}</span>
+                                          </div>
+                                          <div className="flex justify-between">
+                                            <span>Status:</span>
+                                            <Badge variant="outline" className="text-xs">
+                                              {selectedMember.isActive ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>

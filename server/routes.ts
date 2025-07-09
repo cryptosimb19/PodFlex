@@ -123,12 +123,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get pod members
+  // Get pod members with user details
   app.get("/api/pods/:id/members", async (req, res) => {
     try {
       const podId = parseInt(req.params.id);
       const members = await storage.getPodMembers(podId);
-      res.json(members);
+      
+      // Fetch user details for each member
+      const membersWithUserInfo = await Promise.all(
+        members.map(async (member) => {
+          const user = await storage.getUser(member.userId);
+          return {
+            ...member,
+            user: user || null
+          };
+        })
+      );
+      
+      res.json(membersWithUserInfo);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch pod members" });
     }

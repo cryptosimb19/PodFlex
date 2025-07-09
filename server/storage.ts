@@ -69,6 +69,46 @@ export class MemStorage implements IStorage {
         avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
         preferredRegion: "San Francisco",
         createdAt: new Date(),
+      },
+      {
+        id: 3,
+        email: "michael.chen@example.com",
+        firstName: "Michael",
+        lastName: "Chen",
+        membershipId: "BC11111",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+        preferredRegion: "San Jose",
+        createdAt: new Date(),
+      },
+      {
+        id: 4,
+        email: "sarah.wilson@example.com",
+        firstName: "Sarah",
+        lastName: "Wilson",
+        membershipId: "BC22222",
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+        preferredRegion: "San Francisco",
+        createdAt: new Date(),
+      },
+      {
+        id: 5,
+        email: "david.garcia@example.com",
+        firstName: "David",
+        lastName: "Garcia",
+        membershipId: "BC33333",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
+        preferredRegion: "Peninsula",
+        createdAt: new Date(),
+      },
+      {
+        id: 6,
+        email: "emma.taylor@example.com",
+        firstName: "Emma",
+        lastName: "Taylor",
+        membershipId: "BC44444",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+        preferredRegion: "East Bay",
+        createdAt: new Date(),
       }
     ];
 
@@ -264,6 +304,35 @@ export class MemStorage implements IStorage {
     samplePods.forEach(pod => {
       this.pods.set(pod.id, pod);
       this.currentPodId = Math.max(this.currentPodId, pod.id + 1);
+    });
+
+    // Add sample pod members
+    const samplePodMembers: PodMember[] = [
+      // Pod 1 (Courtside) - 2 current members
+      { id: 1, podId: 1, userId: 1, joinedAt: new Date('2024-01-15'), isActive: true }, // John (leader)
+      { id: 2, podId: 1, userId: 3, joinedAt: new Date('2024-02-01'), isActive: true }, // Michael
+      
+      // Pod 2 (Financial District) - 2 current members
+      { id: 3, podId: 2, userId: 2, joinedAt: new Date('2024-01-20'), isActive: true }, // Jane (leader)
+      { id: 4, podId: 2, userId: 4, joinedAt: new Date('2024-02-15'), isActive: true }, // Sarah
+      
+      // Pod 3 (Redwood Shores) - 2 current members
+      { id: 5, podId: 3, userId: 1, joinedAt: new Date('2024-01-10'), isActive: true }, // John (leader)
+      { id: 6, podId: 3, userId: 5, joinedAt: new Date('2024-03-01'), isActive: true }, // David
+      
+      // Pod 4 (Walnut Creek) - 2 current members
+      { id: 7, podId: 4, userId: 2, joinedAt: new Date('2024-01-25'), isActive: true }, // Jane (leader)
+      { id: 8, podId: 4, userId: 6, joinedAt: new Date('2024-02-10'), isActive: true }, // Emma
+      
+      // Pod 5 (Santa Clara) - 3 current members
+      { id: 9, podId: 5, userId: 1, joinedAt: new Date('2024-01-05'), isActive: true }, // John (leader)
+      { id: 10, podId: 5, userId: 3, joinedAt: new Date('2024-01-20'), isActive: true }, // Michael
+      { id: 11, podId: 5, userId: 4, joinedAt: new Date('2024-02-05'), isActive: true }, // Sarah
+    ];
+
+    samplePodMembers.forEach(member => {
+      this.podMembers.set(member.id, member);
+      this.currentPodMemberId = Math.max(this.currentPodMemberId, member.id + 1);
     });
   }
 
