@@ -63,9 +63,9 @@ export default function PodsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading pods...</p>
+        <div className="text-center fade-in">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto loading-spin"></div>
+          <p className="mt-2 text-muted-foreground loading-pulse">Loading pods...</p>
         </div>
       </div>
     );
@@ -150,62 +150,70 @@ export default function PodsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredPods.map((pod) => (
-              <Card 
-                key={pod.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => navigate(`/pods/${pod.id}`)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {pod.title}
-                      </h3>
-                      <div className="flex items-center text-sm text-gray-600 mb-2">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {pod.clubName} • {pod.clubRegion}
+            {filteredPods.map((pod, index) => (
+              <div key={pod.id} className="fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
+                <Card 
+                  className="cursor-pointer hover:shadow-lg transition-all duration-300 hover-lift card-transition"
+                  onClick={() => navigate(`/pod/${pod.id}`)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                          {pod.title}
+                        </h3>
+                        <div className="flex items-center text-sm text-muted-foreground mb-2">
+                          <MapPin className="w-4 h-4 mr-1 text-primary/70" />
+                          {pod.clubName} • {pod.clubRegion}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">
-                        {formatPrice(pod.costPerPerson)}
-                        <span className="text-sm text-gray-600 font-normal">/month</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-700 mb-4 line-clamp-2">
-                    {pod.description}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Badge className={getBadgeColor(pod.membershipType)}>
-                        {pod.membershipType}
-                      </Badge>
-                      
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="w-4 h-4 mr-1" />
-                        {pod.availableSpots} of {pod.totalSpots} spots available
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-primary">
+                          {formatPrice(pod.costPerPerson)}
+                          <span className="text-sm text-gray-600 font-normal">/month</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex space-x-2">
-                      {pod.amenities?.slice(0, 3).map((amenity) => (
-                        <Badge key={amenity} variant="outline" className="text-xs">
-                          {amenity}
+                    <p className="text-gray-700 mb-4 line-clamp-2">
+                      {pod.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <Badge className={`${getBadgeColor(pod.membershipType)} font-medium`}>
+                          {pod.membershipType}
                         </Badge>
-                      ))}
-                      {pod.amenities && pod.amenities.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{pod.amenities.length - 3} more
-                        </Badge>
-                      )}
+                        
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Users className="w-4 h-4 mr-1 text-primary/70" />
+                          <span className="font-medium">{pod.availableSpots} of {pod.totalSpots} spots available</span>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-2">
+                        {pod.amenities?.slice(0, 3).map((amenity) => (
+                          <Badge 
+                            key={amenity} 
+                            variant="outline" 
+                            className="text-xs bg-primary/10 text-primary/80 border-primary/20 hover:bg-primary/20 transition-colors"
+                          >
+                            {amenity}
+                          </Badge>
+                        ))}
+                        {pod.amenities && pod.amenities.length > 3 && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs bg-primary/10 text-primary/80 border-primary/20"
+                          >
+                            +{pod.amenities.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         )}
