@@ -18,6 +18,7 @@ export const pods = pgTable("pods", {
   leadId: integer("lead_id").references(() => users.id).notNull(),
   clubName: text("club_name").notNull(), // "Bay Club Courtside", "Bay Club San Francisco", etc.
   clubRegion: text("club_region").notNull(), // "San Jose", "San Francisco", etc.
+  clubAddress: text("club_address").notNull(), // Full address of the club
   membershipType: text("membership_type").notNull(), // "Single-Club", "Multi-Club", "Family"
   title: text("title").notNull(),
   description: text("description").notNull(),
@@ -37,6 +38,11 @@ export const joinRequests = pgTable("join_requests", {
   userId: integer("user_id").references(() => users.id).notNull(),
   status: text("status").notNull().default("pending"), // "pending", "accepted", "rejected"
   message: text("message"), // Optional message from requester
+  userInfo: json("user_info").$type<{
+    name: string;
+    email: string;
+    phone?: string;
+  }>(), // Contact information for the join request
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

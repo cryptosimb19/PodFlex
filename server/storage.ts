@@ -79,7 +79,7 @@ export class MemStorage implements IStorage {
         leadId: 1,
         clubName: "Courtside",
         clubRegion: "San Jose",
-
+        clubAddress: "1413 Kooser Road, San Jose, CA 95118",
         membershipType: "Multi-Club",
         title: "Courtside Tennis & Fitness Pod",
         description: "Join our active tennis community at Bay Club Courtside! We're a group of tennis enthusiasts who share costs for premium access to the courts, fitness facilities, and pool. Perfect for intermediate to advanced players.",
@@ -97,7 +97,7 @@ export class MemStorage implements IStorage {
         leadId: 2,
         clubName: "Financial District",
         clubRegion: "San Francisco",
-
+        clubAddress: "50 California Street, San Francisco, CA 94111",
         membershipType: "Single-Club",
         title: "SF Financial District Professionals",
         description: "Premium downtown Bay Club access for busy professionals! Share costs for the Financial District location - perfect for lunch workouts, after-work fitness, and networking.",
@@ -115,7 +115,7 @@ export class MemStorage implements IStorage {
         leadId: 1,
         clubName: "Redwood Shores",
         clubRegion: "Peninsula",
-
+        clubAddress: "400 Marine Parkway, Redwood Shores, CA 94065",
         membershipType: "Family",
         title: "Redwood Shores Family Membership",
         description: "Family-friendly Bay Club pod for the beautiful Redwood Shores location! Perfect for families wanting premium access to kids' programs, aquatics, tennis, and family amenities.",
@@ -133,7 +133,7 @@ export class MemStorage implements IStorage {
         leadId: 2,
         clubName: "Walnut Creek",
         clubRegion: "East Bay",
-
+        clubAddress: "1375 Locust Street, Walnut Creek, CA 94596",
         membershipType: "Multi-Club",
         title: "Walnut Creek Active Lifestyle Pod",
         description: "Join our Walnut Creek Bay Club community! We're fitness enthusiasts who love the full range of amenities - from group classes to tennis to swimming. Great for staying active year-round.",
@@ -151,7 +151,7 @@ export class MemStorage implements IStorage {
         leadId: 1,
         clubName: "Santa Clara",
         clubRegion: "Santa Clara",
-
+        clubAddress: "5175 Stevens Creek Boulevard, Santa Clara, CA 95051",
         membershipType: "Single-Club",
         title: "Santa Clara Fitness & Sports Hub",
         description: "Experience the newly renovated Santa Clara Bay Club! Join our pod for access to the amazing new 12,000-square-foot fitness atrium, basketball courts, squash courts, and premium amenities.",
@@ -169,7 +169,7 @@ export class MemStorage implements IStorage {
         leadId: 2,
         clubName: "Marin",
         clubRegion: "Marin",
-
+        clubAddress: "335 Tamalpais Drive, Corte Madera, CA 94925",
         membershipType: "Family",
         title: "Marin Family Golf & Recreation",
         description: "Share the luxury of Bay Club Marin! Perfect for families who want access to premium amenities in beautiful Corte Madera. Great for shopping, dining, and staying active with kids.",
@@ -187,6 +187,7 @@ export class MemStorage implements IStorage {
         leadId: 1,
         clubName: "San Francisco",
         clubRegion: "San Francisco",
+        clubAddress: "150 Greenwich Street, San Francisco, CA 94111",
         membershipType: "Multi-Club",
         title: "SF Greenwich Street Flagship Experience",
         description: "Experience the magic of San Francisco at our flagship location! Share access to our 15,000 sq ft fitness floor, squash facility, basketball, yoga, Pilates, and two indoor pools with city views.",
@@ -204,6 +205,7 @@ export class MemStorage implements IStorage {
         leadId: 2,
         clubName: "Manhattan Country Club",
         clubRegion: "Los Angeles",
+        clubAddress: "1400 Parkview Avenue, Manhattan Beach, CA 90266",
         membershipType: "Family",
         title: "Manhattan Beach Country Club Elite",
         description: "Exclusive access to Manhattan Country Club in Manhattan Beach! Join our premium pod for the ultimate SoCal country club experience with ocean views, golf, tennis, and luxury amenities.",
@@ -221,6 +223,7 @@ export class MemStorage implements IStorage {
         leadId: 1,
         clubName: "Santa Monica",
         clubRegion: "Los Angeles",
+        clubAddress: "1025 2nd Street, Santa Monica, CA 90403",
         membershipType: "Multi-Club",
         title: "Santa Monica Beach Club Pod",
         description: "Join our Santa Monica Bay Club community! Perfect for beach lifestyle enthusiasts who want access to premium fitness classes, state-of-the-art equipment, and incredible Pacific Ocean views.",
@@ -238,6 +241,7 @@ export class MemStorage implements IStorage {
         leadId: 2,
         clubName: "Carmel Valley",
         clubRegion: "San Diego",
+        clubAddress: "11236 El Camino Real, San Diego, CA 92130",
         membershipType: "Family",
         title: "San Diego Family Golf & Recreation",
         description: "Share the luxury of Bay Club Carmel Valley! Perfect for families who want access to our 27-hole golf course with gorgeous views, year-round aquatics, tennis, and state-of-the-art fitness facilities.",
@@ -366,6 +370,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
       message: insertRequest.message || null,
+      userInfo: insertRequest.userInfo || null,
       status: "pending",
     };
     this.joinRequests.set(id, request);

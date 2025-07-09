@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Pod, JoinRequest } from "@shared/schema";
 
@@ -13,6 +17,13 @@ export default function PodDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+  const [joinMessage, setJoinMessage] = useState("");
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
 
   // Fetch pod details
   const { data: pod, isLoading: podLoading } = useQuery<Pod>({
@@ -27,14 +38,15 @@ export default function PodDetail() {
 
   // Create join request mutation
   const joinMutation = useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async (requestData: { message: string; userInfo: typeof userInfo }) => {
       const response = await fetch('/api/join-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           podId: parseInt(id || '0'),
           userId: 1, // Mock user ID - in real app would come from auth
-          message,
+          message: requestData.message,
+          userInfo: requestData.userInfo,
         }),
       });
       if (!response.ok) throw new Error('Failed to create join request');
@@ -45,6 +57,9 @@ export default function PodDetail() {
         title: "Join request sent!",
         description: "The pod leader will review your request and get back to you.",
       });
+      setIsJoinDialogOpen(false);
+      setJoinMessage("");
+      setUserInfo({ name: "", email: "", phone: "" });
       queryClient.invalidateQueries({ queryKey: ['/api/pods', id] });
     },
     onError: () => {
@@ -57,7 +72,15 @@ export default function PodDetail() {
   });
 
   const handleJoinRequest = () => {
-    joinMutation.mutate("I'd like to join your Bay Club pod!");
+    if (!userInfo.name || !userInfo.email || !joinMessage) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    joinMutation.mutate({ message: joinMessage, userInfo });
   };
 
   const formatPrice = (cents: number) => {
@@ -212,13 +235,79 @@ export default function PodDetail() {
                 </div>
                 <div className="ml-6">
                   {pod.availableSpots > 0 ? (
-                    <Button
-                      onClick={handleJoinRequest}
-                      disabled={joinMutation.isPending}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      {joinMutation.isPending ? "Sending..." : "Request to Join"}
-                    </Button>
+                    <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="bg-primary hover:bg-primary/90">
+                          <Send className="w-4 h-4 mr-2" />
+                          Request to Join
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Join {pod.title}</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Full Name *</label>
+                              <Input
+                                value={userInfo.name}
+                                onChange={(e) => setUserInfo(prev => ({ ...prev, name: e.target.value }))}
+                                placeholder="John Doe"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Email *</label>
+                              <Input
+                                type="email"
+                                value={userInfo.email}
+                                onChange={(e) => setUserInfo(prev => ({ ...prev, email: e.target.value }))}
+                                placeholder="john@example.com"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Phone Number</label>
+                            <Input
+                              type="tel"
+                              value={userInfo.phone}
+                              onChange={(e) => setUserInfo(prev => ({ ...prev, phone: e.target.value }))}
+                              placeholder="(555) 123-4567"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Message to Pod Leader *</label>
+                            <Textarea
+                              value={joinMessage}
+                              onChange={(e) => setJoinMessage(e.target.value)}
+                              placeholder="Hi! I'd love to join your Bay Club pod. I'm interested in..."
+                              rows={3}
+                            />
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <p className="text-sm text-gray-600">
+                              Your request will be sent to the pod leader. They'll review your information and get back to you.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsJoinDialogOpen(false)}
+                            disabled={joinMutation.isPending}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleJoinRequest}
+                            disabled={joinMutation.isPending}
+                            className="bg-primary hover:bg-primary/90"
+                          >
+                            {joinMutation.isPending ? "Sending..." : "Send Request"}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   ) : (
                     <Button disabled>
                       <CheckCircle className="w-4 h-4 mr-2" />
