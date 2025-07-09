@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,39 @@ export default function PodDetail() {
     email: "",
     phone: "",
   });
+
+  // Get user data from localStorage
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        return {
+          firstName: parsed.firstName || '',
+          lastName: parsed.lastName || '',
+          email: parsed.email || '',
+          phone: parsed.phone || '',
+        };
+      }
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    }
+    return null;
+  };
+
+  // Prepopulate form when dialog opens
+  useEffect(() => {
+    if (isJoinDialogOpen) {
+      const userData = getUserData();
+      if (userData) {
+        setUserInfo({
+          name: `${userData.firstName} ${userData.lastName}`.trim(),
+          email: userData.email,
+          phone: userData.phone,
+        });
+      }
+    }
+  }, [isJoinDialogOpen]);
 
   // Fetch pod details
   const { data: pod, isLoading: podLoading } = useQuery<Pod>({

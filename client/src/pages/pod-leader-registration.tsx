@@ -321,6 +321,26 @@ export default function PodLeaderRegistration() {
   };
 
   const handleSubmit = async () => {
+    // Save user data to localStorage for use in join requests
+    const userData = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      primaryCampus: formData.primaryCampus,
+      primaryClub: formData.primaryClub,
+      membershipLevel: formData.membershipLevel,
+      membershipId: formData.membershipId,
+      street: formData.street,
+      aptUnit: formData.aptUnit,
+      city: formData.city,
+      state: formData.state,
+      zipCode: formData.zipCode,
+      country: formData.country,
+      dateOfBirth: formData.dateOfBirth,
+    };
+    localStorage.setItem('userData', JSON.stringify(userData));
+    
     // In a real app, this would create the pod and save to backend
     console.log("Pod Leader Registration Data:", formData);
     navigate("/pods");

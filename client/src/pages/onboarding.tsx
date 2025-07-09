@@ -10,6 +10,7 @@ interface UserData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   primaryCampus: string;
   primaryClub: string;
   membershipLevel: string;
@@ -29,6 +30,7 @@ export default function OnboardingWizard() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     primaryCampus: "",
     primaryClub: "",
     membershipLevel: "",
@@ -251,12 +253,13 @@ export default function OnboardingWizard() {
   };
 
   const handleFinish = async () => {
-    // In a real app, this would save user data to backend
+    // Save user data to localStorage for use in join requests
+    localStorage.setItem('userData', JSON.stringify(userData));
     console.log("User data:", userData);
     navigate("/pods");
   };
 
-  const canProceedToStep2 = userData.firstName && userData.lastName && userData.email;
+  const canProceedToStep2 = userData.firstName && userData.lastName && userData.email && userData.phone;
   const canProceedToStep3 = userData.primaryCampus && userData.primaryClub && userData.membershipLevel;
   const canFinish = true; // No additional step needed
 
@@ -298,6 +301,15 @@ export default function OnboardingWizard() {
                   value={userData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="Enter your email"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone Number</label>
+                <Input
+                  type="tel"
+                  value={userData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="(555) 123-4567"
                 />
               </div>
               <Button 
