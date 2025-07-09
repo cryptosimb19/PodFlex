@@ -15,7 +15,12 @@ interface PodLeaderData {
   lastName: string;
   email: string;
   phone: string;
-  address: string;
+  street: string;
+  aptUnit: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
   dateOfBirth: string;
   
   // Membership Info
@@ -43,7 +48,12 @@ export default function PodLeaderRegistration() {
     lastName: "",
     email: "",
     phone: "",
-    address: "",
+    street: "",
+    aptUnit: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "United States",
     dateOfBirth: "",
     primaryCampus: "",
     primaryClub: "",
@@ -318,7 +328,7 @@ export default function PodLeaderRegistration() {
 
   const totalSteps = 4;
 
-  const canProceedStep1 = formData.firstName && formData.lastName && formData.email && formData.phone;
+  const canProceedStep1 = formData.firstName && formData.lastName && formData.email && formData.phone && formData.street && formData.city && formData.state && formData.zipCode && formData.country && formData.dateOfBirth;
   const canProceedStep2 = formData.primaryCampus && formData.primaryClub && formData.membershipLevel;
   const canProceedStep3 = formData.podName && formData.podDescription && formData.monthlyFee && formData.availableSpots && formData.startDate;
   const canSubmit = formData.agreesToTerms;
@@ -377,13 +387,44 @@ export default function PodLeaderRegistration() {
                 />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="text-sm font-medium">Current Address</label>
-                <Input
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  placeholder="Enter your current address"
-                />
+                <div className="space-y-2">
+                  <Input
+                    value={formData.street}
+                    onChange={(e) => handleInputChange('street', e.target.value)}
+                    placeholder="Street Address"
+                  />
+                  <Input
+                    value={formData.aptUnit}
+                    onChange={(e) => handleInputChange('aptUnit', e.target.value)}
+                    placeholder="Apt/Unit (Optional)"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      placeholder="City"
+                    />
+                    <Input
+                      value={formData.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                      placeholder="State"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      value={formData.zipCode}
+                      onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                      placeholder="Zip Code"
+                    />
+                    <Input
+                      value={formData.country}
+                      onChange={(e) => handleInputChange('country', e.target.value)}
+                      placeholder="Country"
+                    />
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-2">

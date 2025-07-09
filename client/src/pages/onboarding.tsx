@@ -14,7 +14,12 @@ interface UserData {
   primaryClub: string;
   membershipLevel: string;
   membershipId: string;
-  address: string;
+  street: string;
+  aptUnit: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
   dateOfBirth: string;
 }
 
@@ -28,7 +33,12 @@ export default function OnboardingWizard() {
     primaryClub: "",
     membershipLevel: "",
     membershipId: "",
-    address: "",
+    street: "",
+    aptUnit: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "United States",
     dateOfBirth: "",
   });
   const [, navigate] = useLocation();
@@ -393,13 +403,44 @@ export default function OnboardingWizard() {
                 </p>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="text-sm font-medium">Current Address</label>
-                <Input
-                  value={userData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  placeholder="Enter your current address"
-                />
+                <div className="space-y-2">
+                  <Input
+                    value={userData.street}
+                    onChange={(e) => handleInputChange('street', e.target.value)}
+                    placeholder="Street Address"
+                  />
+                  <Input
+                    value={userData.aptUnit}
+                    onChange={(e) => handleInputChange('aptUnit', e.target.value)}
+                    placeholder="Apt/Unit (Optional)"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      value={userData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      placeholder="City"
+                    />
+                    <Input
+                      value={userData.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                      placeholder="State"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      value={userData.zipCode}
+                      onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                      placeholder="Zip Code"
+                    />
+                    <Input
+                      value={userData.country}
+                      onChange={(e) => handleInputChange('country', e.target.value)}
+                      placeholder="Country"
+                    />
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -421,7 +462,7 @@ export default function OnboardingWizard() {
                 </Button>
                 <Button 
                   onClick={handleFinish}
-                  disabled={!canProceedToStep3}
+                  disabled={!userData.membershipId || !userData.street || !userData.city || !userData.state || !userData.zipCode || !userData.country || !userData.dateOfBirth}
                   className="flex-1"
                 >
                   Complete Registration
