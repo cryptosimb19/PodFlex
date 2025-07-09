@@ -134,6 +134,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get join requests for a user (for dashboard)
+  app.get("/api/join-requests/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const requests = await storage.getJoinRequestsForUser(userId);
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user join requests" });
+    }
+  });
+
   // Get user by ID (for profile info)
   app.get("/api/users/:id", async (req, res) => {
     try {

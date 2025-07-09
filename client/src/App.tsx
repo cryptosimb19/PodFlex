@@ -10,6 +10,7 @@ import UserTypeSelection from "@/pages/user-type-selection";
 import PodLeaderRegistration from "@/pages/pod-leader-registration";
 import SearchScreen from "@/pages/search";
 import PodDetail from "@/pages/pod-detail";
+import Dashboard from "@/pages/dashboard";
 import { useEffect } from "react";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
       <Route path="/pods" component={SearchScreen} />
       <Route path="/pod/:id" component={PodDetail} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />
     </Switch>
   );

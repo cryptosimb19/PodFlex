@@ -343,7 +343,7 @@ export default function PodLeaderRegistration() {
     
     // In a real app, this would create the pod and save to backend
     console.log("Pod Leader Registration Data:", formData);
-    navigate("/pods");
+    navigate("/dashboard");
   };
 
   const totalSteps = 4;

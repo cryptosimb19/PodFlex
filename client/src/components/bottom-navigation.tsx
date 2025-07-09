@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Search, Map, Bookmark, Settings } from "lucide-react";
+import { Search, LayoutDashboard, Users, User } from "lucide-react";
 
 interface BottomNavigationProps {
   currentPage: string;
@@ -10,10 +10,9 @@ export function BottomNavigation({ currentPage }: BottomNavigationProps) {
   const [, navigate] = useLocation();
 
   const navItems = [
-    { id: 'search', label: 'Search', icon: Search, path: '/search' },
-    { id: 'map', label: 'Map', icon: Map, path: '/map' },
-    { id: 'saved', label: 'Saved', icon: Bookmark, path: '/saved' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+    { id: 'pods', label: 'Pods', icon: Search, path: '/pods' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
   ];
 
   return (

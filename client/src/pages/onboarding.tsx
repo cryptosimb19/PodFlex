@@ -256,7 +256,7 @@ export default function OnboardingWizard() {
     // Save user data to localStorage for use in join requests
     localStorage.setItem('userData', JSON.stringify(userData));
     console.log("User data:", userData);
-    navigate("/pods");
+    navigate("/dashboard");
   };
 
   const canProceedToStep2 = userData.firstName && userData.lastName && userData.email && userData.phone;
