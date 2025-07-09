@@ -78,21 +78,19 @@ export default function PodsPage() {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                <Zap className="w-6 h-6 text-white" />
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">FlexAccess</h1>
-                <p className="text-sm text-gray-600">Fun is better when Shared</p>
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900">Find Your Pod</h1>
             </div>
-            <Button 
-              onClick={() => navigate("/create-pod")}
-              className="bg-primary hover:bg-primary/90"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Pod
-            </Button>
+            <div className="flex space-x-2">
+              <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm">
+                Dashboard
+              </Button>
+              <Button onClick={() => navigate('/pod-leader-dashboard')} variant="outline" size="sm">
+                Pod Leader
+              </Button>
+            </div>
           </div>
 
           {/* Search Bar */}

@@ -9,9 +9,29 @@ interface BottomNavigationProps {
 export function BottomNavigation({ currentPage }: BottomNavigationProps) {
   const [, navigate] = useLocation();
 
+  // Check if user is a pod leader based on localStorage
+  const getUserType = () => {
+    try {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        return 'leader'; // Can be enhanced to detect actual user type
+      }
+    } catch (error) {
+      console.error('Failed to load user type:', error);
+    }
+    return 'seeker';
+  };
+
+  const userType = getUserType();
+
   const navItems = [
     { id: 'pods', label: 'Pods', icon: Search, path: '/pods' },
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { 
+      id: 'dashboard', 
+      label: 'Dashboard', 
+      icon: LayoutDashboard, 
+      path: userType === 'leader' ? '/pod-leader-dashboard' : '/dashboard' 
+    },
     { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
   ];
 

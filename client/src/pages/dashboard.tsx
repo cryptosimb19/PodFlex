@@ -145,9 +145,14 @@ export default function Dashboard() {
                 <p className="text-gray-600">Your Membership Dashboard</p>
               </div>
             </div>
-            <Button onClick={() => navigate('/pods')} variant="outline">
-              Browse Pods
-            </Button>
+            <div className="flex space-x-3">
+              <Button onClick={() => navigate('/pods')} variant="outline">
+                Browse Pods
+              </Button>
+              <Button onClick={() => navigate('/pod-leader-dashboard')} variant="outline">
+                Pod Leader Dashboard
+              </Button>
+            </div>
           </div>
         </div>
       </div>
