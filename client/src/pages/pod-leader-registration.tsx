@@ -330,7 +330,7 @@ export default function PodLeaderRegistration() {
 
   const canProceedStep1 = formData.firstName && formData.lastName && formData.email && formData.phone && formData.street && formData.city && formData.state && formData.zipCode && formData.country && formData.dateOfBirth;
   const canProceedStep2 = formData.primaryCampus && formData.primaryClub && formData.membershipLevel;
-  const canProceedStep3 = formData.podName && formData.podDescription && formData.monthlyFee && formData.availableSpots && formData.startDate;
+  const canProceedStep3 = formData.podName && formData.podDescription && formData.monthlyFee && formData.availableSpots && formData.startDate && (formData.requirements.includes("Monthly Payment") || formData.requirements.includes("Annual Payment"));
   const canSubmit = formData.agreesToTerms;
 
   const renderStep = () => {
@@ -703,41 +703,6 @@ export default function PodLeaderRegistration() {
                 />
               </div>
               
-              <div className="flex space-x-3 pt-4">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCurrentStep(2)}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-                <Button 
-                  onClick={() => setCurrentStep(4)}
-                  disabled={!canProceedStep3}
-                  className="flex-1"
-                >
-                  Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 4:
-        return (
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Requirements & Terms</CardTitle>
-              <p className="text-muted-foreground">
-                Set member requirements and review terms
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div className="space-y-3">
                 <label className="text-sm font-medium">Payment Schedule</label>
                 <div className="grid grid-cols-2 gap-3">
@@ -789,6 +754,41 @@ export default function PodLeaderRegistration() {
                 </div>
               </div>
               
+              <div className="flex space-x-3 pt-4">
+                <Button 
+                  variant="outline"
+                  onClick={() => setCurrentStep(2)}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button 
+                  onClick={() => setCurrentStep(4)}
+                  disabled={!canProceedStep3}
+                  className="flex-1"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 4:
+        return (
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl">Requirements & Terms</CardTitle>
+              <p className="text-muted-foreground">
+                Set member requirements and review terms
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Pod Leader Responsibilities</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
