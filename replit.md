@@ -112,6 +112,51 @@ FlexAccess is a mobile-first web application designed to make high-end gym membe
 - `DATABASE_URL`: PostgreSQL connection string
 - PWA manifest and service worker registration
 
+## Functional Requirements Summary
+
+### Core User Management
+- **User Registration & Onboarding**: Multi-step registration flow with user type selection (Pod Seeker vs Pod Leader)
+- **Profile Management**: Complete user profiles with contact information, membership details, and preferences
+- **Role-Based Access**: Separate dashboards and features for regular users vs pod leaders
+- **Authentication**: User session management with localStorage persistence
+
+### Pod Discovery & Management
+- **Pod Creation**: Full pod creation workflow for leaders with detailed information capture
+- **Pod Search & Filtering**: Search by location, membership type, amenities, and pricing
+- **Regional Organization**: Authentic Bay Club campus and club structure with real locations
+- **Pod Listings**: Rich pod cards with images, descriptions, pricing, and availability
+
+### Membership Coordination
+- **Join Request System**: Complete workflow for requesting to join pods with approval/rejection
+- **Request Management**: Pod leaders can review, approve, or reject join requests with detailed applicant information
+- **Member Management**: View and manage current pod members with detailed profiles
+- **Status Tracking**: Real-time status updates for join requests and membership changes
+
+### Dashboard Systems
+- **User Dashboard**: Personal overview with active pods, join request history, and profile management
+- **Pod Leader Dashboard**: Comprehensive management interface with three main sections:
+  - Join Requests: Review and manage pending applications
+  - Pod Members: View and manage current members across all pods
+  - My Pods: Overview and management of created pods
+- **Analytics**: Statistics on active pods, total members, pending requests, and revenue
+
+### Data Integration
+- **Authentic Bay Club Data**: Complete integration of real Bay Club locations across 10 campuses
+- **Membership Tiers**: Accurate membership levels and pricing from official Bay Club structure
+- **Location-Based Features**: Campus-specific membership options and regional filtering
+
+### User Experience
+- **Mobile-First Design**: Responsive design optimized for mobile devices
+- **Modern UI**: Purple-branded design with smooth animations and glass effects
+- **Accessibility**: WCAG-compliant design with proper focus states and keyboard navigation
+- **Progressive Web App**: PWA capabilities with offline functionality
+
+### Technical Architecture
+- **Full-Stack TypeScript**: End-to-end type safety with shared schemas
+- **Real-Time Data**: TanStack Query for server state management and caching
+- **Secure API**: RESTful endpoints with proper validation and error handling
+- **Scalable Storage**: PostgreSQL with Drizzle ORM for type-safe database operations
+
 ## Changelog
 
 ```
@@ -172,6 +217,14 @@ Changelog:
   - Improved welcome page and user type selection with polished button interactions
   - Added custom scrollbar styling and focus states for accessibility
   - Removed pod leader dashboard link from regular user dashboard for cleaner role separation
+- July 12, 2025. Implemented comprehensive pod members management system
+  - Added "Pod Members" tab to pod leader dashboard with three-tab interface
+  - Created pod selection interface for viewing members by specific pod
+  - Built member cards with contact information and membership details
+  - Implemented detailed member profile modal with full contact and membership information
+  - Enhanced backend with pod member endpoints that include complete user data
+  - Added sample member data across all pods for realistic testing
+  - Integrated member management with existing pod leadership workflow
 ```
 
 ## User Preferences
