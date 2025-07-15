@@ -272,7 +272,7 @@ export default function OnboardingWizard() {
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Zap className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-2xl">Welcome to FlexAccess</CardTitle>
+              <CardTitle className="text-2xl">Welcome to FlexPod</CardTitle>
               <p className="text-muted-foreground">
                 {userType === 'lead' ? 'Let\'s set up your pod leadership profile' : 'Let\'s find you the perfect pod'}
               </p>

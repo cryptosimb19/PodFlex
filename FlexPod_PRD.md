@@ -1,15 +1,15 @@
-# FlexAccess - Product Requirements Document (PRD)
+# FlexPod - Product Requirements Document (PRD)
 
 ## Product Overview
 
-**Product Name:** FlexAccess  
+**Product Name:** FlexPod  
 **Version:** 1.0  
 **Document Date:** July 15, 2025  
 **Product Type:** Mobile-First Progressive Web Application (PWA)
 
 ## Executive Summary
 
-FlexAccess is a comprehensive gym membership pod sharing platform that transforms how people access premium fitness facilities. Built specifically for Bay Club members, the platform replaces ad-hoc WhatsApp coordination with a secure, streamlined experience for discovering and joining membership "pods" - shared memberships that make high-end fitness accessible and affordable.
+FlexPod is a comprehensive gym membership pod sharing platform that transforms how people access premium fitness facilities. Built specifically for Bay Club members, the platform replaces ad-hoc WhatsApp coordination with a secure, streamlined experience for discovering and joining membership "pods" - shared memberships that make high-end fitness accessible and affordable.
 
 ## Problem Statement
 
@@ -22,7 +22,7 @@ FlexAccess is a comprehensive gym membership pod sharing platform that transform
 
 ## Solution Overview
 
-FlexAccess provides a centralized platform where users can discover pods, request membership, and manage shared gym memberships through intuitive dashboards and secure coordination tools.
+FlexPod provides a centralized platform where users can discover pods, request membership, and manage shared gym memberships through intuitive dashboards and secure coordination tools.
 
 ## Implemented Features
 

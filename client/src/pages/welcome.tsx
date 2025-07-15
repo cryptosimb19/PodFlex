@@ -41,7 +41,7 @@ export default function Welcome() {
           <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow">
             <Zap className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-2 gradient-text">FlexAccess</h1>
+          <h1 className="text-4xl font-bold mb-2 gradient-text">FlexPod</h1>
           <p className="text-lg text-gray-600 font-medium">Fun is better when Shared</p>
         </div>
 

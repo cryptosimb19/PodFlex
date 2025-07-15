@@ -117,7 +117,7 @@ export default function Dashboard() {
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
               <Zap className="w-8 h-8 text-white" />
             </div>
-            <CardTitle>Welcome to FlexAccess</CardTitle>
+            <CardTitle>Welcome to FlexPod</CardTitle>
             <p className="text-muted-foreground">Complete your profile to access your dashboard</p>
           </CardHeader>
           <CardContent>
@@ -141,7 +141,7 @@ export default function Dashboard() {
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">FlexAccess</h1>
+                <h1 className="text-2xl font-bold text-gray-900">FlexPod</h1>
                 <p className="text-gray-600">Your Account</p>
               </div>
             </div>

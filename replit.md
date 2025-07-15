@@ -1,8 +1,8 @@
-# FlexAccess - Gym Membership Pod Sharing Platform
+# FlexPod - Gym Membership Pod Sharing Platform
 
 ## Overview
 
-FlexAccess is a mobile-first web application designed to make high-end gym memberships (starting with Bay Club) more affordable by connecting people who want to share membership costs. The platform replaces ad-hoc WhatsApp coordination with a secure, streamlined experience for discovering and joining membership "pods."
+FlexPod is a mobile-first web application designed to make high-end gym memberships (starting with Bay Club) more affordable by connecting people who want to share membership costs. The platform replaces ad-hoc WhatsApp coordination with a secure, streamlined experience for discovering and joining membership "pods."
 
 **Core Problem**: Pods (shared memberships) are scattered across chats, pricing is unclear, and trust/payment handling is manual.
 
@@ -230,6 +230,7 @@ Changelog:
   - Updated all 10 sample pods with location-specific membership levels
   - Applied Executive Club South Bay, East Bay Campus, Single Site, etc. based on location
   - Changed "Your Membership Dashboard" to "Your Account" in dashboard header
+  - Rebranded platform from "FlexAccess" to "FlexPod" across all components and documentation
 ```
 
 ## User Preferences
