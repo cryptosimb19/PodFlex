@@ -225,6 +225,11 @@ Changelog:
   - Enhanced backend with pod member endpoints that include complete user data
   - Added sample member data across all pods for realistic testing
   - Integrated member management with existing pod leadership workflow
+- July 15, 2025. Updated sample pod data with authentic Bay Club membership levels
+  - Replaced generic "Multi-Club/Single-Club/Family" with real Bay Club membership tiers
+  - Updated all 10 sample pods with location-specific membership levels
+  - Applied Executive Club South Bay, East Bay Campus, Single Site, etc. based on location
+  - Changed "Your Membership Dashboard" to "Your Account" in dashboard header
 ```
 
 ## User Preferences

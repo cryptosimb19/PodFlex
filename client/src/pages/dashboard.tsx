@@ -142,7 +142,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">FlexAccess</h1>
-                <p className="text-gray-600">Your Membership Dashboard</p>
+                <p className="text-gray-600">Your Account</p>
               </div>
             </div>
             <div className="flex space-x-3">
