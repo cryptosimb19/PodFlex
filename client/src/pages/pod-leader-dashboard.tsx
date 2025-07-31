@@ -23,7 +23,8 @@ import {
   UserX,
   TrendingUp,
   Mail,
-  Phone
+  Phone,
+  LogOut
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -232,6 +233,12 @@ export default function PodLeaderDashboard() {
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Pod
               </Button>
+              <a href="/api/logout">
+                <Button variant="outline" size="sm">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </a>
             </div>
           </div>
         </div>

@@ -149,6 +149,11 @@ export default function Dashboard() {
               <Button onClick={() => navigate('/pods')} variant="outline">
                 Browse Pods
               </Button>
+              <a href="/api/logout">
+                <Button variant="outline" size="sm">
+                  Logout
+                </Button>
+              </a>
             </div>
           </div>
         </div>

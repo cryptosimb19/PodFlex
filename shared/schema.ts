@@ -1,21 +1,35 @@
-import { pgTable, text, serial, integer, boolean, json, decimal, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, json, decimal, timestamp, varchar, index, jsonb } from "drizzle-orm/pg-core";
+import { sql } from 'drizzle-orm';
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for Replit Auth
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   membershipId: text("membership_id"),
-  avatar: text("avatar"),
   preferredRegion: text("preferred_region"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const pods = pgTable("pods", {
   id: serial("id").primaryKey(),
-  leadId: integer("lead_id").references(() => users.id).notNull(),
+  leadId: varchar("lead_id").references(() => users.id).notNull(),
   clubName: text("club_name").notNull(), // "Bay Club Courtside", "Bay Club San Francisco", etc.
   clubRegion: text("club_region").notNull(), // "San Jose", "San Francisco", etc.
   clubAddress: text("club_address").notNull(), // Full address of the club
@@ -35,7 +49,7 @@ export const pods = pgTable("pods", {
 export const joinRequests = pgTable("join_requests", {
   id: serial("id").primaryKey(),
   podId: integer("pod_id").references(() => pods.id).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
   status: text("status").notNull().default("pending"), // "pending", "accepted", "rejected"
   message: text("message"), // Optional message from requester
   userInfo: json("user_info").$type<{
@@ -50,7 +64,7 @@ export const joinRequests = pgTable("join_requests", {
 export const podMembers = pgTable("pod_members", {
   id: serial("id").primaryKey(),
   podId: integer("pod_id").references(() => pods.id).notNull(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
   isActive: boolean("is_active").default(true),
 });
@@ -59,9 +73,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   firstName: true,
   lastName: true,
+  profileImageUrl: true,
   membershipId: true,
-  avatar: true,
   preferredRegion: true,
+});
+
+export const upsertUserSchema = createInsertSchema(users).pick({
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
 });
 
 export const insertPodSchema = createInsertSchema(pods).omit({
@@ -76,6 +98,7 @@ export const insertJoinRequestSchema = createInsertSchema(joinRequests).omit({
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertPod = z.infer<typeof insertPodSchema>;
 export type Pod = typeof pods.$inferSelect;
