@@ -97,8 +97,10 @@ export default function Dashboard() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (date: Date | null | string) => {
+    if (!date) return 'Unknown';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -254,16 +256,16 @@ export default function Dashboard() {
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
                                   <h3 className="font-semibold text-lg">{pod.clubName}</h3>
-                                  <Badge variant="outline">{pod.region}</Badge>
+                                  <Badge variant="outline">{pod.clubRegion}</Badge>
                                 </div>
                                 <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
                                   <div className="flex items-center space-x-1">
                                     <MapPin className="w-4 h-4" />
-                                    <span>{pod.location}</span>
+                                    <span>{pod.clubAddress}</span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <DollarSign className="w-4 h-4" />
-                                    <span>${pod.monthlyFee}/month</span>
+                                    <span>${(pod.costPerPerson / 100)}/month</span>
                                   </div>
                                 </div>
                                 <p className="text-sm text-gray-600 line-clamp-2">{pod.description}</p>
