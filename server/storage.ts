@@ -188,11 +188,11 @@ export class DatabaseStorage implements IStorage {
 
   // Initialize sample data
   async initializeSamplePods(): Promise<void> {
-    // Check if pods already exist
-    const existingPods = await this.getPods();
-    if (existingPods.length > 0) {
-      return; // Don't add duplicates
-    }
+    // Clear existing sample data first
+    await db.delete(podMembers);
+    await db.delete(joinRequests);  
+    await db.delete(pods);
+    await db.delete(users);
 
     // First create sample users for pod leads
     const sampleUsers = [
@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Executive Club South Bay",
         title: "Active Tennis Group at Courtside",
         description: "Join our friendly tennis group! We play 3-4 times per week and love the competition. Looking for intermediate to advanced players who can commit to regular play. Great courts and excellent pro shop.",
-        costPerPerson: 39900, // $399/month
+        costPerPerson: 18900, // $189/month
         totalSpots: 4,
         availableSpots: 2,
         amenities: ["tennis", "fitness", "pool", "dining"],
@@ -276,7 +276,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Early Morning Swimmers",
         description: "Perfect for professionals who swim before work. We share lap swimming costs and coordinate early morning sessions. Pool is pristine and rarely crowded at 6 AM.",
-        costPerPerson: 22700, // $227/month
+        costPerPerson: 17500, // $175/month
         totalSpots: 3,
         availableSpots: 1,
         amenities: ["pool", "fitness", "spa"],
@@ -291,7 +291,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Executive Club Bay Area",
         title: "Downtown Professionals Network",
         description: "Business networking meets fitness in the heart of SF. Perfect for finance and tech professionals. Access to downtown clubs plus networking events.",
-        costPerPerson: 44500, // $445/month
+        costPerPerson: 20900, // $209/month
         totalSpots: 6,
         availableSpots: 3,
         amenities: ["fitness", "business_center", "dining", "spa"],
@@ -306,7 +306,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Campus Bay Area",
         title: "Family Fitness Fun",
         description: "Great for families with teens. Kids love the pool and fitness classes. Perfect for busy parents who want family time combined with exercise.",
-        costPerPerson: 35900, // $359/month  
+        costPerPerson: 19500, // $195/month  
         totalSpots: 5,
         availableSpots: 2,
         amenities: ["pool", "fitness", "kids_programs", "dining"],
@@ -321,7 +321,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "East Bay Campus", 
         title: "Pickleball Enthusiasts",
         description: "Obsessed with pickleball? Join us! We play daily and compete in local tournaments. Great courts and growing pickleball community.",
-        costPerPerson: 31400, // $314/month
+        costPerPerson: 16800, // $168/month
         totalSpots: 4,
         availableSpots: 1,
         amenities: ["pickleball", "tennis", "fitness", "pool"],
@@ -336,7 +336,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Tech Worker Fitness",
         description: "Perfect for tech workers in South Bay. Flexible schedules welcome. Great for relieving work stress with consistent workout routines.",
-        costPerPerson: 24900, // $249/month
+        costPerPerson: 15000, // $150/month
         totalSpots: 5,
         availableSpots: 3,
         amenities: ["fitness", "pool", "basketball"],
@@ -351,7 +351,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Marathon Training Group",
         description: "Training for Bay Area marathons and half-marathons. Group runs, training plans, and race support. Welcoming to all pace levels.",
-        costPerPerson: 22700, // $227/month
+        costPerPerson: 16200, // $162/month
         totalSpots: 6,
         availableSpots: 4,
         amenities: ["fitness", "track", "pool", "spa"],
@@ -366,7 +366,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site", 
         title: "Yoga and Wellness Focus",
         description: "Centered on yoga, meditation, and wellness. Beautiful Marin location with peaceful atmosphere. Great for stress relief and mindfulness.",
-        costPerPerson: 28900, // $289/month
+        costPerPerson: 18500, // $185/month
         totalSpots: 4,
         availableSpots: 2,
         amenities: ["yoga", "spa", "pool", "meditation"],
@@ -381,7 +381,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Basketball League Players", 
         description: "Join our competitive basketball league! Games twice weekly with playoffs. Looking for intermediate to advanced players who love team sports.",
-        costPerPerson: 24900, // $249/month
+        costPerPerson: 15800, // $158/month
         totalSpots: 8,
         availableSpots: 5,
         amenities: ["basketball", "fitness", "pool"],
@@ -396,7 +396,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Young Professionals Mixer",
         description: "20s and 30s professionals mixing fitness with social networking. Happy hours, group classes, and weekend activities. Great for meeting new people.",
-        costPerPerson: 26400, // $264/month
+        costPerPerson: 17200, // $172/month
         totalSpots: 6,
         availableSpots: 4,
         amenities: ["fitness", "dining", "social_events", "pool"],
@@ -411,7 +411,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Spa and Relaxation Group",
         description: "Focus on spa services, massages, and relaxation. Perfect for busy professionals who need to unwind. Beautiful Marin location.",
-        costPerPerson: 33900, // $339/month
+        costPerPerson: 20200, // $202/month
         totalSpots: 3,
         availableSpots: 1,
         amenities: ["spa", "massage", "pool", "relaxation"],
@@ -426,7 +426,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Parents Escape Pod",
         description: "Parents need fitness time too! Coordinate childcare and workout schedules. Supportive community for busy moms and dads in Los Altos area.",
-        costPerPerson: 29900, // $299/month
+        costPerPerson: 18200, // $182/month
         totalSpots: 4,
         availableSpots: 2,
         amenities: ["fitness", "pool", "kids_area", "spa"],
@@ -441,7 +441,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Campus Washington",
         title: "Seattle Tech Networking",
         description: "Pacific Northwest tech professionals. Access to all Washington locations. Great for Amazon, Microsoft, and startup employees.",
-        costPerPerson: 37900, // $379/month
+        costPerPerson: 19800, // $198/month
         totalSpots: 5,
         availableSpots: 3,
         amenities: ["fitness", "business_center", "dining", "pool"],
@@ -456,7 +456,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "Outdoor Adventure Group", 
         description: "Love hiking, biking, and outdoor activities? We use the club for training and recovery between outdoor adventures. Great Pacific Northwest community.",
-        costPerPerson: 27400, // $274/month
+        costPerPerson: 16600, // $166/month
         totalSpots: 5,
         availableSpots: 3,
         amenities: ["fitness", "pool", "outdoor_training", "spa"],
@@ -471,7 +471,7 @@ export class DatabaseStorage implements IStorage {
         membershipType: "Single Site",
         title: "55+ Active Lifestyle",
         description: "Active adults 55+ enjoying fitness, social activities, and wellness programs. Slower pace but consistent activity. Welcoming community.",
-        costPerPerson: 25900, // $259/month
+        costPerPerson: 15600, // $156/month
         totalSpots: 4,
         availableSpots: 1,
         amenities: ["fitness", "pool", "spa", "social_programs"],

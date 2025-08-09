@@ -240,9 +240,14 @@ Changelog:
   - Created comprehensive sample pod dataset across all Bay Club regions (CA, WA, OR)
   - Added authentic membership types: Executive Club South Bay, East Bay Campus, Single Site, etc.
   - Included diverse pod themes: Tennis groups, swimming, pickleball, yoga, tech networking, family fitness
-  - Price range from $227/month to $445/month reflecting real Bay Club membership costs
+  - Price range from $150/month to $209/month for affordable shared membership costs
   - Added 50+ sample users (pod leads and members) to populate the platform
   - Implemented database initialization system that prevents duplicate sample data
+- August 09, 2025. Updated sample pod pricing to affordable range
+  - Adjusted all 15 sample pods to price range between $150-$209/month
+  - Enhanced database initialization to clear existing data and apply updates
+  - Pricing now reflects realistic cost sharing: $150 (lowest) to $209 (highest premium)
+  - Makes Bay Club membership more accessible through pod sharing
 ```
 
 ## User Preferences
