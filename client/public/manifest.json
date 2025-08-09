@@ -1,7 +1,7 @@
 {
-  "name": "FlexAccess - Fun is better when Shared",
-  "short_name": "FlexAccess",
-  "description": "Share Bay Club membership costs with FlexAccess. Find and join premium fitness membership pods to make high-end gym access more affordable.",
+  "name": "FlexPod - Fun is better when Shared",
+  "short_name": "FlexPod",
+  "description": "Share Bay Club membership costs with FlexPod. Find and join premium fitness membership pods to make high-end gym access more affordable.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAFAFA",

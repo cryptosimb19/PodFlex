@@ -1,6 +1,6 @@
-const CACHE_NAME = 'flexaccess-v1';
-const STATIC_CACHE_NAME = 'flexaccess-static-v1';
-const DYNAMIC_CACHE_NAME = 'flexaccess-dynamic-v1';
+const CACHE_NAME = 'flexpod-v1';
+const STATIC_CACHE_NAME = 'flexpod-static-v1';
+const DYNAMIC_CACHE_NAME = 'flexpod-dynamic-v1';
 
 // Static assets to cache
 const STATIC_ASSETS = [
@@ -166,7 +166,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('FlexAccess', options)
+    self.registration.showNotification('FlexPod', options)
   );
 });
 
