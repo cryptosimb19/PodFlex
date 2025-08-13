@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { sendJoinRequestNotification } from "./emailService";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 
@@ -86,6 +87,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestData = insertJoinRequestSchema.parse(req.body);
       const joinRequest = await storage.createJoinRequest(requestData);
+      
+      // Send email notification to pod leader
+      try {
+        const pod = await storage.getPod(joinRequest.podId);
+        const podLead = await storage.getUser(pod?.leadId || "");
+        const applicant = await storage.getUser(joinRequest.userId);
+        
+        if (pod && podLead && applicant && podLead.email) {
+          const fromEmail = process.env.FROM_EMAIL || "noreply@your-domain.com";
+          await sendJoinRequestNotification(
+            podLead.email,
+            pod.title,
+            `${applicant.firstName} ${applicant.lastName}`,
+            applicant.email || "",
+            fromEmail
+          );
+        }
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
+        // Don't fail the request if email fails
+      }
+      
       res.status(201).json(joinRequest);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -164,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get join requests for a user (for dashboard)
   app.get("/api/join-requests/user/:userId", async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const requests = await storage.getJoinRequestsForUser(userId);
       res.json(requests);
     } catch (error) {
@@ -175,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user by ID (for profile info)
   app.get("/api/users/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const user = await storage.getUser(id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
