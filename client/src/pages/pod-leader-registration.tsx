@@ -73,10 +73,10 @@ export default function PodLeaderRegistration() {
     setFormData(prev => {
       // Reset dependent fields when campus or club changes
       if (key === 'primaryCampus') {
-        return { ...prev, [key]: value, primaryClub: "", membershipLevel: "" };
+        return { ...prev, [key]: value as string, primaryClub: "", membershipLevel: "" };
       }
       if (key === 'primaryClub') {
-        return { ...prev, [key]: value, membershipLevel: "" };
+        return { ...prev, [key]: value as string, membershipLevel: "" };
       }
       return { ...prev, [key]: value };
     });
@@ -743,7 +743,6 @@ export default function PodLeaderRegistration() {
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         checked={formData.requirements.includes("Monthly Payment")}
-                        readOnly
                       />
                       <span className="text-sm font-medium">Monthly Payment</span>
                     </div>
@@ -766,7 +765,6 @@ export default function PodLeaderRegistration() {
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         checked={formData.requirements.includes("Annual Payment")}
-                        readOnly
                       />
                       <span className="text-sm font-medium">Annual Payment</span>
                     </div>
