@@ -72,4 +72,4 @@ Preferred communication style: Simple, everyday language.
 - `ESBuild`: Production bundling
 
 ### Third-Party Services
-- **SendGrid**: For email notifications (e.g., join requests).
+- **SendGrid**: Fully configured for email notifications. Successfully sends professional emails to pod leaders when users request to join their pods. Includes branded HTML templates with gradient headers, applicant details, and dashboard links.
