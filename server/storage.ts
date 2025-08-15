@@ -142,7 +142,7 @@ export class DatabaseStorage implements IStorage {
   async createJoinRequest(requestData: InsertJoinRequest): Promise<JoinRequest> {
     const [request] = await db
       .insert(joinRequests)
-      .values(requestData)
+      .values([requestData])
       .returning();
     return request;
   }
@@ -459,7 +459,7 @@ export class DatabaseStorage implements IStorage {
         costPerPerson: 16600, // $166/month
         totalSpots: 5,
         availableSpots: 3,
-        amenities: ["fitness", "pool", "outdoor_training", "spa"],
+        amenities: ["fitness", "pool", "outdoor_training", "spa"] as string[],
         rules: "Active outdoor lifestyle. Adventure planning and group trips welcomed.",
         imageUrl: null
       },
@@ -522,7 +522,7 @@ export class DatabaseStorage implements IStorage {
       { podId: insertedPods[14].id, userId: "member-35" }
     ];
 
-    await db.insert(podMembers).values(sampleMembers);
+    await db.insert(podMembers).values([...sampleMembers]);
   }
 }
 
