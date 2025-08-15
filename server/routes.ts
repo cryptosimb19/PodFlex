@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { sendJoinRequestNotification } from "./emailService";
 import { z } from "zod";
-import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
+import { insertPodSchema, insertJoinRequestSchema, insertUserSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid pod data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create pod", error: error.message });
+      res.status(500).json({ message: "Failed to create pod", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid user data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create user", error: error.message });
+      res.status(500).json({ message: "Failed to create user", error: error instanceof Error ? error.message : String(error) });
     }
   });
 

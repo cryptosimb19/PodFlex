@@ -145,7 +145,7 @@ export class DatabaseStorage implements IStorage {
   async createPod(podData: InsertPod): Promise<Pod> {
     const [pod] = await db
       .insert(pods)
-      .values(podData)
+      .values([podData])
       .returning();
     return pod;
   }
@@ -163,7 +163,7 @@ export class DatabaseStorage implements IStorage {
   async createJoinRequest(requestData: InsertJoinRequest): Promise<JoinRequest> {
     const [request] = await db
       .insert(joinRequests)
-      .values([requestData])
+      .values(requestData)
       .returning();
     return request;
   }

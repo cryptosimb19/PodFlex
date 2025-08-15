@@ -402,7 +402,7 @@ export default function PodLeaderRegistration() {
       navigate("/pod-leader-dashboard");
     } catch (error) {
       console.error("Error creating pod:", error);
-      alert(`Pod creation failed: ${error.message}. Please try again.`);
+      alert(`Pod creation failed: ${error instanceof Error ? error.message : String(error)}. Please try again.`);
       // Don't navigate if there's an error - let user try again
     }
   };
