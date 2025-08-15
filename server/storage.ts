@@ -23,6 +23,7 @@ export interface IStorage {
   // Additional user operations
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createOrUpdateUser(user: InsertUser): Promise<User>;
   
   // Pod operations
   getPods(): Promise<Pod[]>;
@@ -80,6 +81,26 @@ export class DatabaseStorage implements IStorage {
       .values(userData)
       .returning();
     return user;
+  }
+
+  async createOrUpdateUser(userData: InsertUser): Promise<User> {
+    // Try to find existing user by email
+    const existingUser = await this.getUserByEmail(userData.email || "");
+    if (existingUser) {
+      // Update existing user
+      const [user] = await db
+        .update(users)
+        .set({
+          ...userData,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, existingUser.id))
+        .returning();
+      return user;
+    } else {
+      // Create new user
+      return await this.createUser(userData);
+    }
   }
 
   // Pod operations

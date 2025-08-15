@@ -341,9 +341,70 @@ export default function PodLeaderRegistration() {
     };
     localStorage.setItem('userData', JSON.stringify(userData));
     
-    // In a real app, this would create the pod and save to backend
-    console.log("Pod Leader Registration Data:", formData);
-    navigate("/pod-leader-dashboard");
+    // Create the pod in the backend
+    try {
+      // First create or get the user in the system
+      const userResponse = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          membershipId: userData.membershipId,
+          preferredRegion: userData.primaryCampus
+        }),
+      });
+
+      let userId;
+      if (userResponse.ok) {
+        const user = await userResponse.json();
+        userId = user.id;
+      } else {
+        // If user creation fails, generate a temporary ID based on email
+        userId = `temp-${userData.email.replace(/[^a-z0-9]/gi, '-')}`;
+      }
+
+      const podData = {
+        leadId: userId,
+        clubName: formData.primaryClub,
+        clubRegion: formData.primaryCampus,
+        clubAddress: `${formData.primaryClub}, ${formData.primaryCampus}`,
+        membershipType: formData.membershipLevel,
+        title: formData.podName,
+        description: formData.podDescription,
+        costPerPerson: Math.round(parseFloat(formData.monthlyFee) * 100), // Convert to cents
+        totalSpots: parseInt(formData.availableSpots) + 1, // +1 for the leader
+        availableSpots: parseInt(formData.availableSpots),
+        amenities: [], // Default empty amenities
+        rules: formData.requirements.join(", "),
+        imageUrl: null
+      };
+
+      const response = await fetch('/api/pods', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(podData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Pod creation failed:', errorData);
+        throw new Error(errorData.message || 'Failed to create pod');
+      }
+
+      const newPod = await response.json();
+      console.log("Pod created successfully!", newPod);
+      navigate("/pod-leader-dashboard");
+    } catch (error) {
+      console.error("Error creating pod:", error);
+      alert(`Pod creation failed: ${error.message}. Please try again.`);
+      // Don't navigate if there's an error - let user try again
+    }
   };
 
   const totalSteps = 4;
