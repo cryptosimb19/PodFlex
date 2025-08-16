@@ -43,12 +43,18 @@ function Landing() {
             Connect with others to split Bay Club membership costs.
           </p>
 
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center space-y-4">
             <a
               href="/api/login"
               className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Sign In to Get Started
+              Get Started
+            </a>
+            <a
+              href="/api/login"
+              className="inline-flex items-center px-8 py-4 text-lg font-semibold text-purple-600 bg-white border-2 border-purple-200 rounded-xl hover:bg-purple-50 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Sign In
             </a>
           </div>
         </div>
