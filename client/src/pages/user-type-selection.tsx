@@ -19,12 +19,8 @@ export default function UserTypeSelection() {
   const handleSignIn = (type: "join" | "fill") => {
     // Store the intended flow in localStorage so we can redirect after sign-in
     localStorage.setItem('pendingUserFlow', type);
-    // Navigate to the appropriate dashboard based on user type
-    if (type === "join") {
-      navigate("/pods"); // Pod seeker goes to browse pods
-    } else {
-      navigate("/pod-leader-dashboard"); // Pod leader goes to their dashboard
-    }
+    // Navigate to sign-in page
+    navigate("/login");
   };
 
   return (

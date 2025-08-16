@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuthRoutes } from "./authRoutes";
 import { sendJoinRequestNotification } from "./emailService";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema, insertUserSchema } from "@shared/schema";
@@ -9,6 +10,9 @@ import { insertPodSchema, insertJoinRequestSchema, insertUserSchema } from "@sha
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  
+  // Setup local authentication routes
+  setupAuthRoutes(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
