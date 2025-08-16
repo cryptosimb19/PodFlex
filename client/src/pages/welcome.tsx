@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Zap, Users, DollarSign, Shield, ArrowRight, CheckCircle } from "lucide-react";
+import { Zap, Users, DollarSign, Shield, ArrowRight, CheckCircle, LogIn } from "lucide-react";
 
 export default function Welcome() {
   const [, navigate] = useLocation();
@@ -84,14 +84,32 @@ export default function Welcome() {
           </div>
         </div>
 
-        {/* Get Started Button */}
-        <Button 
-          onClick={() => navigate("/user-type")}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-4 rounded-lg text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow"
-        >
-          Get Started
-          <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
-        </Button>
+        {/* Get Started and Sign In Buttons */}
+        <div className="space-y-3">
+          <Button 
+            onClick={() => navigate("/user-type")}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-4 rounded-lg text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow"
+          >
+            Get Started
+            <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={() => navigate("/pods")}
+            className="w-full border-2 border-purple-200 text-purple-600 hover:bg-purple-50 font-medium py-4 rounded-lg text-lg shadow-sm hover:shadow-md transition-all duration-300"
+          >
+            <LogIn className="w-5 h-5 mr-2" />
+            Sign In
+          </Button>
+        </div>
+
+        {/* Sign In Text */}
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600">
+            New users start here • Existing users can sign in to access their dashboard
+          </p>
+        </div>
 
 
       </div>
