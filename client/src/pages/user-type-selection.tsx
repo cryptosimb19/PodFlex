@@ -8,13 +8,11 @@ export default function UserTypeSelection() {
   const [, navigate] = useLocation();
 
   const handleSelection = (type: "pod_seeker" | "pod_leader") => {
-    localStorage.setItem('flexpod_user_type', type);
+    // Store the user type selection for after registration
+    localStorage.setItem('flexpod_pending_user_type', type);
     
-    if (type === "pod_leader") {
-      navigate("/pod-leader-registration");
-    } else {
-      navigate("/onboarding");
-    }
+    // Navigate to registration
+    navigate("/register");
   };
 
 
@@ -24,11 +22,19 @@ export default function UserTypeSelection() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/")}
+            className="mb-4 text-gray-600 hover:text-gray-800"
+          >
+            Back to Home
+          </Button>
           <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Zap className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">FlexPod</h1>
-          <p className="text-gray-600">Fun is better when Shared</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Choose Your Path</h1>
+          <p className="text-gray-600">How would you like to use FlexPod?</p>
         </div>
 
         {/* Selection Cards */}

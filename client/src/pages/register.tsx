@@ -36,8 +36,22 @@ export default function Register() {
         description: "Welcome to FlexPod! Let's get you started.",
       });
 
-      // After registration, always go to user type selection
-      navigate("/user-type");
+      // Get the pending user type and set it
+      const pendingUserType = localStorage.getItem('flexpod_pending_user_type');
+      if (pendingUserType) {
+        localStorage.setItem('flexpod_user_type', pendingUserType);
+        localStorage.removeItem('flexpod_pending_user_type');
+        
+        // Navigate to appropriate onboarding flow
+        if (pendingUserType === "pod_leader") {
+          navigate("/pod-leader-registration");
+        } else {
+          navigate("/onboarding");
+        }
+      } else {
+        // Fallback - shouldn't happen but just in case
+        navigate("/");
+      }
     },
     onError: (error: any) => {
       toast({

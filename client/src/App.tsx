@@ -49,7 +49,7 @@ function Landing() {
 
           <div className="flex flex-col items-center space-y-4">
             <Button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/user-type")}
               className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Get Started
@@ -89,6 +89,7 @@ function Router() {
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
+          <Route path="/user-type" component={UserTypeSelection} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
         </>
