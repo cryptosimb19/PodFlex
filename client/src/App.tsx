@@ -17,6 +17,7 @@ import Dashboard from "@/pages/dashboard";
 import PodLeaderDashboard from "@/pages/pod-leader-dashboard";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import MembershipSelection from "@/pages/membership-selection";
 import { useEffect } from "react";
 
 // Landing page for non-authenticated users
@@ -92,6 +93,7 @@ function Router() {
           <Route path="/user-type" component={UserTypeSelection} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/membership-selection" component={MembershipSelection} />
         </>
       ) : (
         <>
@@ -120,6 +122,7 @@ function Router() {
             }
           }} />
           <Route path="/user-type" component={UserTypeSelection} />
+          <Route path="/membership-selection" component={MembershipSelection} />
           <Route path="/onboarding" component={OnboardingWizard} />
           <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
           <Route path="/pods" component={SearchScreen} />

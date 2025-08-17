@@ -51,12 +51,8 @@ export default function Register() {
         localStorage.setItem('flexpod_user_type', pendingUserType);
         localStorage.removeItem('flexpod_pending_user_type');
         
-        // Navigate to appropriate onboarding flow
-        if (pendingUserType === "pod_leader") {
-          navigate("/pod-leader-registration");
-        } else {
-          navigate("/onboarding");
-        }
+        // Navigate to membership selection
+        navigate("/membership-selection");
       } else {
         // Fallback - shouldn't happen but just in case
         navigate("/");
