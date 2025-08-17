@@ -96,13 +96,8 @@ function Router() {
         <>
           <Route path="/" component={() => {
             // Check localStorage for user flow state
-            const hasSeenWelcome = localStorage.getItem('flexpod_seen_welcome');
             const userType = localStorage.getItem('flexpod_user_type');
             const hasCompletedOnboarding = localStorage.getItem('flexpod_onboarding_complete');
-            
-            if (!hasSeenWelcome) {
-              return <Welcome />;
-            }
             
             if (!userType) {
               return <UserTypeSelection />;

@@ -1,27 +1,23 @@
-import { useState } from "react";
+
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Users, Plus, ArrowRight, LogIn } from "lucide-react";
+import { Zap, Users, Plus } from "lucide-react";
 
 export default function UserTypeSelection() {
-  const [selectedType, setSelectedType] = useState<string>("");
   const [, navigate] = useLocation();
 
-  const handleContinue = () => {
-    if (selectedType === "join") {
-      navigate("/onboarding?type=seeker");
-    } else if (selectedType === "fill") {
+  const handleSelection = (type: "pod_seeker" | "pod_leader") => {
+    localStorage.setItem('flexpod_user_type', type);
+    
+    if (type === "pod_leader") {
       navigate("/pod-leader-registration");
+    } else {
+      navigate("/onboarding");
     }
   };
 
-  const handleSignIn = (type: "join" | "fill") => {
-    // Store the intended flow in localStorage so we can redirect after sign-in
-    localStorage.setItem('pendingUserFlow', type);
-    // Navigate to sign-in page
-    navigate("/login");
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
@@ -38,12 +34,8 @@ export default function UserTypeSelection() {
         {/* Selection Cards */}
         <div className="space-y-4 mb-8">
           <Card 
-            className={`cursor-pointer transition-all duration-300 hover-lift card-transition ${
-              selectedType === "join" 
-                ? "ring-2 ring-primary bg-primary/5 border-primary/20 shadow-lg" 
-                : "hover:shadow-lg"
-            }`}
-            onClick={() => setSelectedType("join")}
+            className="cursor-pointer transition-all duration-300 hover-lift card-transition hover:shadow-lg"
+            onClick={() => handleSelection("pod_seeker")}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center space-x-3">
@@ -56,33 +48,31 @@ export default function UserTypeSelection() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
+              <p className="text-sm text-gray-600 mb-4">
+                Find and join existing membership pods to save money on your Bay Club membership.
+              </p>
               <div className="mt-3 flex flex-wrap gap-2 mb-4">
                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">Quick find</span>
                 <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">Premium access</span>
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">Save money</span>
               </div>
               <Button
-                variant="outline"
                 size="sm"
-                className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleSignIn("join");
+                  handleSelection("pod_seeker");
                 }}
               >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign in to Join Pods
+                <Users className="w-4 h-4 mr-2" />
+                Join Pods
               </Button>
             </CardContent>
           </Card>
 
           <Card 
-            className={`cursor-pointer transition-all duration-300 hover-lift card-transition ${
-              selectedType === "fill" 
-                ? "ring-2 ring-primary bg-primary/5 border-primary/20 shadow-lg" 
-                : "hover:shadow-lg"
-            }`}
-            onClick={() => setSelectedType("fill")}
+            className="cursor-pointer transition-all duration-300 hover-lift card-transition hover:shadow-lg"
+            onClick={() => handleSelection("pod_leader")}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center space-x-3">
@@ -95,41 +85,33 @@ export default function UserTypeSelection() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
+              <p className="text-sm text-gray-600 mb-4">
+                Create and manage your own membership pod to find members and reduce costs.
+              </p>
               <div className="mt-3 flex flex-wrap gap-2 mb-4">
                 <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">Find Members</span>
                 <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">Manage Pod</span>
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">Reduce Costs</span>
               </div>
               <Button
-                variant="outline"
                 size="sm"
-                className="w-full text-orange-600 border-orange-200 hover:bg-orange-50"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleSignIn("fill");
+                  handleSelection("pod_leader");
                 }}
               >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign in to Manage Pods
+                <Plus className="w-4 h-4 mr-2" />
+                Create Pod
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Continue Button */}
-        <Button 
-          onClick={handleContinue}
-          disabled={!selectedType}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow"
-        >
-          Get Started as New User
-          <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-        </Button>
-
-        {/* Alternative Sign In Text */}
+        {/* Help Text */}
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
-            Already have an account? Use the sign-in buttons above to access your dashboard directly.
+            Choose your path to get started with FlexPod and save on your membership costs.
           </p>
         </div>
 

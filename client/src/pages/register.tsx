@@ -33,16 +33,11 @@ export default function Register() {
       
       toast({
         title: "Registration Successful!",
-        description: "Welcome to FlexPod! You can now browse and join pods.",
+        description: "Welcome to FlexPod! Let's get you started.",
       });
 
-      // Check if user was intending to join or lead pods
-      const pendingFlow = localStorage.getItem('pendingUserFlow');
-      if (pendingFlow === 'fill') {
-        navigate("/pod-leader-dashboard");
-      } else {
-        navigate("/pods");
-      }
+      // After registration, always go to user type selection
+      navigate("/user-type");
     },
     onError: (error: any) => {
       toast({

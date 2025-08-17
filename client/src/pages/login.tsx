@@ -32,12 +32,27 @@ export default function Login() {
         description: "You have successfully signed in to FlexPod.",
       });
 
-      // Check if user was intending to join or lead pods
-      const pendingFlow = localStorage.getItem('pendingUserFlow');
-      if (pendingFlow === 'fill') {
-        navigate("/pod-leader-dashboard");
+      // Check if user has completed onboarding flow
+      const userType = localStorage.getItem('flexpod_user_type');
+      const hasCompletedOnboarding = localStorage.getItem('flexpod_onboarding_complete');
+      
+      if (!userType) {
+        // First time user, go to user type selection
+        navigate("/user-type");
+      } else if (!hasCompletedOnboarding) {
+        // User has type but hasn't completed onboarding
+        if (userType === 'pod_leader') {
+          navigate("/pod-leader-registration");
+        } else {
+          navigate("/onboarding");
+        }
       } else {
-        navigate("/pods");
+        // Existing user, go to appropriate dashboard
+        if (userType === 'pod_leader') {
+          navigate("/pod-leader-dashboard");
+        } else {
+          navigate("/pods");
+        }
       }
     },
     onError: (error: any) => {
