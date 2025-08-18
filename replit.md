@@ -73,3 +73,6 @@ Preferred communication style: Simple, everyday language.
 
 ### Third-Party Services
 - **SendGrid**: Fully configured for email notifications. Successfully sends professional emails to pod leaders when users request to join their pods. Includes branded HTML templates with gradient headers, applicant details, and dashboard links.
+
+### Recent Changes (August 18, 2025)
+- **Bay Club Membership ID Made Optional**: Updated both onboarding and pod-leader registration forms to make the Bay Club Membership ID field optional. Users can now complete registration without providing their membership ID and add it later. This improves user accessibility and reduces signup friction.

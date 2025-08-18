@@ -403,7 +403,7 @@ export default function OnboardingWizard() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID</label>
+                <label className="text-sm font-medium">Bay Club Membership ID <span className="text-xs text-muted-foreground">(Optional)</span></label>
                 <Input
                   value={userData.membershipId}
                   onChange={(e) => handleInputChange('membershipId', e.target.value)}
@@ -411,7 +411,7 @@ export default function OnboardingWizard() {
                   className="font-mono"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app.
+                  Found on your Bay Club membership card or app. You can add this later.
                 </p>
               </div>
               
@@ -527,7 +527,7 @@ export default function OnboardingWizard() {
                 </Button>
                 <Button 
                   onClick={handleFinish}
-                  disabled={!userData.membershipId || !userData.street || !userData.city || !userData.state || !userData.zipCode || !userData.country || !userData.dateOfBirth}
+                  disabled={!userData.street || !userData.city || !userData.state || !userData.zipCode || !userData.country || !userData.dateOfBirth}
                   className="flex-1"
                 >
                   Complete Registration
