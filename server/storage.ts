@@ -481,7 +481,7 @@ export class DatabaseStorage implements IStorage {
     ];
 
     // Insert all sample pods and get their IDs
-    const insertedPods = await db.insert(pods).values([...samplePods]).returning();
+    const insertedPods = await db.insert(pods).values(samplePods).returning();
     
     // Add some sample members to make the pods look active using actual pod IDs
     const sampleMembers = [
