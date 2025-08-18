@@ -637,7 +637,7 @@ export default function PodLeaderRegistration() {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID <span className="text-xs text-muted-foreground">(Optional)</span></label>
+                <label className="text-sm font-medium">Bay Club Membership ID (Optional)</label>
                 <Input
                   value={formData.membershipId}
                   onChange={(e) => handleInputChange('membershipId', e.target.value)}
