@@ -2,17 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { setupAuthRoutes } from "./authRoutes";
 import { sendJoinRequestNotification } from "./emailService";
 import { z } from "zod";
-import { insertPodSchema, insertJoinRequestSchema, insertUserSchema } from "@shared/schema";
+import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
-  
-  // Setup local authentication routes
-  setupAuthRoutes(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -75,18 +71,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new pod
   app.post("/api/pods", async (req, res) => {
     try {
-      console.log("Pod creation request body:", req.body);
       const podData = insertPodSchema.parse(req.body);
-      console.log("Parsed pod data:", podData);
       const pod = await storage.createPod(podData);
       res.status(201).json(pod);
     } catch (error) {
-      console.error("Pod creation error:", error);
       if (error instanceof z.ZodError) {
-        console.error("Validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid pod data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create pod", error: error instanceof Error ? error.message : String(error) });
+      res.status(500).json({ message: "Failed to create pod" });
     }
   });
 
@@ -200,21 +192,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(requests);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user join requests" });
-    }
-  });
-
-  // Create or update user
-  app.post("/api/users", async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createOrUpdateUser(userData);
-      res.status(201).json(user);
-    } catch (error) {
-      console.error("User creation error:", error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid user data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create user", error: error instanceof Error ? error.message : String(error) });
     }
   });
 

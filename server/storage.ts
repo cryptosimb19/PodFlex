@@ -23,11 +23,6 @@ export interface IStorage {
   // Additional user operations
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  createOrUpdateUser(user: InsertUser): Promise<User>;
-  
-  // Authentication operations
-  registerUser(userData: InsertUser): Promise<User>;
-  authenticateUser(email: string, password: string): Promise<User | null>;
   
   // Pod operations
   getPods(): Promise<Pod[]>;
@@ -79,46 +74,12 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async registerUser(userData: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(userData).returning();
-    return user;
-  }
-
-  async authenticateUser(email: string, password: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    if (!user) return null;
-    
-    const bcrypt = await import('bcryptjs');
-    const isValid = await bcrypt.compare(password, user.password);
-    return isValid ? user : null;
-  }
-
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(userData)
       .returning();
     return user;
-  }
-
-  async createOrUpdateUser(userData: InsertUser): Promise<User> {
-    // Try to find existing user by email
-    const existingUser = await this.getUserByEmail(userData.email || "");
-    if (existingUser) {
-      // Update existing user
-      const [user] = await db
-        .update(users)
-        .set({
-          ...userData,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, existingUser.id))
-        .returning();
-      return user;
-    } else {
-      // Create new user
-      return await this.createUser(userData);
-    }
   }
 
   // Pod operations
@@ -163,7 +124,7 @@ export class DatabaseStorage implements IStorage {
   async createPod(podData: InsertPod): Promise<Pod> {
     const [pod] = await db
       .insert(pods)
-      .values([podData])
+      .values(podData)
       .returning();
     return pod;
   }
@@ -233,62 +194,59 @@ export class DatabaseStorage implements IStorage {
     await db.delete(pods);
     await db.delete(users);
 
-    // Default password hash for "password123"
-    const defaultPassword = "$2a$12$LQv3c1yqBWVHxkd0LQ1Gv.6BlTNjjA9z4rV7jL5wBVwD8.gH8kG8G";
-    
     // First create sample users for pod leads
     const sampleUsers = [
-      { id: "sample-lead-1", email: "lead1@example.com", password: defaultPassword, firstName: "Sarah", lastName: "Chen", profileImageUrl: null },
-      { id: "sample-lead-2", email: "lead2@example.com", password: defaultPassword, firstName: "Michael", lastName: "Rodriguez", profileImageUrl: null },
-      { id: "sample-lead-3", email: "lead3@example.com", password: defaultPassword, firstName: "Emily", lastName: "Thompson", profileImageUrl: null },
-      { id: "sample-lead-4", email: "lead4@example.com", password: defaultPassword, firstName: "David", lastName: "Kim", profileImageUrl: null },
-      { id: "sample-lead-5", email: "lead5@example.com", password: defaultPassword, firstName: "Jessica", lastName: "Patel", profileImageUrl: null },
-      { id: "sample-lead-6", email: "lead6@example.com", password: defaultPassword, firstName: "Ryan", lastName: "Johnson", profileImageUrl: null },
-      { id: "sample-lead-7", email: "lead7@example.com", password: defaultPassword, firstName: "Amanda", lastName: "Davis", profileImageUrl: null },
-      { id: "sample-lead-8", email: "lead8@example.com", password: defaultPassword, firstName: "Kevin", lastName: "Brown", profileImageUrl: null },
-      { id: "sample-lead-9", email: "lead9@example.com", password: defaultPassword, firstName: "Lisa", lastName: "Wilson", profileImageUrl: null },
-      { id: "sample-lead-10", email: "lead10@example.com", password: defaultPassword, firstName: "James", lastName: "Martinez", profileImageUrl: null },
-      { id: "sample-lead-11", email: "lead11@example.com", password: defaultPassword, firstName: "Nicole", lastName: "Anderson", profileImageUrl: null },
-      { id: "sample-lead-12", email: "lead12@example.com", password: defaultPassword, firstName: "Tyler", lastName: "Taylor", profileImageUrl: null },
-      { id: "sample-lead-13", email: "lead13@example.com", password: defaultPassword, firstName: "Rachel", lastName: "Moore", profileImageUrl: null },
-      { id: "sample-lead-14", email: "lead14@example.com", password: defaultPassword, firstName: "Alex", lastName: "Garcia", profileImageUrl: null },
-      { id: "sample-lead-15", email: "lead15@example.com", password: defaultPassword, firstName: "Samantha", lastName: "Lee", profileImageUrl: null },
+      { id: "sample-lead-1", email: "lead1@example.com", firstName: "Sarah", lastName: "Chen", profileImageUrl: null },
+      { id: "sample-lead-2", email: "lead2@example.com", firstName: "Michael", lastName: "Rodriguez", profileImageUrl: null },
+      { id: "sample-lead-3", email: "lead3@example.com", firstName: "Emily", lastName: "Thompson", profileImageUrl: null },
+      { id: "sample-lead-4", email: "lead4@example.com", firstName: "David", lastName: "Kim", profileImageUrl: null },
+      { id: "sample-lead-5", email: "lead5@example.com", firstName: "Jessica", lastName: "Patel", profileImageUrl: null },
+      { id: "sample-lead-6", email: "lead6@example.com", firstName: "Ryan", lastName: "Johnson", profileImageUrl: null },
+      { id: "sample-lead-7", email: "lead7@example.com", firstName: "Amanda", lastName: "Davis", profileImageUrl: null },
+      { id: "sample-lead-8", email: "lead8@example.com", firstName: "Kevin", lastName: "Brown", profileImageUrl: null },
+      { id: "sample-lead-9", email: "lead9@example.com", firstName: "Lisa", lastName: "Wilson", profileImageUrl: null },
+      { id: "sample-lead-10", email: "lead10@example.com", firstName: "James", lastName: "Martinez", profileImageUrl: null },
+      { id: "sample-lead-11", email: "lead11@example.com", firstName: "Nicole", lastName: "Anderson", profileImageUrl: null },
+      { id: "sample-lead-12", email: "lead12@example.com", firstName: "Tyler", lastName: "Taylor", profileImageUrl: null },
+      { id: "sample-lead-13", email: "lead13@example.com", firstName: "Rachel", lastName: "Moore", profileImageUrl: null },
+      { id: "sample-lead-14", email: "lead14@example.com", firstName: "Alex", lastName: "Garcia", profileImageUrl: null },
+      { id: "sample-lead-15", email: "lead15@example.com", firstName: "Samantha", lastName: "Lee", profileImageUrl: null },
       // Add sample members too
-      { id: "member-1", email: "member1@example.com", password: defaultPassword, firstName: "John", lastName: "Smith", profileImageUrl: null },
-      { id: "member-2", email: "member2@example.com", password: defaultPassword, firstName: "Jane", lastName: "Doe", profileImageUrl: null },
-      { id: "member-3", email: "member3@example.com", password: defaultPassword, firstName: "Bob", lastName: "Johnson", profileImageUrl: null },
-      { id: "member-4", email: "member4@example.com", password: defaultPassword, firstName: "Alice", lastName: "Williams", profileImageUrl: null },
-      { id: "member-5", email: "member5@example.com", password: defaultPassword, firstName: "Charlie", lastName: "Brown", profileImageUrl: null },
-      { id: "member-6", email: "member6@example.com", password: defaultPassword, firstName: "Diana", lastName: "Miller", profileImageUrl: null },
-      { id: "member-7", email: "member7@example.com", password: defaultPassword, firstName: "Frank", lastName: "Davis", profileImageUrl: null },
-      { id: "member-8", email: "member8@example.com", password: defaultPassword, firstName: "Grace", lastName: "Wilson", profileImageUrl: null },
-      { id: "member-9", email: "member9@example.com", password: defaultPassword, firstName: "Henry", lastName: "Moore", profileImageUrl: null },
-      { id: "member-10", email: "member10@example.com", password: defaultPassword, firstName: "Ivy", lastName: "Taylor", profileImageUrl: null },
-      { id: "member-11", email: "member11@example.com", password: defaultPassword, firstName: "Jack", lastName: "Anderson", profileImageUrl: null },
-      { id: "member-12", email: "member12@example.com", password: defaultPassword, firstName: "Kate", lastName: "Thomas", profileImageUrl: null },
-      { id: "member-13", email: "member13@example.com", password: defaultPassword, firstName: "Leo", lastName: "Jackson", profileImageUrl: null },
-      { id: "member-14", email: "member14@example.com", password: defaultPassword, firstName: "Mia", lastName: "White", profileImageUrl: null },
-      { id: "member-15", email: "member15@example.com", password: defaultPassword, firstName: "Nick", lastName: "Harris", profileImageUrl: null },
-      { id: "member-16", email: "member16@example.com", password: defaultPassword, firstName: "Olivia", lastName: "Martin", profileImageUrl: null },
-      { id: "member-17", email: "member17@example.com", password: defaultPassword, firstName: "Paul", lastName: "Thompson", profileImageUrl: null },
-      { id: "member-18", email: "member18@example.com", password: defaultPassword, firstName: "Quinn", lastName: "Garcia", profileImageUrl: null },
-      { id: "member-19", email: "member19@example.com", password: defaultPassword, firstName: "Ruby", lastName: "Martinez", profileImageUrl: null },
-      { id: "member-20", email: "member20@example.com", password: defaultPassword, firstName: "Steve", lastName: "Robinson", profileImageUrl: null },
-      { id: "member-21", email: "member21@example.com", password: defaultPassword, firstName: "Tina", lastName: "Clark", profileImageUrl: null },
-      { id: "member-22", email: "member22@example.com", password: defaultPassword, firstName: "Uma", lastName: "Rodriguez", profileImageUrl: null },
-      { id: "member-23", email: "member23@example.com", password: defaultPassword, firstName: "Victor", lastName: "Lewis", profileImageUrl: null },
-      { id: "member-24", email: "member24@example.com", password: defaultPassword, firstName: "Wendy", lastName: "Lee", profileImageUrl: null },
-      { id: "member-25", email: "member25@example.com", password: defaultPassword, firstName: "Xavier", lastName: "Walker", profileImageUrl: null },
-      { id: "member-26", email: "member26@example.com", password: defaultPassword, firstName: "Yara", lastName: "Hall", profileImageUrl: null },
-      { id: "member-27", email: "member27@example.com", password: defaultPassword, firstName: "Zoe", lastName: "Allen", profileImageUrl: null },
-      { id: "member-28", email: "member28@example.com", password: defaultPassword, firstName: "Adam", lastName: "Young", profileImageUrl: null },
-      { id: "member-29", email: "member29@example.com", password: defaultPassword, firstName: "Beth", lastName: "Hernandez", profileImageUrl: null },
-      { id: "member-30", email: "member30@example.com", password: defaultPassword, firstName: "Carl", lastName: "King", profileImageUrl: null },
-      { id: "member-31", email: "member31@example.com", password: defaultPassword, firstName: "Dana", lastName: "Wright", profileImageUrl: null },
-      { id: "member-32", email: "member32@example.com", password: defaultPassword, firstName: "Eric", lastName: "Lopez", profileImageUrl: null },
-      { id: "member-33", email: "member33@example.com", password: defaultPassword, firstName: "Fiona", lastName: "Hill", profileImageUrl: null },
-      { id: "member-34", email: "member34@example.com", password: defaultPassword, firstName: "Greg", lastName: "Green", profileImageUrl: null },
-      { id: "member-35", email: "member35@example.com", password: defaultPassword, firstName: "Helen", lastName: "Adams", profileImageUrl: null }
+      { id: "member-1", email: "member1@example.com", firstName: "John", lastName: "Smith", profileImageUrl: null },
+      { id: "member-2", email: "member2@example.com", firstName: "Jane", lastName: "Doe", profileImageUrl: null },
+      { id: "member-3", email: "member3@example.com", firstName: "Bob", lastName: "Johnson", profileImageUrl: null },
+      { id: "member-4", email: "member4@example.com", firstName: "Alice", lastName: "Williams", profileImageUrl: null },
+      { id: "member-5", email: "member5@example.com", firstName: "Charlie", lastName: "Brown", profileImageUrl: null },
+      { id: "member-6", email: "member6@example.com", firstName: "Diana", lastName: "Miller", profileImageUrl: null },
+      { id: "member-7", email: "member7@example.com", firstName: "Frank", lastName: "Davis", profileImageUrl: null },
+      { id: "member-8", email: "member8@example.com", firstName: "Grace", lastName: "Wilson", profileImageUrl: null },
+      { id: "member-9", email: "member9@example.com", firstName: "Henry", lastName: "Moore", profileImageUrl: null },
+      { id: "member-10", email: "member10@example.com", firstName: "Ivy", lastName: "Taylor", profileImageUrl: null },
+      { id: "member-11", email: "member11@example.com", firstName: "Jack", lastName: "Anderson", profileImageUrl: null },
+      { id: "member-12", email: "member12@example.com", firstName: "Kate", lastName: "Thomas", profileImageUrl: null },
+      { id: "member-13", email: "member13@example.com", firstName: "Leo", lastName: "Jackson", profileImageUrl: null },
+      { id: "member-14", email: "member14@example.com", firstName: "Mia", lastName: "White", profileImageUrl: null },
+      { id: "member-15", email: "member15@example.com", firstName: "Nick", lastName: "Harris", profileImageUrl: null },
+      { id: "member-16", email: "member16@example.com", firstName: "Olivia", lastName: "Martin", profileImageUrl: null },
+      { id: "member-17", email: "member17@example.com", firstName: "Paul", lastName: "Thompson", profileImageUrl: null },
+      { id: "member-18", email: "member18@example.com", firstName: "Quinn", lastName: "Garcia", profileImageUrl: null },
+      { id: "member-19", email: "member19@example.com", firstName: "Ruby", lastName: "Martinez", profileImageUrl: null },
+      { id: "member-20", email: "member20@example.com", firstName: "Steve", lastName: "Robinson", profileImageUrl: null },
+      { id: "member-21", email: "member21@example.com", firstName: "Tina", lastName: "Clark", profileImageUrl: null },
+      { id: "member-22", email: "member22@example.com", firstName: "Uma", lastName: "Rodriguez", profileImageUrl: null },
+      { id: "member-23", email: "member23@example.com", firstName: "Victor", lastName: "Lewis", profileImageUrl: null },
+      { id: "member-24", email: "member24@example.com", firstName: "Wendy", lastName: "Lee", profileImageUrl: null },
+      { id: "member-25", email: "member25@example.com", firstName: "Xavier", lastName: "Walker", profileImageUrl: null },
+      { id: "member-26", email: "member26@example.com", firstName: "Yara", lastName: "Hall", profileImageUrl: null },
+      { id: "member-27", email: "member27@example.com", firstName: "Zoe", lastName: "Allen", profileImageUrl: null },
+      { id: "member-28", email: "member28@example.com", firstName: "Adam", lastName: "Young", profileImageUrl: null },
+      { id: "member-29", email: "member29@example.com", firstName: "Beth", lastName: "Hernandez", profileImageUrl: null },
+      { id: "member-30", email: "member30@example.com", firstName: "Carl", lastName: "King", profileImageUrl: null },
+      { id: "member-31", email: "member31@example.com", firstName: "Dana", lastName: "Wright", profileImageUrl: null },
+      { id: "member-32", email: "member32@example.com", firstName: "Eric", lastName: "Lopez", profileImageUrl: null },
+      { id: "member-33", email: "member33@example.com", firstName: "Fiona", lastName: "Hill", profileImageUrl: null },
+      { id: "member-34", email: "member34@example.com", firstName: "Greg", lastName: "Green", profileImageUrl: null },
+      { id: "member-35", email: "member35@example.com", firstName: "Helen", lastName: "Adams", profileImageUrl: null }
     ];
 
     // Insert users first
@@ -501,7 +459,7 @@ export class DatabaseStorage implements IStorage {
         costPerPerson: 16600, // $166/month
         totalSpots: 5,
         availableSpots: 3,
-        amenities: ["fitness", "pool", "outdoor_training", "spa"] as string[],
+        amenities: ["fitness", "pool", "outdoor_training", "spa"],
         rules: "Active outdoor lifestyle. Adventure planning and group trips welcomed.",
         imageUrl: null
       },
@@ -564,7 +522,7 @@ export class DatabaseStorage implements IStorage {
       { podId: insertedPods[14].id, userId: "member-35" }
     ];
 
-    await db.insert(podMembers).values([...sampleMembers]);
+    await db.insert(podMembers).values(sampleMembers);
   }
 }
 

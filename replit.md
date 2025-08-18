@@ -36,7 +36,7 @@ Preferred communication style: Simple, everyday language.
 - **User Experience**: Mobile-first responsive design, offline capability, push notifications, accessibility features.
 
 ### Data Flow
-- **User Onboarding**: User type selection → Multi-step registration → Membership selection → Role-specific onboarding.
+- **User Onboarding**: Preference collection, local storage, server sync.
 - **Pod Discovery**: Search/filter, API request, results rendering.
 - **Join Request**: User selection, request creation, lead notification.
 - **Pod Management**: Lead approval, member update, status sync.
@@ -47,8 +47,7 @@ Preferred communication style: Simple, everyday language.
 - **Join Requests**: User-pod connections, approval status.
 
 ### Functional Requirements Summary
-- **User Management**: Multi-step registration (basic info → contact/address), Pod Seeker vs Pod Leader selection, profile management, role-based access, authentication.
-- **Membership Selection**: Bay Club membership selection page with authentic options (Single-Club, Multi-Club, Family), pricing, availability, and regional organization.
+- **User Management**: Registration (Pod Seeker vs Pod Leader), profile management, role-based access, authentication.
 - **Pod Discovery & Management**: Pod creation, search/filtering by location/type/amenities, regional organization based on authentic Bay Club data, rich pod listings.
 - **Membership Coordination**: Join request system (approval/rejection), member management, status tracking.
 - **Dashboard Systems**: User Dashboard (active pods, requests), Pod Leader Dashboard (join requests, pod members, my pods, analytics).

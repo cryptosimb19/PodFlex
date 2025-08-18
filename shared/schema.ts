@@ -14,11 +14,10 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table with email/password authentication
+// User storage table for Replit Auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique().notNull(),
-  password: varchar("password").notNull(),
+  email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -72,29 +71,11 @@ export const podMembers = pgTable("pod_members", {
 
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
-  password: true,
   firstName: true,
   lastName: true,
   profileImageUrl: true,
   membershipId: true,
   preferredRegion: true,
-});
-
-export const registerUserSchema = createInsertSchema(users).pick({
-  email: true,
-  password: true,
-  firstName: true,
-  lastName: true,
-}).extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-export const loginUserSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
 });
 
 export const upsertUserSchema = createInsertSchema(users).pick({
@@ -118,8 +99,6 @@ export const insertJoinRequestSchema = createInsertSchema(joinRequests).omit({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
-export type RegisterUser = z.infer<typeof registerUserSchema>;
-export type LoginUser = z.infer<typeof loginUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertPod = z.infer<typeof insertPodSchema>;
 export type Pod = typeof pods.$inferSelect;

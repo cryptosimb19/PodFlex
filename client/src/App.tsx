@@ -1,9 +1,8 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
@@ -15,14 +14,10 @@ import SearchScreen from "@/pages/search";
 import PodDetail from "@/pages/pod-detail";
 import Dashboard from "@/pages/dashboard";
 import PodLeaderDashboard from "@/pages/pod-leader-dashboard";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import MembershipSelection from "@/pages/membership-selection";
 import { useEffect } from "react";
 
 // Landing page for non-authenticated users
 function Landing() {
-  const [, navigate] = useLocation();
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-16">
@@ -48,20 +43,13 @@ function Landing() {
             Connect with others to split Bay Club membership costs.
           </p>
 
-          <div className="flex flex-col items-center space-y-4">
-            <Button
-              onClick={() => navigate("/user-type")}
+          <div className="flex justify-center">
+            <a
+              href="/api/login"
               className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Get Started
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/login")}
-              className="inline-flex items-center px-8 py-4 text-lg font-semibold text-purple-600 bg-white border-2 border-purple-200 rounded-xl hover:bg-purple-50 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              Sign In
-            </Button>
+              Sign In to Get Started
+            </a>
           </div>
         </div>
       </div>
@@ -88,19 +76,18 @@ function Router() {
   return (
     <Switch>
       {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/user-type" component={UserTypeSelection} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-          <Route path="/membership-selection" component={MembershipSelection} />
-        </>
+        <Route path="/" component={Landing} />
       ) : (
         <>
           <Route path="/" component={() => {
             // Check localStorage for user flow state
+            const hasSeenWelcome = localStorage.getItem('flexpod_seen_welcome');
             const userType = localStorage.getItem('flexpod_user_type');
             const hasCompletedOnboarding = localStorage.getItem('flexpod_onboarding_complete');
+            
+            if (!hasSeenWelcome) {
+              return <Welcome />;
+            }
             
             if (!userType) {
               return <UserTypeSelection />;
@@ -122,7 +109,6 @@ function Router() {
             }
           }} />
           <Route path="/user-type" component={UserTypeSelection} />
-          <Route path="/membership-selection" component={MembershipSelection} />
           <Route path="/onboarding" component={OnboardingWizard} />
           <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
           <Route path="/pods" component={SearchScreen} />
