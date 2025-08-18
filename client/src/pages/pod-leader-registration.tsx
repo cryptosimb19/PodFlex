@@ -321,29 +321,52 @@ export default function PodLeaderRegistration() {
   };
 
   const handleSubmit = async () => {
-    // Save user data to localStorage for use in join requests
-    const userData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      primaryCampus: formData.primaryCampus,
-      primaryClub: formData.primaryClub,
-      membershipLevel: formData.membershipLevel,
-      membershipId: formData.membershipId,
-      street: formData.street,
-      aptUnit: formData.aptUnit,
-      city: formData.city,
-      state: formData.state,
-      zipCode: formData.zipCode,
-      country: formData.country,
-      dateOfBirth: formData.dateOfBirth,
-    };
-    localStorage.setItem('userData', JSON.stringify(userData));
-    
-    // In a real app, this would create the pod and save to backend
-    console.log("Pod Leader Registration Data:", formData);
-    navigate("/pod-leader-dashboard");
+    try {
+      // Save user data to localStorage for use in join requests
+      const userData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        primaryCampus: formData.primaryCampus,
+        primaryClub: formData.primaryClub,
+        membershipLevel: formData.membershipLevel,
+        membershipId: formData.membershipId,
+        street: formData.street,
+        aptUnit: formData.aptUnit,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        country: formData.country,
+        dateOfBirth: formData.dateOfBirth,
+      };
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // Update user profile with membership information if provided
+      if (formData.membershipId || formData.primaryCampus) {
+        const response = await fetch('/api/users/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            membershipId: formData.membershipId || undefined,
+            preferredRegion: formData.primaryCampus || undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to update user profile, but continuing...');
+        }
+      }
+      
+      console.log("Pod Leader Registration Data:", formData);
+      navigate("/pod-leader-dashboard");
+    } catch (error) {
+      console.error("Error during pod leader registration:", error);
+      // Still navigate even if profile update fails
+      navigate("/pod-leader-dashboard");
+    }
   };
 
   const totalSteps = 4;

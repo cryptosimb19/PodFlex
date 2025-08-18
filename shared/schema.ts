@@ -84,6 +84,8 @@ export const upsertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   profileImageUrl: true,
+  membershipId: true,
+  preferredRegion: true,
 });
 
 export const insertPodSchema = createInsertSchema(pods).omit({

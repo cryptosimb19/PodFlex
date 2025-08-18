@@ -253,10 +253,35 @@ export default function OnboardingWizard() {
   };
 
   const handleFinish = async () => {
-    // Save user data to localStorage for use in join requests
-    localStorage.setItem('userData', JSON.stringify(userData));
-    console.log("User data:", userData);
-    navigate("/dashboard");
+    try {
+      // Save user data to localStorage for join requests
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // Update user profile with membership information if provided
+      if (userData.membershipId || userData.primaryCampus) {
+        const response = await fetch('/api/users/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            membershipId: userData.membershipId || undefined,
+            preferredRegion: userData.primaryCampus || undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to update user profile, but continuing...');
+        }
+      }
+      
+      console.log("User data:", userData);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error during onboarding completion:", error);
+      // Still navigate to dashboard even if profile update fails
+      navigate("/dashboard");
+    }
   };
 
   const canProceedToStep2 = userData.firstName && userData.lastName && userData.email && userData.phone;
