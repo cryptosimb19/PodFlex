@@ -16,6 +16,53 @@ import Dashboard from "@/pages/dashboard";
 import PodLeaderDashboard from "@/pages/pod-leader-dashboard";
 import { useEffect } from "react";
 
+// Dedicated Sign In page
+function SignInPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                <Zap className="w-10 h-10 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Sign In to{" "}
+            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              FlexPod
+            </span>
+          </h1>
+
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            Welcome back! Sign in to access your pods and manage your membership sharing.
+          </p>
+
+          <div className="space-y-4">
+            <a
+              href="/api/login"
+              className="inline-flex items-center justify-center w-full px-6 py-3 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Continue with Replit
+            </a>
+            
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              New to FlexPod?{" "}
+              <a href="/" className="text-purple-600 hover:text-purple-700 font-medium">
+                Get started here
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Landing page for non-authenticated users
 function Landing() {
   return (
@@ -43,13 +90,22 @@ function Landing() {
             Connect with others to split Bay Club membership costs.
           </p>
 
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center space-y-4">
             <a
               href="/api/login"
               className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Sign In to Get Started
+              Get Started
             </a>
+            
+            <div className="text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Already have an account?{" "}
+                <a href="/signin" className="text-purple-600 hover:text-purple-700 font-medium">
+                  Sign In
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -76,7 +132,10 @@ function Router() {
   return (
     <Switch>
       {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/signin" component={SignInPage} />
+        </>
       ) : (
         <>
           <Route path="/" component={() => {
