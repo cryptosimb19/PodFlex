@@ -86,23 +86,15 @@ export default function Welcome() {
 
         {/* Get Started Button */}
         <Button 
-          onClick={() => navigate("/user-type")}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-4 rounded-lg text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow mb-4"
+          onClick={() => {
+            localStorage.setItem('flexpod_seen_welcome', 'true');
+            navigate("/user-type");
+          }}
+          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-4 rounded-lg text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow"
         >
           Get Started
           <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
         </Button>
-
-        {/* Sign In Option */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600 mb-3">Already have an account?</p>
-          <a
-            href="/api/login"
-            className="inline-flex items-center px-6 py-2 text-sm font-medium text-purple-600 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            Sign In
-          </a>
-        </div>
 
 
       </div>

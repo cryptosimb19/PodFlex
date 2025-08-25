@@ -129,12 +129,14 @@ function Router() {
     );
   }
 
-  // Clear localStorage if user is not authenticated to avoid stale state
-  if (!isAuthenticated) {
-    localStorage.removeItem('flexpod_seen_welcome');
-    localStorage.removeItem('flexpod_user_type');
-    localStorage.removeItem('flexpod_onboarding_complete');
-  }
+  // Clear localStorage only when transitioning from authenticated to unauthenticated
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      localStorage.removeItem('flexpod_seen_welcome');
+      localStorage.removeItem('flexpod_user_type');
+      localStorage.removeItem('flexpod_onboarding_complete');
+    }
+  }, [isAuthenticated, isLoading]);
 
   return (
     <Switch>
