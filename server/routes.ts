@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { sendJoinRequestNotification } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification } from "./emailService";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 
@@ -153,6 +153,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (pod && pod.availableSpots > 0) {
           await storage.updatePodAvailability(updatedRequest.podId, pod.availableSpots - 1);
         }
+      }
+
+      // Send email notification to applicant
+      try {
+        const pod = await storage.getPod(updatedRequest.podId);
+        const applicant = await storage.getUser(updatedRequest.userId);
+        const fromEmail = process.env.FROM_EMAIL || "noreply@your-domain.com";
+        
+        if (pod && applicant && applicant.email) {
+          if (status === "accepted") {
+            const podLeader = await storage.getUser(pod.leadId);
+            const podLeaderName = podLeader ? `${podLeader.firstName} ${podLeader.lastName}` : "Pod Leader";
+            
+            await sendJoinRequestAcceptedNotification(
+              applicant.email,
+              `${applicant.firstName} ${applicant.lastName}`,
+              pod.title,
+              podLeaderName,
+              fromEmail
+            );
+          } else if (status === "rejected") {
+            await sendJoinRequestRejectedNotification(
+              applicant.email,
+              `${applicant.firstName} ${applicant.lastName}`,
+              pod.title,
+              fromEmail
+            );
+          }
+        }
+      } catch (emailError) {
+        console.error("Failed to send status update email:", emailError);
+        // Don't fail the request if email fails
       }
 
       res.json(updatedRequest);
