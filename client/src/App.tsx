@@ -129,6 +129,13 @@ function Router() {
     );
   }
 
+  // Clear localStorage if user is not authenticated to avoid stale state
+  if (!isAuthenticated) {
+    localStorage.removeItem('flexpod_seen_welcome');
+    localStorage.removeItem('flexpod_user_type');
+    localStorage.removeItem('flexpod_onboarding_complete');
+  }
+
   return (
     <Switch>
       {!isAuthenticated ? (
