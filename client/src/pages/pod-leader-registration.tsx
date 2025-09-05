@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Zap, Users, MapPin, DollarSign, Calendar, Shield, ArrowRight, ArrowLeft } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 interface PodLeaderData {
   // Personal Info
@@ -322,6 +323,13 @@ export default function PodLeaderRegistration() {
 
   const handleSubmit = async () => {
     try {
+      // Get current user data for the pod leadId
+      const userResponse = await fetch('/api/auth/user');
+      if (!userResponse.ok) {
+        throw new Error('Failed to get user information');
+      }
+      const currentUser = await userResponse.json();
+
       // Save user data to localStorage for use in join requests
       const userData = {
         firstName: formData.firstName,
@@ -359,12 +367,47 @@ export default function PodLeaderRegistration() {
           console.warn('Failed to update user profile, but continuing...');
         }
       }
+
+      // Create the pod
+      const podData = {
+        leadId: currentUser.id,
+        clubName: formData.primaryClub,
+        clubRegion: formData.primaryCampus,
+        clubAddress: `${formData.primaryClub}, ${formData.primaryCampus}`, // Basic address
+        membershipType: formData.membershipLevel,
+        title: formData.podName,
+        description: formData.podDescription,
+        costPerPerson: Math.round(parseFloat(formData.monthlyFee) * 100), // Convert to cents
+        totalSpots: parseInt(formData.availableSpots),
+        availableSpots: parseInt(formData.availableSpots),
+        amenities: [], // Default empty, can be enhanced later
+        rules: formData.requirements.join(', '), // Convert requirements array to string
+        isActive: true,
+      };
+
+      const podResponse = await fetch('/api/pods', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(podData),
+      });
+
+      if (!podResponse.ok) {
+        throw new Error('Failed to create pod');
+      }
+
+      const createdPod = await podResponse.json();
+      console.log("Pod created successfully:", createdPod);
+      
+      // Invalidate pods cache to refresh the browse pods list
+      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
       
       console.log("Pod Leader Registration Data:", formData);
       navigate("/pod-leader-dashboard");
     } catch (error) {
       console.error("Error during pod leader registration:", error);
-      // Still navigate even if profile update fails
+      // Still navigate even if pod creation fails
       navigate("/pod-leader-dashboard");
     }
   };
