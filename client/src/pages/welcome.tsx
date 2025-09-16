@@ -84,27 +84,26 @@ export default function Welcome() {
           </div>
         </div>
 
-        {/* Get Started Button */}
-        <Button 
-          onClick={() => {
-            localStorage.setItem('flexpod_seen_welcome', 'true');
-            navigate("/user-type");
-          }}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-4 rounded-lg text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow mb-4"
-        >
-          Get Started
-          <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
-        </Button>
-
-        {/* Sign In Option */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600 mb-3">Already have an account?</p>
+        {/* Main CTA - Sign In/Get Started */}
+        <div className="space-y-4 mb-6">
           <a
             href="/api/login"
-            className="inline-flex items-center px-6 py-2 text-sm font-medium text-purple-600 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md"
+            className="inline-flex items-center justify-center w-full px-6 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow"
           >
-            Sign In
+            Continue with Replit
+            <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
           </a>
+          
+          <p className="text-sm text-gray-600 text-center">
+            New to FlexPod? No problem! Just sign in and we'll get you started.
+          </p>
+        </div>
+
+        {/* Additional Info */}
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            Secure authentication powered by Replit • No passwords to remember
+          </p>
         </div>
 
       </div>
