@@ -57,10 +57,7 @@ function Router() {
             const userType = localStorage.getItem('flexpod_user_type');
             const hasCompletedOnboarding = localStorage.getItem('flexpod_onboarding_complete');
             
-            if (!hasSeenWelcome) {
-              return <Welcome />;
-            }
-            
+            // For authenticated users, skip welcome screen and go to appropriate flow
             if (!userType) {
               return <UserTypeSelection />;
             }
