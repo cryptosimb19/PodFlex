@@ -75,7 +75,7 @@ export default function Welcome() {
             href="/api/login"
             className="inline-flex items-center justify-center w-full px-6 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow"
           >
-            Continue with Replit
+            Sign in or Sign up
             <ArrowRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
           </a>
           
