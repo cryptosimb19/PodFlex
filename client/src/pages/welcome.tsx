@@ -84,12 +84,6 @@ export default function Welcome() {
           </p>
         </div>
 
-        {/* Additional Info */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Secure authentication powered by Replit • No passwords to remember
-          </p>
-        </div>
 
       </div>
     </div>
