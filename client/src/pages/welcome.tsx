@@ -68,21 +68,6 @@ export default function Welcome() {
           </CardContent>
         </Card>
 
-        {/* Benefits List */}
-        <div className="space-y-3 mb-8 slide-in-right">
-          <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/50 transition-colors">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <span className="text-sm text-gray-700 font-medium">Access to Shared Membership</span>
-          </div>
-          <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/50 transition-colors">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <span className="text-sm text-gray-700 font-medium">Verified Members</span>
-          </div>
-          <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/50 transition-colors">
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <span className="text-sm text-gray-700 font-medium">Secure Payment</span>
-          </div>
-        </div>
 
         {/* Main CTA - Sign In/Get Started */}
         <div className="space-y-4 mb-6">
