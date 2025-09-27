@@ -7,6 +7,7 @@ import { Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/welcome";
+import LoginPage from "@/pages/login";
 import OnboardingWizard from "@/pages/onboarding";
 import UserTypeSelection from "@/pages/user-type-selection";
 import PodLeaderRegistration from "@/pages/pod-leader-registration";
@@ -48,9 +49,19 @@ function Router() {
         <>
           <Route path="/" component={Welcome} />
           <Route path="/signin" component={Welcome} />
+          <Route path="/login" component={LoginPage} />
         </>
       ) : (
         <>
+          <Route path="/login" component={() => {
+            // Redirect authenticated users to their dashboard
+            const userType = localStorage.getItem('flexpod_user_type');
+            if (userType === 'pod_leader') {
+              return <PodLeaderDashboard />;
+            } else {
+              return <Dashboard />;
+            }
+          }} />
           <Route path="/" component={() => {
             // Check localStorage for user flow state
             const hasSeenWelcome = localStorage.getItem('flexpod_seen_welcome');
@@ -78,6 +89,7 @@ function Router() {
             }
           }} />
           <Route path="/user-type" component={UserTypeSelection} />
+          <Route path="/user-type-selection" component={UserTypeSelection} />
           <Route path="/onboarding" component={OnboardingWizard} />
           <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
           <Route path="/pods" component={SearchScreen} />

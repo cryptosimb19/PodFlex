@@ -14,15 +14,25 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table supporting multiple authentication providers
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
+  email: varchar("email").unique().notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   membershipId: text("membership_id"),
   preferredRegion: text("preferred_region"),
+  // Local authentication fields
+  passwordHash: varchar("password_hash"), // For local authentication
+  authProvider: varchar("auth_provider").notNull().default("local"), // "local", "google", "replit"
+  googleId: varchar("google_id"), // For Google OAuth
+  replitId: varchar("replit_id"), // For Replit Auth
+  // Account verification
+  isEmailVerified: boolean("is_email_verified").default(false),
+  emailVerificationToken: varchar("email_verification_token"),
+  passwordResetToken: varchar("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -76,6 +86,14 @@ export const insertUserSchema = createInsertSchema(users).pick({
   profileImageUrl: true,
   membershipId: true,
   preferredRegion: true,
+  passwordHash: true,
+  authProvider: true,
+  googleId: true,
+  replitId: true,
+  isEmailVerified: true,
+  emailVerificationToken: true,
+}).partial().extend({
+  email: z.string().email(),
 });
 
 export const upsertUserSchema = createInsertSchema(users).pick({

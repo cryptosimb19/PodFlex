@@ -22,7 +22,9 @@ export interface IStorage {
   
   // Additional user operations
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, userData: Partial<User>): Promise<User | undefined>;
   
   // Pod operations
   getPods(): Promise<Pod[]>;
@@ -78,6 +80,23 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .insert(users)
       .values(userData)
+      .returning();
+    return user;
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
+    return user;
+  }
+
+  async updateUser(id: string, userData: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...userData,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
       .returning();
     return user;
   }

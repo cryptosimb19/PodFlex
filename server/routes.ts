@@ -1,10 +1,18 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, hashPassword } from "./multiAuth";
+import passport from "passport";
 import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification } from "./emailService";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
+import type { User } from "@shared/schema";
+
+// Sanitize user data to remove sensitive fields
+function sanitizeUser(user: User) {
+  const { passwordHash, emailVerificationToken, passwordResetToken, passwordResetExpires, ...sanitized } = user;
+  return sanitized;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -13,13 +21,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      res.json(sanitizeUser(req.user));
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  // Local authentication routes
+  const registerSchema = z.object({
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    firstName: z.string().min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  });
+
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const validatedData = registerSchema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      // Hash password and create user
+      const passwordHash = await hashPassword(validatedData.password);
+      const user = await storage.createUser({
+        email: validatedData.email,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        passwordHash,
+        authProvider: "local",
+        isEmailVerified: false, // In a real app, you'd send verification email
+      });
+
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Failed to log in after registration" });
+        }
+        res.status(201).json({ user: sanitizeUser(user), message: "Registration successful" });
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  const loginSchema = z.object({
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(1, "Password is required"),
+  });
+
+  app.post('/api/auth/login', (req, res, next) => {
+    try {
+      const validatedData = loginSchema.parse(req.body);
+      
+      passport.authenticate('local', (err: any, user: any, info: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Login error" });
+        }
+        if (!user) {
+          return res.status(401).json({ message: info.message || "Invalid credentials" });
+        }
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).json({ message: "Failed to log in" });
+          }
+          res.json({ user: sanitizeUser(user), message: "Login successful" });
+        });
+      })(req, res, next);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input data", 
+          errors: error.errors 
+        });
+      }
+      return res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Auth providers endpoint
+  app.get('/api/auth/providers', (req, res) => {
+    const providers = ['local'];
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      providers.push('google');
+    }
+    res.json({ providers });
+  });
+
+  // Google OAuth routes (only if configured)
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    app.get('/api/auth/google', 
+      passport.authenticate('google', { scope: ['profile', 'email'] })
+    );
+
+    app.get('/api/auth/google/callback',
+      passport.authenticate('google', { failureRedirect: '/login' }),
+      (req, res) => {
+        // Successful authentication, redirect to user type selection
+        res.redirect('/user-type-selection');
+      }
+    );
+  } else {
+    // Return error if Google OAuth is not configured
+    app.get('/api/auth/google', (req, res) => {
+      res.status(503).json({ message: "Google OAuth is not configured" });
+    });
+  }
+
+  // Logout route
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logout successful" });
+    });
   });
   // Get all pods
   app.get("/api/pods", async (req, res) => {
@@ -205,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const user = await storage.getUser(member.userId);
           return {
             ...member,
-            user: user || null
+            user: user ? sanitizeUser(user) : null
           };
         })
       );
@@ -235,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json(user);
+      res.json(sanitizeUser(user));
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user" });
     }
@@ -244,21 +370,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user profile
   app.put("/api/users/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { membershipId, preferredRegion } = req.body;
       
       // Update user with membership information
       const updatedUser = await storage.upsertUser({
         id: userId,
-        email: req.user.claims.email,
-        firstName: req.user.claims.first_name,
-        lastName: req.user.claims.last_name,
-        profileImageUrl: req.user.claims.profile_image_url,
+        email: req.user.email,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        profileImageUrl: req.user.profileImageUrl,
         ...(membershipId && { membershipId }),
         ...(preferredRegion && { preferredRegion })
       });
       
-      res.json(updatedUser);
+      res.json(sanitizeUser(updatedUser));
     } catch (error) {
       console.error("Error updating user profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
