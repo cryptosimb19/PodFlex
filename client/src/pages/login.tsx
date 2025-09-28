@@ -137,7 +137,7 @@ export default function LoginPage() {
         description: "Welcome to FlexPod!",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      navigate('/user-type');
+      navigate('/user-type-selection');
     },
     onError: (error: Error) => {
       toast({

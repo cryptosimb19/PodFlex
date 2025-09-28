@@ -88,7 +88,6 @@ function Router() {
               return <Dashboard />;
             }
           }} />
-          <Route path="/user-type" component={UserTypeSelection} />
           <Route path="/user-type-selection" component={UserTypeSelection} />
           <Route path="/onboarding" component={OnboardingWizard} />
           <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
