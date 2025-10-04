@@ -72,7 +72,9 @@ Preferred communication style: Simple, everyday language.
 - `ESBuild`: Production bundling
 
 ### Third-Party Services
-- **SendGrid**: Fully configured for email notifications. Successfully sends professional emails to pod leaders when users request to join their pods. Includes branded HTML templates with gradient headers, applicant details, and dashboard links.
+- **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
 
-### Recent Changes (August 18, 2025)
-- **Bay Club Membership ID Made Optional**: Updated both onboarding and pod-leader registration forms to make the Bay Club Membership ID field optional. Users can now complete registration without providing their membership ID and add it later. This improves user accessibility and reduces signup friction.
+### Recent Changes
+- **October 4, 2025**: Replaced SendGrid with MailerSend for email notifications. Updated emailService.ts to use MailerSend SDK with proper email templates for join requests, acceptances, and rejections.
+- **October 4, 2025**: Fixed 404 flash issue after login/signup by properly awaiting authentication state updates (invalidateQueries + refetchQueries) before navigation.
+- **August 18, 2025**: Bay Club Membership ID Made Optional - Updated both onboarding and pod-leader registration forms to make the Bay Club Membership ID field optional. Users can now complete registration without providing their membership ID and add it later. This improves user accessibility and reduces signup friction.
