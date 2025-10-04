@@ -53,6 +53,20 @@ interface PodMemberWithUser extends PodMember {
 
 export default function PodLeaderDashboard() {
   const [, navigate] = useLocation();
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      navigate('/');
+    }
+  };
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -233,12 +247,10 @@ export default function PodLeaderDashboard() {
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Pod
               </Button>
-              <a href="/api/logout">
-                <Button variant="outline" size="sm">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
-              </a>
+              <Button onClick={handleLogout} variant="outline" size="sm" data-testid="button-logout">
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>

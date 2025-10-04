@@ -51,6 +51,20 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      navigate('/');
+    }
+  };
+
   // Fetch user's join requests
   const { data: joinRequests, isLoading: requestsLoading } = useQuery<JoinRequest[]>({
     queryKey: ['/api/join-requests', 'user', 1], // Mock user ID
@@ -157,11 +171,15 @@ export default function Dashboard() {
               >
                 Browse Pods
               </Button>
-              <a href="/api/logout" className="w-full sm:w-auto">
-                <Button variant="outline" size="sm" className="w-full sm:w-auto" data-testid="button-logout">
-                  Logout
-                </Button>
-              </a>
+              <Button 
+                onClick={handleLogout}
+                variant="outline" 
+                size="sm" 
+                className="w-full sm:w-auto" 
+                data-testid="button-logout"
+              >
+                Logout
+              </Button>
             </div>
           </div>
         </div>
