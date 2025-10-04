@@ -97,12 +97,13 @@ export default function LoginPage() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
       navigate('/');
     },
     onError: (error: Error) => {
@@ -131,12 +132,13 @@ export default function LoginPage() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Registration successful",
         description: "Welcome to FlexPod!",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
       navigate('/user-type-selection');
     },
     onError: (error: Error) => {
