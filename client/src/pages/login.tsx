@@ -103,7 +103,7 @@ export default function LoginPage() {
         description: "Welcome back!",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      navigate('/dashboard');
+      navigate('/');
     },
     onError: (error: Error) => {
       toast({
