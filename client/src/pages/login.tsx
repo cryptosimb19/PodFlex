@@ -52,7 +52,7 @@ export default function LoginPage() {
   const queryClient = useQueryClient();
 
   // Check available auth providers
-  const { data: providers } = useQuery({
+  const { data: providers } = useQuery<{ providers: string[] }>({
     queryKey: ['/api/auth/providers'],
     retry: false,
   });
