@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import Navigation from "@/components/Navigation";
 import { Search, Filter, MapPin, Users, DollarSign, Star, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Pod } from "@shared/schema";
@@ -79,33 +80,11 @@ export default function SearchScreen() {
     navigate(`/pod/${podId}`);
   };
 
+  const userType = (localStorage.getItem('flexpod_user_type') === 'pod_leader' ? 'pod_leader' : 'pod_seeker') as 'pod_seeker' | 'pod_leader';
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">FlexPod</h1>
-                <p className="text-sm text-gray-600">Fun is better when Shared</p>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2"
-            >
-              <Filter className="w-4 h-4" />
-              <span>Filters</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Navigation userType={userType} />
 
       {/* Search Bar */}
       <div className="px-4 py-4 bg-white border-b">

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Navigation from "@/components/Navigation";
 import { Zap, Users, MapPin } from "lucide-react";
 
 interface UserData {
@@ -570,7 +571,9 @@ export default function OnboardingWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navigation userType="pod_seeker" />
+      <div className="flex flex-col items-center justify-center px-4 pt-20">
       {renderStep()}
       
       {/* Progress indicator */}
@@ -583,6 +586,7 @@ export default function OnboardingWizard() {
             }`}
           />
         ))}
+      </div>
       </div>
     </div>
   );

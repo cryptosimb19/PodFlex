@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import Navigation from "@/components/Navigation";
 import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Pod, JoinRequest } from "@shared/schema";
@@ -146,20 +147,21 @@ export default function PodDetail() {
     );
   }
 
+  const userType = (localStorage.getItem('flexpod_user_type') === 'pod_leader' ? 'pod_leader' : 'pod_seeker') as 'pod_seeker' | 'pod_leader';
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/pods")}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Pods
-          </Button>
-        </div>
+      <Navigation userType={userType} />
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/pods")}
+          className="mb-4"
+          data-testid="button-back-to-pods"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Pods
+        </Button>
       </div>
 
       {/* Pod Details */}

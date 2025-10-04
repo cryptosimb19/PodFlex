@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Navigation from "@/components/Navigation";
 import { Zap, Users, Plus, ArrowRight } from "lucide-react";
 
 export default function UserTypeSelection() {
@@ -17,7 +18,9 @@ export default function UserTypeSelection() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      <Navigation userType="pod_seeker" />
+      <div className="flex items-center justify-center p-4 pt-20">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
@@ -94,8 +97,7 @@ export default function UserTypeSelection() {
           Continue
           <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
         </Button>
-
-
+      </div>
       </div>
     </div>
   );

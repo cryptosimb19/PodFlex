@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import Navigation from "@/components/Navigation";
 import { 
   User, 
   Calendar, 
@@ -148,42 +149,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-6 space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">FlexPod</h1>
-                <p className="text-sm sm:text-base text-gray-600">Your Account</p>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <Button 
-                onClick={() => navigate('/pods')} 
-                variant="outline" 
-                size="sm"
-                className="w-full sm:w-auto"
-                data-testid="button-browse-pods"
-              >
-                Browse Pods
-              </Button>
-              <Button 
-                onClick={handleLogout}
-                variant="outline" 
-                size="sm" 
-                className="w-full sm:w-auto" 
-                data-testid="button-logout"
-              >
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Navigation userType="pod_seeker" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">

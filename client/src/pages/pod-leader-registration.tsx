@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import Navigation from "@/components/Navigation";
 import { Zap, Users, MapPin, DollarSign, Calendar, Shield, ArrowRight, ArrowLeft } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 
@@ -925,7 +926,9 @@ export default function PodLeaderRegistration() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      <Navigation userType="pod_leader" />
+      <div className="flex items-center justify-center p-4 pt-20">
       <div className="w-full max-w-md">
         {/* Progress Bar */}
         <div className="mb-6">
@@ -942,6 +945,7 @@ export default function PodLeaderRegistration() {
         </div>
 
         {renderStep()}
+      </div>
       </div>
     </div>
   );
