@@ -58,10 +58,10 @@ export default function Dashboard() {
         method: 'POST',
         credentials: 'include',
       });
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      navigate('/');
+      navigate('/login');
     }
   };
 

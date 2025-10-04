@@ -61,10 +61,10 @@ export default function PodLeaderDashboard() {
         method: 'POST',
         credentials: 'include',
       });
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      navigate('/');
+      navigate('/login');
     }
   };
   const { toast } = useToast();
