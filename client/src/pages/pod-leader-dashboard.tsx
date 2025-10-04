@@ -43,6 +43,7 @@ interface UserData {
 }
 
 interface JoinRequestWithUser extends JoinRequest {
+  podName?: string;
   userName?: string;
   userEmail?: string;
   userPhone?: string;
@@ -81,7 +82,7 @@ export default function PodLeaderDashboard() {
       if (!response.ok) throw new Error('Failed to fetch pods');
       const allPods = await response.json();
       // Filter pods where current user is the leader
-      return allPods.filter((pod: Pod) => pod.leadId === 1); // Mock filter
+      return allPods.filter((pod: Pod) => pod.leadId === 'sample-lead-1'); // Mock filter
     },
   });
 
@@ -187,8 +188,8 @@ export default function PodLeaderDashboard() {
   };
 
   const pendingRequests = allJoinRequests?.filter(req => req.status === 'pending') || [];
-  const totalMembers = leaderPods?.reduce((sum, pod) => sum + (pod.maxMembers - pod.availableSpots), 0) || 0;
-  const totalRevenue = leaderPods?.reduce((sum, pod) => sum + (pod.monthlyFee * (pod.maxMembers - pod.availableSpots)), 0) || 0;
+  const totalMembers = leaderPods?.reduce((sum, pod) => sum + (pod.availableSpots || 0), 0) || 0;
+  const totalRevenue = leaderPods?.reduce((sum, pod) => sum + (pod.costPerPerson * (pod.availableSpots || 0)), 0) || 0;
 
   if (!userData) {
     return (
@@ -370,7 +371,7 @@ export default function PodLeaderDashboard() {
                                   Wants to join: <strong>{request.podName}</strong>
                                 </p>
                                 <p className="text-sm text-gray-600">
-                                  Submitted: {formatDate(request.createdAt)}
+                                  Submitted: {request.createdAt ? formatDate(request.createdAt.toString()) : 'Unknown'}
                                 </p>
                               </div>
                               <div className="flex space-x-2">
@@ -466,7 +467,7 @@ export default function PodLeaderDashboard() {
                                 <div className="text-right">
                                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                                     <Users className="w-4 h-4" />
-                                    <span>{(pod.totalSpots || pod.maxMembers || 0) - pod.availableSpots} members</span>
+                                    <span>{pod.totalSpots - (pod.availableSpots || 0)} members</span>
                                   </div>
                                 </div>
                               </div>
@@ -528,7 +529,7 @@ export default function PodLeaderDashboard() {
                                         {member.user?.email || 'No email'}
                                       </p>
                                       <p className="text-sm text-gray-500">
-                                        Joined {formatDate(member.joinedAt)}
+                                        Joined {member.joinedAt ? formatDate(member.joinedAt.toString()) : 'Unknown'}
                                       </p>
                                     </div>
                                   </div>
@@ -606,7 +607,7 @@ export default function PodLeaderDashboard() {
                                         <div className="space-y-2 text-sm">
                                           <div className="flex justify-between">
                                             <span>Joined Date:</span>
-                                            <span>{formatDate(selectedMember.joinedAt)}</span>
+                                            <span>{selectedMember.joinedAt ? formatDate(selectedMember.joinedAt.toString()) : 'Unknown'}</span>
                                           </div>
                                           <div className="flex justify-between">
                                             <span>Status:</span>
@@ -660,23 +661,23 @@ export default function PodLeaderDashboard() {
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
                                   <h3 className="font-semibold text-lg">{pod.clubName}</h3>
-                                  <Badge variant="outline">{pod.region}</Badge>
-                                  <Badge variant={pod.availableSpots > 0 ? "default" : "secondary"}>
-                                    {pod.availableSpots > 0 ? "Open" : "Full"}
+                                  <Badge variant="outline">{pod.clubRegion}</Badge>
+                                  <Badge variant={(pod.availableSpots || 0) > 0 ? "default" : "secondary"}>
+                                    {(pod.availableSpots || 0) > 0 ? "Open" : "Full"}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
                                   <div className="flex items-center space-x-1">
                                     <MapPin className="w-4 h-4" />
-                                    <span>{pod.location}</span>
+                                    <span>{pod.clubAddress}</span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <DollarSign className="w-4 h-4" />
-                                    <span>${pod.monthlyFee}/month</span>
+                                    <span>${pod.costPerPerson}/month</span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <Users className="w-4 h-4" />
-                                    <span>{pod.maxMembers - pod.availableSpots}/{pod.maxMembers}</span>
+                                    <span>{pod.totalSpots - (pod.availableSpots || 0)}/{pod.totalSpots}</span>
                                   </div>
                                 </div>
                                 <p className="text-sm text-gray-600 line-clamp-2">{pod.description}</p>
