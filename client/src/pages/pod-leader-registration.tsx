@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ interface PodLeaderData {
 }
 
 export default function PodLeaderRegistration() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(1); // Will start at Bay Club form (3 steps total now)
   const [formData, setFormData] = useState<PodLeaderData>({
     firstName: "",
     lastName: "",
@@ -70,6 +70,27 @@ export default function PodLeaderRegistration() {
     agreesToTerms: false,
   });
   const [, navigate] = useLocation();
+
+  // Fetch authenticated user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/auth/user', { credentials: 'include' });
+        if (response.ok) {
+          const user = await response.json();
+          setFormData(prev => ({
+            ...prev,
+            firstName: user.firstName || "",
+            lastName: user.lastName || "",
+            email: user.email || "",
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   const handleInputChange = (key: keyof PodLeaderData, value: string | boolean | string[]) => {
     setFormData(prev => {
@@ -413,11 +434,15 @@ export default function PodLeaderRegistration() {
     }
   };
 
-  const totalSteps = 4;
+  const totalSteps = 3; // Reduced from 4 to 3 steps
 
-  const canProceedStep1 = formData.firstName && formData.lastName && formData.email && formData.phone && formData.street && formData.city && formData.state && formData.zipCode && formData.country && formData.dateOfBirth;
-  const canProceedStep2 = formData.primaryCampus && formData.primaryClub && formData.membershipLevel;
-  const canProceedStep3 = formData.podName && formData.podDescription && formData.monthlyFee && formData.availableSpots && formData.startDate && (formData.requirements.includes("Monthly Payment") || formData.requirements.includes("Annual Payment"));
+  // Updated validation: Step 1 is now Bay Club membership + phone/address
+  const canProceedStep1 = formData.primaryCampus && formData.primaryClub && formData.membershipLevel && 
+                          formData.phone && formData.street && formData.city && formData.state && 
+                          formData.zipCode && formData.country && formData.dateOfBirth;
+  const canProceedStep2 = formData.podName && formData.podDescription && formData.monthlyFee && 
+                          formData.availableSpots && formData.startDate && 
+                          (formData.requirements.includes("Monthly Payment") || formData.requirements.includes("Annual Payment"));
   const canSubmit = formData.agreesToTerms;
 
   const renderStep = () => {
@@ -426,42 +451,95 @@ export default function PodLeaderRegistration() {
         return (
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Zap className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Shield className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-2xl">Pod Leader Registration</CardTitle>
+              <CardTitle className="text-2xl">Bay Club Membership</CardTitle>
               <p className="text-muted-foreground">
-                Let's start with your basic information
+                Enter your membership details
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">First Name</label>
-                  <Input
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    placeholder="John"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Last Name</label>
-                  <Input
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    placeholder="Doe"
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Primary Campus</label>
+                <Select value={formData.primaryCampus} onValueChange={(value) => handleInputChange('primaryCampus', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your primary campus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableCampuses().map((campus) => (
+                      <SelectItem key={campus.value} value={campus.value}>
+                        {campus.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-medium">Primary Club</label>
+                <Select 
+                  value={formData.primaryClub} 
+                  onValueChange={(value) => handleInputChange('primaryClub', value)}
+                  disabled={!formData.primaryCampus}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.primaryCampus ? "Select your primary club" : "Select campus first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableClubs().map((club) => (
+                      <SelectItem key={club.value} value={club.value}>
+                        {club.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.primaryCampus && getAvailableClubs().length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No clubs available for this campus
+                  </p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Membership Level</label>
+                <Select 
+                  value={formData.membershipLevel} 
+                  onValueChange={(value) => handleInputChange('membershipLevel', value)}
+                  disabled={!formData.primaryClub}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.primaryClub ? "Select membership level" : "Select club first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableMembershipLevels().map((membership) => (
+                      <SelectItem key={membership.value} value={membership.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{membership.label}</span>
+                          <span className="text-xs text-gray-500">{membership.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.primaryClub && getAvailableMembershipLevels().length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No membership levels available for this club
+                  </p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Bay Club Membership ID (Optional)</label>
                 <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="john@example.com"
+                  value={formData.membershipId}
+                  onChange={(e) => handleInputChange('membershipId', e.target.value)}
+                  placeholder="BC123456"
+                  className="font-mono"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Found on your Bay Club membership card or app. You can add this later.
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -602,123 +680,6 @@ export default function PodLeaderRegistration() {
         return (
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Bay Club Membership</CardTitle>
-              <p className="text-muted-foreground">
-                Enter your membership details
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Primary Campus</label>
-                <Select value={formData.primaryCampus} onValueChange={(value) => handleInputChange('primaryCampus', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your primary campus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getAvailableCampuses().map((campus) => (
-                      <SelectItem key={campus.value} value={campus.value}>
-                        {campus.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Primary Club</label>
-                <Select 
-                  value={formData.primaryClub} 
-                  onValueChange={(value) => handleInputChange('primaryClub', value)}
-                  disabled={!formData.primaryCampus}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={formData.primaryCampus ? "Select your primary club" : "Select campus first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getAvailableClubs().map((club) => (
-                      <SelectItem key={club.value} value={club.value}>
-                        {club.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formData.primaryCampus && getAvailableClubs().length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No clubs available for this campus
-                  </p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Membership Level</label>
-                <Select 
-                  value={formData.membershipLevel} 
-                  onValueChange={(value) => handleInputChange('membershipLevel', value)}
-                  disabled={!formData.primaryClub}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={formData.primaryClub ? "Select membership level" : "Select club first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getAvailableMembershipLevels().map((membership) => (
-                      <SelectItem key={membership.value} value={membership.value}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{membership.label}</span>
-                          <span className="text-xs text-gray-500">{membership.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formData.primaryClub && getAvailableMembershipLevels().length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No membership levels available for this club
-                  </p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Bay Club Membership ID (Optional)</label>
-                <Input
-                  value={formData.membershipId}
-                  onChange={(e) => handleInputChange('membershipId', e.target.value)}
-                  placeholder="BC123456"
-                  className="font-mono"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app. You can add this later.
-                </p>
-              </div>
-              
-              <div className="flex space-x-3 pt-4">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-                <Button 
-                  onClick={() => setCurrentStep(3)}
-                  disabled={!canProceedStep2}
-                  className="flex-1"
-                >
-                  Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 3:
-        return (
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Users className="w-8 h-8 text-white" />
               </div>
@@ -842,15 +803,15 @@ export default function PodLeaderRegistration() {
               <div className="flex space-x-3 pt-4">
                 <Button 
                   variant="outline"
-                  onClick={() => setCurrentStep(2)}
+                  onClick={() => setCurrentStep(1)}
                   className="flex-1"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Button>
                 <Button 
-                  onClick={() => setCurrentStep(4)}
-                  disabled={!canProceedStep3}
+                  onClick={() => setCurrentStep(3)}
+                  disabled={!canProceedStep2}
                   className="flex-1"
                 >
                   Continue
@@ -861,7 +822,7 @@ export default function PodLeaderRegistration() {
           </Card>
         );
 
-      case 4:
+      case 3:
         return (
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
@@ -901,7 +862,7 @@ export default function PodLeaderRegistration() {
               <div className="flex space-x-3 pt-4">
                 <Button 
                   variant="outline"
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => setCurrentStep(2)}
                   className="flex-1"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
