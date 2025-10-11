@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ interface UserData {
 }
 
 export default function OnboardingWizard() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(1); // Will only have 1 step now
   const [userData, setUserData] = useState<UserData>({
     firstName: "",
     lastName: "",
@@ -49,6 +49,27 @@ export default function OnboardingWizard() {
   // Get user type from URL parameters
   const searchParams = new URLSearchParams(window.location.search);
   const userType = searchParams.get('type') || 'seeker'; // 'seeker' or 'lead'
+  
+  // Fetch authenticated user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/auth/user', { credentials: 'include' });
+        if (response.ok) {
+          const user = await response.json();
+          setUserData(prev => ({
+            ...prev,
+            firstName: user.firstName || "",
+            lastName: user.lastName || "",
+            email: user.email || "",
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      }
+    };
+    fetchUserData();
+  }, []);
   
   // Helper functions for dynamic form options
   const getAvailableClubsForCampus = (campus: string) => {
@@ -285,71 +306,14 @@ export default function OnboardingWizard() {
     }
   };
 
-  const canProceedToStep2 = userData.firstName && userData.lastName && userData.email && userData.phone;
-  const canProceedToStep3 = userData.primaryCampus && userData.primaryClub && userData.membershipLevel;
-  const canFinish = true; // No additional step needed
+  // No step validation needed since we only have one step
+  const canFinish = userData.primaryCampus && userData.primaryClub && userData.membershipLevel && 
+                    userData.phone && userData.street && userData.city && userData.state && 
+                    userData.zipCode && userData.country && userData.dateOfBirth;
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Welcome to FlexPod</CardTitle>
-              <p className="text-muted-foreground">
-                {userType === 'lead' ? 'Let\'s set up your pod leadership profile' : 'Let\'s find you the perfect pod'}
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">First Name</label>
-                <Input
-                  value={userData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  placeholder="Enter your first name"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Last Name</label>
-                <Input
-                  value={userData.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  placeholder="Enter your last name"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
-                <Input
-                  type="email"
-                  value={userData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Enter your email"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Phone Number</label>
-                <Input
-                  type="tel"
-                  value={userData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="(555) 123-4567"
-                />
-              </div>
-              <Button 
-                onClick={() => setCurrentStep(2)}
-                disabled={!canProceedToStep2}
-                className="w-full"
-              >
-                Continue
-              </Button>
-            </CardContent>
-          </Card>
-        );
-
-      case 2:
         return (
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
@@ -439,6 +403,16 @@ export default function OnboardingWizard() {
                 <p className="text-xs text-muted-foreground">
                   Found on your Bay Club membership card or app. You can add this later.
                 </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone Number</label>
+                <Input
+                  type="tel"
+                  value={userData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="(555) 123-4567"
+                />
               </div>
               
               <div className="space-y-3">
@@ -543,22 +517,13 @@ export default function OnboardingWizard() {
                 />
               </div>
               
-              <div className="flex space-x-3">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button 
-                  onClick={handleFinish}
-                  disabled={!userData.street || !userData.city || !userData.state || !userData.zipCode || !userData.country || !userData.dateOfBirth}
-                  className="flex-1"
-                >
-                  Complete Registration
-                </Button>
-              </div>
+              <Button 
+                onClick={handleFinish}
+                disabled={!canFinish}
+                className="w-full"
+              >
+                Complete Registration
+              </Button>
             </CardContent>
           </Card>
         );
@@ -576,16 +541,9 @@ export default function OnboardingWizard() {
       <div className="flex flex-col items-center justify-center px-4 pt-20">
       {renderStep()}
       
-      {/* Progress indicator */}
+      {/* Progress indicator - Single step */}
       <div className="flex space-x-2 mt-6">
-        {[1, 2, 3].map((step) => (
-          <div
-            key={step}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              step <= currentStep ? 'bg-primary' : 'bg-primary/30'
-            }`}
-          />
-        ))}
+        <div className="w-2 h-2 rounded-full bg-primary" />
       </div>
       </div>
     </div>
