@@ -73,12 +73,17 @@ export default function PodDetail() {
   // Create join request mutation
   const joinMutation = useMutation({
     mutationFn: async (requestData: { message: string; userInfo: typeof userInfo }) => {
+      // Get authenticated user
+      const userResponse = await fetch('/api/auth/user', { credentials: 'include' });
+      if (!userResponse.ok) throw new Error('Not authenticated');
+      const user = await userResponse.json();
+      
       const response = await fetch('/api/join-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           podId: parseInt(id || '0'),
-          userId: 1, // Mock user ID - in real app would come from auth
+          userId: user.id, // Get actual user ID from authenticated session
           message: requestData.message,
           userInfo: requestData.userInfo,
         }),
