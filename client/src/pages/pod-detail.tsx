@@ -99,7 +99,9 @@ export default function PodDetail() {
       setIsJoinDialogOpen(false);
       setJoinMessage("");
       setUserInfo({ name: "", email: "", phone: "" });
+      // Invalidate both pods and join requests queries
       queryClient.invalidateQueries({ queryKey: ['/api/pods', id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/join-requests'] });
     },
     onError: () => {
       toast({

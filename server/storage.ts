@@ -207,7 +207,14 @@ export class DatabaseStorage implements IStorage {
 
   // Initialize sample data
   async initializeSamplePods(): Promise<void> {
-    // Clear existing sample data first
+    // Only initialize if pods table is empty (first-time setup)
+    const existingPods = await db.select().from(pods).limit(1);
+    if (existingPods.length > 0) {
+      console.log('[Storage] Pods already exist, skipping initialization');
+      return;
+    }
+    
+    // Clear existing sample data first (only on first-time setup)
     await db.delete(podMembers);
     await db.delete(joinRequests);  
     await db.delete(pods);

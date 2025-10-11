@@ -52,14 +52,25 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Fetch authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/user', { credentials: 'include' });
+      if (!response.ok) return null;
+      return response.json();
+    },
+  });
+
   // Fetch user's join requests
   const { data: joinRequests, isLoading: requestsLoading } = useQuery<JoinRequest[]>({
-    queryKey: ['/api/join-requests', 'user', 1], // Mock user ID
+    queryKey: ['/api/join-requests', 'user', authUser?.id],
     queryFn: async () => {
-      const response = await fetch('/api/join-requests/user/1');
+      const response = await fetch(`/api/join-requests/user/${authUser?.id}`);
       if (!response.ok) throw new Error('Failed to fetch join requests');
       return response.json();
     },
+    enabled: !!authUser?.id, // Only run when we have the user ID
   });
 
   // Fetch all pods to show user's active memberships
