@@ -55,6 +55,7 @@ export async function sendJoinRequestNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `New Join Request for ${podTitle} - FlexPod`;
+  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://your-domain.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -73,7 +74,7 @@ export async function sendJoinRequestNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://your-domain.com/pod-leader-dashboard" 
+          <a href="${baseUrl}/pod-leader-dashboard" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Review Request
           </a>
@@ -119,6 +120,7 @@ export async function sendJoinRequestAcceptedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `🎉 Welcome to ${podTitle} - FlexPod`;
+  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://your-domain.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -146,7 +148,7 @@ export async function sendJoinRequestAcceptedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://your-domain.com/dashboard" 
+          <a href="${baseUrl}/dashboard" 
              style="background: #10B981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             View My Dashboard
           </a>
@@ -192,6 +194,7 @@ export async function sendJoinRequestRejectedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `Update on ${podTitle} Request - FlexPod`;
+  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://your-domain.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -217,7 +220,7 @@ export async function sendJoinRequestRejectedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://your-domain.com/pods" 
+          <a href="${baseUrl}/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Browse Other Pods
           </a>
