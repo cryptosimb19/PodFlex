@@ -91,7 +91,7 @@ export default function PodDetail() {
       if (!response.ok) throw new Error('Failed to create join request');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Join request sent!",
         description: "The pod leader will review your request and get back to you.",
@@ -99,9 +99,9 @@ export default function PodDetail() {
       setIsJoinDialogOpen(false);
       setJoinMessage("");
       setUserInfo({ name: "", email: "", phone: "" });
-      // Invalidate both pods and join requests queries
-      queryClient.invalidateQueries({ queryKey: ['/api/pods', id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/join-requests'] });
+      // Refetch both pods and join requests queries immediately
+      await queryClient.refetchQueries({ queryKey: ['/api/pods', id] });
+      await queryClient.refetchQueries({ queryKey: ['/api/join-requests'] });
     },
     onError: () => {
       toast({

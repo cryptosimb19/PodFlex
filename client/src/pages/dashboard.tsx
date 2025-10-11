@@ -71,6 +71,8 @@ export default function Dashboard() {
       return response.json();
     },
     enabled: !!authUser?.id, // Only run when we have the user ID
+    refetchOnMount: true, // Always refetch when component mounts
+    staleTime: 0, // Consider data immediately stale to ensure fresh data
   });
 
   // Fetch all pods to show user's active memberships

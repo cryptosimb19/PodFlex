@@ -76,12 +76,13 @@ Preferred communication style: Simple, everyday language.
 
 ### Recent Changes
 - **October 11, 2025**: Fixed multiple critical join request bugs:
-  1. **Type Mismatch Fix**: Fixed join request 400 error - pod-detail.tsx now fetches authenticated user and uses actual user.id (string) instead of hardcoded number
-  2. **Dashboard User ID Fix**: Updated dashboard to fetch authenticated user ID before querying join requests (was using hardcoded userId=1)
-  3. **Cache Invalidation Fix**: Join request creation now invalidates join-requests cache to trigger dashboard refresh
-  4. **CRITICAL Data Persistence Fix**: Modified initializeSamplePods() to only run on first startup when pods table is empty - this prevents join requests from being deleted on every server restart/hot-reload
+  1. **Type Mismatch Fix**: pod-detail.tsx now fetches authenticated user and uses actual user.id (string) instead of hardcoded number - fixes 400 error
+  2. **Dashboard User ID Fix**: Dashboard fetches authenticated user ID before querying join requests (was using hardcoded userId=1)
+  3. **Cache Refresh Fix**: Changed from invalidateQueries to refetchQueries with await to ensure fresh data before navigation
+  4. **Query Configuration**: Added refetchOnMount: true and staleTime: 0 to dashboard join requests query for guaranteed fresh data
+  5. **CRITICAL Data Persistence Fix**: Modified initializeSamplePods() to only run on first startup when pods table is empty - prevents join requests from being deleted on every server restart/hot-reload
   
-  Also: Created `.npmrc` file with `production=false` to force npm to install devDependencies (tsx, typescript, vite, drizzle-kit) despite `REPLIT_ENVIRONMENT=production`. Updated all email templates to use dynamic `REPLIT_DEV_DOMAIN` instead of hardcoded URLs. Created EMAIL_TROUBLESHOOTING.md to help debug MailerSend trial account limitations.
+  Also: Created `.npmrc` file with `production=false` to force npm to install devDependencies (tsx, typescript, vite, drizzle-kit) despite `REPLIT_ENVIRONMENT=production`. Updated all email templates to use dynamic `REPLIT_DEV_DOMAIN` instead of hardcoded URLs. Created EMAIL_TROUBLESHOOTING.md to help debug MailerSend trial account limitations. Configured MailerSend API token for email notifications.
 - **October 4, 2025**: Replaced SendGrid with MailerSend for email notifications. Updated emailService.ts to use MailerSend SDK with proper email templates for join requests, acceptances, and rejections.
 - **October 4, 2025**: Fixed 404 flash issue after login/signup by properly awaiting authentication state updates (invalidateQueries + refetchQueries) before navigation.
 - **August 18, 2025**: Bay Club Membership ID Made Optional - Updated both onboarding and pod-leader registration forms to make the Bay Club Membership ID field optional. Users can now complete registration without providing their membership ID and add it later. This improves user accessibility and reduces signup friction.
