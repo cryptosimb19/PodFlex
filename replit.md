@@ -75,6 +75,15 @@ Preferred communication style: Simple, everyday language.
 - **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
 
 ### Recent Changes
+- **October 11, 2025**: Streamlined Onboarding UX - Removed duplicate welcome form and consolidated onboarding flow:
+  1. **Pod Seeker Onboarding**: Reduced from 2 steps to 1 step - users now start directly at Bay Club membership form since name/email already collected during signup
+  2. **Pod Leader Registration**: Reduced from 4 steps to 3 steps - removed redundant personal info step
+  3. **Auto-fetch User Data**: Both flows now automatically fetch firstName, lastName, and email from authentication endpoint on mount
+  4. **Phone Number Repositioned**: Moved phone number field to Bay Club membership form, positioned above address section for better flow
+  5. **Progress Indicators Updated**: Pod seeker shows single step indicator, pod leader shows accurate "Step X of 3" progress
+  
+  E2E tests confirm all validations work correctly and navigation flows successfully complete to dashboard/pod-leader-dashboard.
+
 - **October 11, 2025**: Fixed multiple critical join request bugs:
   1. **Type Mismatch Fix**: pod-detail.tsx now fetches authenticated user and uses actual user.id (string) instead of hardcoded number - fixes 400 error
   2. **Dashboard User ID Fix**: Dashboard fetches authenticated user ID before querying join requests (was using hardcoded userId=1)
