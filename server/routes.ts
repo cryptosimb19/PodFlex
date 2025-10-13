@@ -144,7 +144,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (err) {
         return res.status(500).json({ message: "Logout failed" });
       }
-      res.json({ message: "Logout successful" });
+      // Destroy the session to completely clear user data
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          return res.status(500).json({ message: "Failed to destroy session" });
+        }
+        res.clearCookie('connect.sid'); // Clear the session cookie
+        res.json({ message: "Logout successful" });
+      });
     });
   });
   // Get all pods
