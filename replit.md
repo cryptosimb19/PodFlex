@@ -75,6 +75,15 @@ Preferred communication style: Simple, everyday language.
 - **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
 
 ### Recent Changes
+- **October 13, 2025**: Fixed Logout Functionality - Properly ends user session and returns to login page:
+  1. **Backend Session Destruction**: Logout route now calls req.session.destroy() to completely clear the session
+  2. **Cookie Cleanup**: Added res.clearCookie('connect.sid') to remove session cookie
+  3. **Frontend Cache Clearing**: Navigation component now calls queryClient.clear() to remove all cached user data
+  4. **Reliable Redirect**: User reliably redirected to login page after logout
+  5. **Protected Route Security**: Users cannot access protected routes after logout - automatic redirect to login
+  
+  Technical details: Backend destroys Express session and clears cookie, frontend clears TanStack Query cache before navigation, App.tsx automatically clears localStorage when !isAuthenticated.
+
 - **October 11, 2025**: Streamlined Onboarding UX - Removed duplicate welcome form and consolidated onboarding flow:
   1. **Pod Seeker Onboarding**: Reduced from 2 steps to 1 step - users now start directly at Bay Club membership form since name/email already collected during signup
   2. **Pod Leader Registration**: Reduced from 4 steps to 3 steps - removed redundant personal info step
