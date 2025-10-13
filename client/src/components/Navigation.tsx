@@ -10,6 +10,7 @@ import {
   Zap
 } from "lucide-react";
 import { useState } from "react";
+import { queryClient } from "@/lib/queryClient";
 
 interface NavigationProps {
   userType?: 'pod_seeker' | 'pod_leader';
@@ -25,9 +26,14 @@ export default function Navigation({ userType }: NavigationProps) {
         method: 'POST',
         credentials: 'include',
       });
+      // Clear all React Query cache to remove user data
+      queryClient.clear();
+      // Navigate to login page
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
+      // Clear cache even on error and navigate to login
+      queryClient.clear();
       navigate('/login');
     }
   };
