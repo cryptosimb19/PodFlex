@@ -219,7 +219,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/join-requests", async (req, res) => {
     try {
       const requestData = insertJoinRequestSchema.parse(req.body);
-      const joinRequest = await storage.createJoinRequest(requestData);
+      let emailStatus = "sent";
+      
+      // Create the join request first
+      const joinRequest = await storage.createJoinRequest({
+        ...requestData,
+        emailStatus: "pending"
+      });
       
       // Send email notification to pod leader
       try {
@@ -229,20 +235,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (pod && podLead && applicant && podLead.email) {
           const fromEmail = process.env.FROM_EMAIL || "noreply@your-domain.com";
-          await sendJoinRequestNotification(
+          const emailSent = await sendJoinRequestNotification(
             podLead.email,
             pod.title,
             `${applicant.firstName} ${applicant.lastName}`,
             applicant.email || "",
             fromEmail
           );
+          
+          emailStatus = emailSent ? "sent" : "failed";
+        } else {
+          emailStatus = "failed";
         }
       } catch (emailError) {
         console.error("Failed to send email notification:", emailError);
-        // Don't fail the request if email fails
+        emailStatus = "failed";
       }
       
-      res.status(201).json(joinRequest);
+      // Update the join request with email status
+      const updatedRequest = await storage.updateJoinRequestEmailStatus(joinRequest.id, emailStatus);
+      
+      res.status(201).json({
+        ...updatedRequest,
+        emailStatus
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid request data", errors: error.errors });

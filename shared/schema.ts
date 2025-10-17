@@ -67,6 +67,7 @@ export const joinRequests = pgTable("join_requests", {
     email: string;
     phone?: string;
   }>(), // Contact information for the join request
+  emailStatus: text("email_status").notNull().default("sent"), // "sent", "failed", "pending"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
