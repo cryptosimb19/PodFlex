@@ -91,11 +91,19 @@ export default function PodDetail() {
       if (!response.ok) throw new Error('Failed to create join request');
       return response.json();
     },
-    onSuccess: async () => {
-      toast({
-        title: "Join request sent!",
-        description: "The pod leader will review your request and get back to you.",
-      });
+    onSuccess: async (data) => {
+      if (data.emailStatus === 'failed') {
+        toast({
+          title: "Join request saved",
+          description: "Your request was saved, but we couldn't notify the pod leader. You can resend the notification from your dashboard.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Join request sent!",
+          description: "The pod leader will review your request and get back to you.",
+        });
+      }
       setIsJoinDialogOpen(false);
       setJoinMessage("");
       setUserInfo({ name: "", email: "", phone: "" });
@@ -128,8 +136,10 @@ export default function PodDetail() {
     return `$${Math.round(cents / 100)}`;
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString();
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return 'Unknown';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString();
   };
 
   if (podLoading) {
