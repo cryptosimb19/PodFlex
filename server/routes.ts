@@ -1,6 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { joinRequests } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword } from "./multiAuth";
 import passport from "passport";
 import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification } from "./emailService";
@@ -373,6 +376,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(requests);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user join requests" });
+    }
+  });
+
+  // Resend join request email notification
+  app.post("/api/join-requests/:id/resend-email", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get the join request
+      const joinRequest = await db
+        .select()
+        .from(joinRequests)
+        .where(eq(joinRequests.id, id))
+        .limit(1)
+        .then(rows => rows[0]);
+      
+      if (!joinRequest) {
+        return res.status(404).json({ message: "Join request not found" });
+      }
+      
+      let emailStatus = "sent";
+      
+      // Send email notification to pod leader
+      try {
+        const pod = await storage.getPod(joinRequest.podId);
+        const podLead = await storage.getUser(pod?.leadId || "");
+        const applicant = await storage.getUser(joinRequest.userId);
+        
+        if (pod && podLead && applicant && podLead.email) {
+          const fromEmail = process.env.FROM_EMAIL || "noreply@your-domain.com";
+          const emailSent = await sendJoinRequestNotification(
+            podLead.email,
+            pod.title,
+            `${applicant.firstName} ${applicant.lastName}`,
+            applicant.email || "",
+            fromEmail
+          );
+          
+          emailStatus = emailSent ? "sent" : "failed";
+        } else {
+          emailStatus = "failed";
+        }
+      } catch (emailError) {
+        console.error("Failed to resend email notification:", emailError);
+        emailStatus = "failed";
+      }
+      
+      // Update the join request with email status
+      const updatedRequest = await storage.updateJoinRequestEmailStatus(id, emailStatus);
+      
+      res.json({
+        ...updatedRequest,
+        emailStatus
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to resend email" });
     }
   });
 
