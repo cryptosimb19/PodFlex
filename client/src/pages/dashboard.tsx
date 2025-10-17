@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +22,9 @@ import {
   Phone,
   Mail,
   Edit3,
-  Zap
+  Zap,
+  MailWarning,
+  RefreshCw
 } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Pod, JoinRequest } from "@shared/schema";
@@ -39,6 +43,7 @@ interface UserData {
 export default function Dashboard() {
   const [, navigate] = useLocation();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const { toast } = useToast();
 
   // Load user data from localStorage
   useEffect(() => {
@@ -92,6 +97,39 @@ export default function Dashboard() {
       request.podId === pod.id && request.status === 'accepted'
     )
   ) || [];
+
+  // Resend email mutation
+  const resendEmailMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      const response = await fetch(`/api/join-requests/${requestId}/resend-email`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to resend email');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.emailStatus === 'sent') {
+        toast({
+          title: "Email sent successfully",
+          description: "The pod leader has been notified of your join request.",
+        });
+      } else {
+        toast({
+          title: "Email sending failed",
+          description: "We couldn't send the notification. Please try again later.",
+          variant: "destructive",
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'user', authUser?.id] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to resend email notification. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -316,6 +354,7 @@ export default function Dashboard() {
                       <div className="space-y-3 sm:space-y-4">
                         {joinRequests.map((request) => {
                           const pod = allPods?.find(p => p.id === request.podId);
+                          const emailFailed = request.emailStatus === 'failed';
                           return (
                             <div key={request.id} className="border rounded-lg p-3 sm:p-4" data-testid={`request-${request.id}`}>
                               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0 mb-3">
@@ -328,23 +367,53 @@ export default function Dashboard() {
                                         <span className="capitalize">{request.status}</span>
                                       </div>
                                     </Badge>
+                                    {emailFailed && (
+                                      <Badge className="bg-orange-100 text-orange-800" data-testid={`email-status-${request.id}`}>
+                                        <div className="flex items-center space-x-1">
+                                          <MailWarning className="w-4 h-4" />
+                                          <span>Email not sent</span>
+                                        </div>
+                                      </Badge>
+                                    )}
                                     <span className="text-xs sm:text-sm text-gray-600">
                                       {formatDate(request.createdAt)}
                                     </span>
                                   </div>
                                 </div>
-                                {pod && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => navigate(`/pod/${pod.id}`)}
-                                    className="w-full sm:w-auto sm:ml-4 flex-shrink-0"
-                                    data-testid={`button-view-request-pod-${pod.id}`}
-                                  >
-                                    View Pod
-                                  </Button>
-                                )}
+                                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                  {emailFailed && request.status === 'pending' && (
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => resendEmailMutation.mutate(request.id)}
+                                      disabled={resendEmailMutation.isPending}
+                                      className="w-full sm:w-auto flex items-center space-x-1"
+                                      data-testid={`button-resend-email-${request.id}`}
+                                    >
+                                      <RefreshCw className={`w-4 h-4 ${resendEmailMutation.isPending ? 'animate-spin' : ''}`} />
+                                      <span>{resendEmailMutation.isPending ? 'Sending...' : 'Resend Email'}</span>
+                                    </Button>
+                                  )}
+                                  {pod && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => navigate(`/pod/${pod.id}`)}
+                                      className="w-full sm:w-auto flex-shrink-0"
+                                      data-testid={`button-view-request-pod-${pod.id}`}
+                                    >
+                                      View Pod
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
+                              {emailFailed && request.status === 'pending' && (
+                                <div className="bg-orange-50 border border-orange-200 rounded-md p-3 mt-3">
+                                  <p className="text-sm text-orange-800">
+                                    <strong>Notification not sent:</strong> The pod leader was not notified about your request. Click the "Resend Email" button above to notify them.
+                                  </p>
+                                </div>
+                              )}
                               {request.message && (
                                 <div className="bg-gray-50 rounded-md p-3 mt-3">
                                   <p className="text-sm text-gray-700">
