@@ -75,6 +75,17 @@ Preferred communication style: Simple, everyday language.
 - **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
 
 ### Recent Changes
+- **October 18, 2025**: Implemented Email Failure Handling with Recovery - Join request creation no longer fails when email delivery encounters errors:
+  1. **Email Status Tracking**: Added `emailStatus` field to join_requests table ('sent', 'failed', 'pending') to track delivery state
+  2. **Graceful Failure**: Join requests are saved to database even when MailerSend fails (important for trial account limitations)
+  3. **Visual Indicators**: Dashboard shows orange "Email not sent" badge with MailWarning icon when emailStatus='failed'
+  4. **Resend Capability**: Users can retry failed email notifications via resend button in dashboard
+  5. **User Feedback**: Toast notifications inform users at creation time when emails fail, ensuring transparency
+  6. **API Endpoint**: New POST /api/join-requests/:id/resend-email endpoint enables retry functionality
+  7. **Query Optimization**: Added refetchOnWindowFocus to dashboard join requests query for better data freshness
+  
+  Technical details: Backend catches MailerSend errors and records emailStatus, frontend displays status badges and resend button for 'failed' status, query invalidation ensures dashboard reflects latest state. This prevents user frustration from trial account email restrictions while maintaining full functionality.
+
 - **October 13, 2025**: Fixed Logout Functionality - Properly ends user session and returns to login page:
   1. **Backend Session Destruction**: Logout route now calls req.session.destroy() to completely clear the session
   2. **Cookie Cleanup**: Added res.clearCookie('connect.sid') to remove session cookie
