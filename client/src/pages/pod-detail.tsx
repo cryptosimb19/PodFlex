@@ -107,9 +107,9 @@ export default function PodDetail() {
       setIsJoinDialogOpen(false);
       setJoinMessage("");
       setUserInfo({ name: "", email: "", phone: "" });
-      // Refetch both pods and join requests queries immediately
-      await queryClient.refetchQueries({ queryKey: ['/api/pods', id] });
-      await queryClient.refetchQueries({ queryKey: ['/api/join-requests'] });
+      // Invalidate all join request queries to ensure dashboard refreshes
+      await queryClient.invalidateQueries({ queryKey: ['/api/join-requests'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
     },
     onError: () => {
       toast({

@@ -77,6 +77,7 @@ export default function Dashboard() {
     },
     enabled: !!authUser?.id, // Only run when we have the user ID
     refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
     staleTime: 0, // Consider data immediately stale to ensure fresh data
   });
 
