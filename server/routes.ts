@@ -482,17 +482,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/users/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { membershipId, preferredRegion } = req.body;
+      const { membershipId, preferredRegion, userType, hasCompletedOnboarding } = req.body;
       
-      // Update user with membership information
+      // Update user with membership information and onboarding status
       const updatedUser = await storage.upsertUser({
         id: userId,
         email: req.user.email,
         firstName: req.user.firstName,
         lastName: req.user.lastName,
         profileImageUrl: req.user.profileImageUrl,
-        ...(membershipId && { membershipId }),
-        ...(preferredRegion && { preferredRegion })
+        ...(membershipId !== undefined && { membershipId }),
+        ...(preferredRegion !== undefined && { preferredRegion }),
+        ...(userType !== undefined && { userType }),
+        ...(hasCompletedOnboarding !== undefined && { hasCompletedOnboarding })
       });
       
       res.json(sanitizeUser(updatedUser));

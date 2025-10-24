@@ -371,23 +371,24 @@ export default function PodLeaderRegistration() {
         dateOfBirth: formData.dateOfBirth,
       };
       localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('flexpod_onboarding_complete', 'true');
       
-      // Update user profile with membership information if provided
-      if (formData.membershipId || formData.primaryCampus) {
-        const response = await fetch('/api/users/profile', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            membershipId: formData.membershipId || undefined,
-            preferredRegion: formData.primaryCampus || undefined,
-          }),
-        });
+      // Update user profile with membership information and mark onboarding as complete
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          membershipId: formData.membershipId || undefined,
+          preferredRegion: formData.primaryCampus || undefined,
+          hasCompletedOnboarding: true,
+        }),
+      });
 
-        if (!response.ok) {
-          console.warn('Failed to update user profile, but continuing...');
-        }
+      if (!response.ok) {
+        console.warn('Failed to update user profile, but continuing...');
       }
 
       // Create the pod

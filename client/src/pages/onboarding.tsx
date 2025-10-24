@@ -278,23 +278,24 @@ export default function OnboardingWizard() {
     try {
       // Save user data to localStorage for join requests
       localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('flexpod_onboarding_complete', 'true');
       
-      // Update user profile with membership information if provided
-      if (userData.membershipId || userData.primaryCampus) {
-        const response = await fetch('/api/users/profile', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            membershipId: userData.membershipId || undefined,
-            preferredRegion: userData.primaryCampus || undefined,
-          }),
-        });
+      // Update user profile with membership information and mark onboarding as complete
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          membershipId: userData.membershipId || undefined,
+          preferredRegion: userData.primaryCampus || undefined,
+          hasCompletedOnboarding: true,
+        }),
+      });
 
-        if (!response.ok) {
-          console.warn('Failed to update user profile, but continuing...');
-        }
+      if (!response.ok) {
+        console.warn('Failed to update user profile, but continuing...');
       }
       
       console.log("User data:", userData);

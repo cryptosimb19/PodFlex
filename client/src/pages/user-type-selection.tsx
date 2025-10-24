@@ -3,18 +3,46 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
-import { Zap, Users, Plus, ArrowRight } from "lucide-react";
+import { Zap, Users, Plus, ArrowRight, Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UserTypeSelection() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+
+  const saveUserTypeMutation = useMutation({
+    mutationFn: async (userType: string) => {
+      return await apiRequest('/api/users/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ userType }),
+      });
+    },
+    onSuccess: () => {
+      // Save to localStorage for immediate UI updates
+      const userTypeValue = selectedType === "join" ? "pod_seeker" : "pod_leader";
+      localStorage.setItem('flexpod_user_type', userTypeValue);
+      
+      if (selectedType === "join") {
+        navigate("/onboarding?type=seeker");
+      } else if (selectedType === "fill") {
+        navigate("/pod-leader-registration");
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save user type",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleContinue = () => {
-    if (selectedType === "join") {
-      navigate("/onboarding?type=seeker");
-    } else if (selectedType === "fill") {
-      navigate("/pod-leader-registration");
-    }
+    const userType = selectedType === "join" ? "pod_seeker" : "pod_leader";
+    saveUserTypeMutation.mutate(userType);
   };
 
   return (
@@ -91,11 +119,21 @@ export default function UserTypeSelection() {
         {/* Continue Button */}
         <Button 
           onClick={handleContinue}
-          disabled={!selectedType}
+          disabled={!selectedType || saveUserTypeMutation.isPending}
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl transition-all duration-300 hover:scale-105 transform button-glow"
+          data-testid="button-continue-user-type"
         >
-          Continue
-          <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+          {saveUserTypeMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              Continue
+              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+            </>
+          )}
         </Button>
       </div>
       </div>
