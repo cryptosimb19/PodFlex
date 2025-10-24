@@ -32,6 +32,7 @@ export interface IStorage {
   searchPods(query: string): Promise<Pod[]>;
   filterPods(filters: { region?: string; membershipType?: string; amenities?: string[] }): Promise<Pod[]>;
   createPod(pod: InsertPod): Promise<Pod>;
+  updatePod(id: number, podData: Partial<Pod>): Promise<Pod | undefined>;
   updatePodAvailability(id: number, availableSpots: number): Promise<Pod | undefined>;
   
   // Join request operations
@@ -145,6 +146,15 @@ export class DatabaseStorage implements IStorage {
     const [pod] = await db
       .insert(pods)
       .values(podData)
+      .returning();
+    return pod;
+  }
+
+  async updatePod(id: number, podData: Partial<Pod>): Promise<Pod | undefined> {
+    const [pod] = await db
+      .update(pods)
+      .set(podData)
+      .where(eq(pods.id, id))
       .returning();
     return pod;
   }
