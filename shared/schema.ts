@@ -23,6 +23,9 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   membershipId: text("membership_id"),
   preferredRegion: text("preferred_region"),
+  // User type and onboarding
+  userType: varchar("user_type"), // "pod_seeker" or "pod_leader"
+  hasCompletedOnboarding: boolean("has_completed_onboarding").default(false),
   // Local authentication fields
   passwordHash: varchar("password_hash"), // For local authentication
   authProvider: varchar("auth_provider").notNull().default("local"), // "local", "google", "replit"
@@ -87,6 +90,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   profileImageUrl: true,
   membershipId: true,
   preferredRegion: true,
+  userType: true,
+  hasCompletedOnboarding: true,
   passwordHash: true,
   authProvider: true,
   googleId: true,
@@ -105,6 +110,8 @@ export const upsertUserSchema = createInsertSchema(users).pick({
   profileImageUrl: true,
   membershipId: true,
   preferredRegion: true,
+  userType: true,
+  hasCompletedOnboarding: true,
 });
 
 export const insertPodSchema = createInsertSchema(pods).omit({
