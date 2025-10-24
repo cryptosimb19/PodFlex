@@ -61,6 +61,8 @@ export default function PodLeaderDashboard() {
   const [selectedRequest, setSelectedRequest] = useState<JoinRequestWithUser | null>(null);
   const [selectedMember, setSelectedMember] = useState<PodMemberWithUser | null>(null);
   const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
+  const [editingPod, setEditingPod] = useState<Pod | null>(null);
+  const [editImageUrl, setEditImageUrl] = useState("");
 
   // Load user data from localStorage
   useEffect(() => {
@@ -153,8 +155,48 @@ export default function PodLeaderDashboard() {
     },
   });
 
+  // Mutation to update pod
+  const updatePodMutation = useMutation({
+    mutationFn: async ({ podId, imageUrl }: { podId: number; imageUrl: string }) => {
+      const response = await fetch(`/api/pods/${podId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl }),
+      });
+      if (!response.ok) throw new Error('Failed to update pod');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Pod updated",
+        description: "Your pod image has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
+      setEditingPod(null);
+      setEditImageUrl("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update pod. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleRequestAction = (requestId: number, status: 'accepted' | 'rejected') => {
     updateRequestMutation.mutate({ requestId, status });
+  };
+
+  const handleEditPod = (pod: Pod) => {
+    setEditingPod(pod);
+    setEditImageUrl(pod.imageUrl || "");
+  };
+
+  const handleSavePodImage = () => {
+    if (editingPod) {
+      updatePodMutation.mutate({ podId: editingPod.id, imageUrl: editImageUrl });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -687,15 +729,77 @@ export default function PodLeaderDashboard() {
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => navigate(`/pod/${pod.id}`)}
+                                  data-testid={`button-view-pod-${pod.id}`}
                                 >
                                   View Details
                                 </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                >
-                                  <Edit3 className="w-4 h-4" />
-                                </Button>
+                                <Dialog open={editingPod?.id === pod.id} onOpenChange={(open) => !open && setEditingPod(null)}>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEditPod(pod)}
+                                      data-testid={`button-edit-pod-${pod.id}`}
+                                    >
+                                      <Edit3 className="w-4 h-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Edit Pod Image</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                                          Image URL
+                                        </label>
+                                        <input
+                                          id="imageUrl"
+                                          type="text"
+                                          placeholder="https://example.com/image.jpg"
+                                          value={editImageUrl}
+                                          onChange={(e) => setEditImageUrl(e.target.value)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          data-testid="input-pod-image-url"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-1">
+                                          Enter a URL to an image for your pod (e.g., from Unsplash, Imgur, etc.)
+                                        </p>
+                                      </div>
+                                      {editImageUrl && (
+                                        <div>
+                                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Preview
+                                          </label>
+                                          <img 
+                                            src={editImageUrl} 
+                                            alt="Pod preview" 
+                                            className="w-full h-48 object-cover rounded-lg"
+                                            onError={(e) => {
+                                              e.currentTarget.src = "https://via.placeholder.com/400x300?text=Invalid+Image+URL";
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      <div className="flex justify-end space-x-2">
+                                        <Button 
+                                          variant="outline" 
+                                          onClick={() => setEditingPod(null)}
+                                          data-testid="button-cancel-edit"
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button 
+                                          onClick={handleSavePodImage}
+                                          disabled={updatePodMutation.isPending}
+                                          data-testid="button-save-pod-image"
+                                        >
+                                          {updatePodMutation.isPending ? "Saving..." : "Save"}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
                               </div>
                             </div>
                           </div>
