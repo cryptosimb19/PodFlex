@@ -218,6 +218,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update a pod
+  app.patch("/api/pods/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const pod = await storage.getPod(id);
+      
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+      
+      // Check if user is the pod leader
+      if (pod.leadId !== req.user.id) {
+        return res.status(403).json({ message: "Only the pod leader can update this pod" });
+      }
+      
+      // Validate and update pod data
+      const updateSchema = insertPodSchema.partial();
+      const updateData = updateSchema.parse(req.body);
+      const updatedPod = await storage.updatePod(id, updateData);
+      
+      res.json(updatedPod);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid pod data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update pod" });
+    }
+  });
+
   // Create a join request
   app.post("/api/join-requests", async (req, res) => {
     try {
