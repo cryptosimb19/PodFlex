@@ -28,12 +28,21 @@ export default function Navigation({ userType }: NavigationProps) {
       });
       // Clear all React Query cache to remove user data
       queryClient.clear();
+      // Clear localStorage
+      localStorage.removeItem('userData');
+      localStorage.removeItem('flexpod_user_type');
+      localStorage.removeItem('flexpod_onboarding_complete');
+      localStorage.removeItem('flexpod_seen_welcome');
       // Navigate to login page
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Clear cache even on error and navigate to login
+      // Clear cache and localStorage even on error
       queryClient.clear();
+      localStorage.removeItem('userData');
+      localStorage.removeItem('flexpod_user_type');
+      localStorage.removeItem('flexpod_onboarding_complete');
+      localStorage.removeItem('flexpod_seen_welcome');
       navigate('/login');
     }
   };

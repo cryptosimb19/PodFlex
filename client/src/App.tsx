@@ -24,6 +24,7 @@ function Router() {
   // Clear localStorage only when transitioning from authenticated to unauthenticated
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
+      localStorage.removeItem('userData');
       localStorage.removeItem('flexpod_seen_welcome');
       localStorage.removeItem('flexpod_user_type');
       localStorage.removeItem('flexpod_onboarding_complete');
