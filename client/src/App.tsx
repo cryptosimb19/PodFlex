@@ -19,7 +19,7 @@ import { useEffect } from "react";
 
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Clear localStorage only when transitioning from authenticated to unauthenticated
   useEffect(() => {
@@ -30,6 +30,19 @@ function Router() {
       localStorage.removeItem('flexpod_onboarding_complete');
     }
   }, [isAuthenticated, isLoading]);
+  
+  // Sync database values to localStorage when user data is available
+  useEffect(() => {
+    if (user) {
+      const userData = user as any;
+      if (userData.userType) {
+        localStorage.setItem('flexpod_user_type', userData.userType);
+      }
+      if (userData.hasCompletedOnboarding) {
+        localStorage.setItem('flexpod_onboarding_complete', 'true');
+      }
+    }
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -55,21 +68,25 @@ function Router() {
       ) : (
         <>
           <Route path="/login" component={() => {
-            // Redirect authenticated users to their dashboard
-            const userType = localStorage.getItem('flexpod_user_type');
-            if (userType === 'pod_leader') {
-              return <PodLeaderDashboard />;
-            } else {
-              return <Dashboard />;
+            // Redirect authenticated users to their dashboard based on database values
+            const userData = user as any;
+            if (userData?.hasCompletedOnboarding && userData?.userType) {
+              if (userData.userType === 'pod_leader') {
+                return <PodLeaderDashboard />;
+              } else {
+                return <Dashboard />;
+              }
             }
+            // If no userType or onboarding not complete, go to root
+            return <UserTypeSelection />;
           }} />
           <Route path="/" component={() => {
-            // Check localStorage for user flow state
-            const hasSeenWelcome = localStorage.getItem('flexpod_seen_welcome');
-            const userType = localStorage.getItem('flexpod_user_type');
-            const hasCompletedOnboarding = localStorage.getItem('flexpod_onboarding_complete');
+            // Use database values from user object for routing decisions
+            const userData = user as any;
+            const userType = userData?.userType;
+            const hasCompletedOnboarding = userData?.hasCompletedOnboarding;
             
-            // For authenticated users, skip welcome screen and go to appropriate flow
+            // For authenticated users, check onboarding status from database
             if (!userType) {
               return <UserTypeSelection />;
             }

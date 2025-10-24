@@ -104,7 +104,35 @@ export default function LoginPage() {
       });
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      navigate('/');
+      
+      // Get the user data from the query cache
+      const userData = queryClient.getQueryData(['/api/auth/user']) as any;
+      
+      if (userData) {
+        // Sync user data to localStorage
+        if (userData.userType) {
+          localStorage.setItem('flexpod_user_type', userData.userType);
+        }
+        if (userData.hasCompletedOnboarding) {
+          localStorage.setItem('flexpod_onboarding_complete', 'true');
+        }
+        
+        // Redirect based on onboarding status
+        if (userData.hasCompletedOnboarding && userData.userType) {
+          // User has completed onboarding, go directly to dashboard
+          if (userData.userType === 'pod_leader') {
+            navigate('/pod-leader-dashboard');
+          } else {
+            navigate('/dashboard');
+          }
+        } else {
+          // User hasn't completed onboarding, go to onboarding flow
+          navigate('/');
+        }
+      } else {
+        // Fallback to root if user data not available
+        navigate('/');
+      }
     },
     onError: (error: Error) => {
       toast({

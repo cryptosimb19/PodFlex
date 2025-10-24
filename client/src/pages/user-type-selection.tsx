@@ -15,10 +15,16 @@ export default function UserTypeSelection() {
 
   const saveUserTypeMutation = useMutation({
     mutationFn: async (userType: string) => {
-      return await apiRequest('/api/users/profile', {
+      const response = await fetch('/api/users/profile', {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ userType }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to save user type');
+      }
+      return response.json();
     },
     onSuccess: () => {
       // Save to localStorage for immediate UI updates
