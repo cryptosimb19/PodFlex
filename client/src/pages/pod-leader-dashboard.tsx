@@ -76,16 +76,27 @@ export default function PodLeaderDashboard() {
     }
   }, []);
 
+  // Fetch authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/user', { credentials: 'include' });
+      if (!response.ok) return null;
+      return response.json();
+    },
+  });
+
   // Fetch pods where user is the leader
   const { data: leaderPods, isLoading: podsLoading } = useQuery<Pod[]>({
-    queryKey: ['/api/pods', 'leader', 1], // Mock user ID
+    queryKey: ['/api/pods', 'leader', authUser?.id],
     queryFn: async () => {
       const response = await fetch('/api/pods');
       if (!response.ok) throw new Error('Failed to fetch pods');
       const allPods = await response.json();
       // Filter pods where current user is the leader
-      return allPods.filter((pod: Pod) => pod.leadId === 'sample-lead-1'); // Mock filter
+      return allPods.filter((pod: Pod) => pod.leadId === authUser?.id);
     },
+    enabled: !!authUser?.id,
   });
 
   // Fetch join requests for leader's pods

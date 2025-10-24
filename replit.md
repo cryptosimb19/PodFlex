@@ -75,6 +75,15 @@ Preferred communication style: Simple, everyday language.
 - **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
 
 ### Recent Changes
+- **October 24, 2025**: Added Pod Image Update Feature - Pod leaders can now update images for their pods:
+  1. **Storage Layer**: Added `updatePod` method to storage interface for partial pod updates
+  2. **API Endpoint**: New PATCH /api/pods/:id endpoint with authentication and authorization (only pod leader can update their pods)
+  3. **UI Dialog**: Edit button in "My Pods" tab opens dialog with image URL input and live preview
+  4. **Authorization Fix**: Pod leader dashboard now fetches authenticated user ID to properly filter and display user's pods (previously hardcoded to 'sample-lead-1')
+  5. **User Experience**: Image preview with error handling, success/error toasts, automatic cache invalidation
+  
+  Technical details: Endpoint validates with partial insertPodSchema, checks leadId === req.user.id for authorization, frontend uses Dialog component with controlled input state and useMutation for updates. Dashboard queries now properly use authUser.id instead of hardcoded values.
+
 - **October 18, 2025**: Implemented Email Failure Handling with Recovery - Join request creation no longer fails when email delivery encounters errors:
   1. **Email Status Tracking**: Added `emailStatus` field to join_requests table ('sent', 'failed', 'pending') to track delivery state
   2. **Graceful Failure**: Join requests are saved to database even when MailerSend fails (important for trial account limitations)
