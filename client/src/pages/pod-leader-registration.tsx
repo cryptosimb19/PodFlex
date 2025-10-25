@@ -423,14 +423,18 @@ export default function PodLeaderRegistration() {
       const createdPod = await podResponse.json();
       console.log("Pod created successfully:", createdPod);
       
+      console.log("✅ Pod leader registration complete! Redirecting...");
       console.log("Pod Leader Registration Data:", formData);
       
-      // Force a full page reload to /pod-leader-dashboard to ensure auth state is fresh
-      window.location.href = '/pod-leader-dashboard';
+      // Small delay to ensure session is persisted before redirect
+      setTimeout(() => {
+        console.log("🔄 Executing redirect to /pod-leader-dashboard");
+        window.location.href = '/pod-leader-dashboard';
+      }, 500);
     } catch (error) {
-      console.error("Error during pod leader registration:", error);
+      console.error("❌ Error during pod leader registration:", error);
       // Still navigate even if pod creation fails
-      navigate("/pod-leader-dashboard");
+      window.location.href = '/pod-leader-dashboard';
     }
   };
 

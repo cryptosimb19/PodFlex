@@ -300,14 +300,18 @@ export default function OnboardingWizard() {
         console.warn('Failed to update user profile, but continuing...');
       }
       
+      console.log("✅ Onboarding complete! Redirecting to dashboard...");
       console.log("User data:", userData);
       
-      // Force a full page reload to /dashboard to ensure auth state is fresh
-      window.location.href = '/dashboard';
+      // Small delay to ensure session is persisted before redirect
+      setTimeout(() => {
+        console.log("🔄 Executing redirect to /dashboard");
+        window.location.href = '/dashboard';
+      }, 500);
     } catch (error) {
-      console.error("Error during onboarding completion:", error);
+      console.error("❌ Error during onboarding completion:", error);
       // Still navigate to dashboard even if profile update fails
-      navigate("/dashboard");
+      window.location.href = '/dashboard';
     }
   };
 

@@ -24,6 +24,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
+      console.log("📥 GET /api/auth/user - Returning user:", {
+        id: req.user.id,
+        email: req.user.email,
+        userType: req.user.userType,
+        hasCompletedOnboarding: req.user.hasCompletedOnboarding
+      });
       res.json(sanitizeUser(req.user));
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -503,8 +509,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Explicitly save the session to persist the updated user data
       await new Promise<void>((resolve, reject) => {
         req.session.save((err: any) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) {
+            console.error("Session save error:", err);
+            reject(err);
+          } else {
+            console.log("✅ Session saved successfully. User data:", {
+              id: updatedUser.id,
+              userType: updatedUser.userType,
+              hasCompletedOnboarding: updatedUser.hasCompletedOnboarding
+            });
+            resolve();
+          }
         });
       });
       
