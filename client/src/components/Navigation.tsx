@@ -26,24 +26,29 @@ export default function Navigation({ userType }: NavigationProps) {
         method: 'POST',
         credentials: 'include',
       });
-      // Clear all React Query cache to remove user data
-      queryClient.clear();
-      // Clear localStorage
+      // Clear localStorage first
       localStorage.removeItem('userData');
       localStorage.removeItem('flexpod_user_type');
       localStorage.removeItem('flexpod_onboarding_complete');
       localStorage.removeItem('flexpod_seen_welcome');
+      // Clear all React Query cache to remove user data
+      queryClient.clear();
+      // Invalidate and refetch auth query to update isAuthenticated immediately
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
       // Navigate to login page
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (error) {
       console.error('Logout failed:', error);
       // Clear cache and localStorage even on error
-      queryClient.clear();
       localStorage.removeItem('userData');
       localStorage.removeItem('flexpod_user_type');
       localStorage.removeItem('flexpod_onboarding_complete');
       localStorage.removeItem('flexpod_seen_welcome');
-      navigate('/login');
+      queryClient.clear();
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+      navigate('/login', { replace: true });
     }
   };
 

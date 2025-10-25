@@ -75,6 +75,16 @@ Preferred communication style: Simple, everyday language.
 - **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
 
 ### Recent Changes
+- **October 25, 2025**: Protected Dashboard Routes - Added route protection to prevent users from accessing dashboards before completing onboarding:
+  1. **ProtectedDashboard Component**: Checks hasCompletedOnboarding before rendering /dashboard - redirects incomplete users to '/' (which routes to onboarding)
+  2. **ProtectedPodLeaderDashboard Component**: Checks hasCompletedOnboarding before rendering /pod-leader-dashboard - redirects incomplete users to '/'
+  3. **Cross-Type Protection**: Pod seekers trying to access /pod-leader-dashboard are redirected to /dashboard and vice versa
+  4. **URL/Page Sync**: Users now see correct content matching their URL - no more "Welcome to FlexPod" message at /dashboard URL
+  5. **Replace Navigation**: All redirects use replace:true to prevent back-button issues
+  6. **No Redirect Loops**: Protected routes check user state in useEffect with proper dependencies
+  
+  Technical details: ProtectedDashboard/ProtectedPodLeaderDashboard wrap Dashboard/PodLeaderDashboard components, check userData.hasCompletedOnboarding and userData.userType, redirect to '/' when prerequisites fail (RootRouter then routes to onboarding), return null during redirect. This ensures users completing user type selection are redirected to onboarding (not dashboard) and can't manually navigate to dashboards until onboarding is complete.
+
 - **October 25, 2025**: Implemented Smart Redirect System for Returning Users - Users are now automatically redirected to their dashboard when logging in with completed onboarding:
   1. **Database-Driven Routing**: Added userType and hasCompletedOnboarding fields to users table to track onboarding state
   2. **Smart Login Redirect**: Login flow checks user's onboarding status and redirects to appropriate dashboard (pod seekers → /dashboard, pod leaders → /pod-leader-dashboard)

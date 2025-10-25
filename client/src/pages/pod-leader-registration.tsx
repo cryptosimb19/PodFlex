@@ -423,11 +423,10 @@ export default function PodLeaderRegistration() {
       const createdPod = await podResponse.json();
       console.log("Pod created successfully:", createdPod);
       
-      // Invalidate pods cache to refresh the browse pods list
-      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
-      
       console.log("Pod Leader Registration Data:", formData);
-      navigate("/pod-leader-dashboard");
+      
+      // Force a full page reload to /pod-leader-dashboard to ensure auth state is fresh
+      window.location.href = '/pod-leader-dashboard';
     } catch (error) {
       console.error("Error during pod leader registration:", error);
       // Still navigate even if pod creation fails

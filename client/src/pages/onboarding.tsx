@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { Zap, Users, MapPin } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 interface UserData {
   firstName: string;
@@ -290,6 +291,7 @@ export default function OnboardingWizard() {
         body: JSON.stringify({
           membershipId: userData.membershipId || undefined,
           preferredRegion: userData.primaryCampus || undefined,
+          userType: 'pod_seeker', // Ensure userType is set for pod seekers
           hasCompletedOnboarding: true,
         }),
       });
@@ -299,7 +301,9 @@ export default function OnboardingWizard() {
       }
       
       console.log("User data:", userData);
-      navigate("/dashboard");
+      
+      // Force a full page reload to /dashboard to ensure auth state is fresh
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error("Error during onboarding completion:", error);
       // Still navigate to dashboard even if profile update fails

@@ -497,6 +497,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...(hasCompletedOnboarding !== undefined && { hasCompletedOnboarding })
       });
       
+      // Update the session with the new user data
+      req.user = updatedUser;
+      
+      // Explicitly save the session to persist the updated user data
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+      
       res.json(sanitizeUser(updatedUser));
     } catch (error) {
       console.error("Error updating user profile:", error);

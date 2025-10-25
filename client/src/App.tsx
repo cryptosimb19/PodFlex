@@ -38,10 +38,13 @@ function LoginRedirect() {
 }
 
 function ProtectedDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   
   useEffect(() => {
+    // Don't redirect while loading to avoid race conditions
+    if (isLoading) return;
+    
     const userData = user as any;
     if (!userData?.hasCompletedOnboarding || !userData?.userType) {
       // User hasn't completed onboarding, redirect to appropriate flow
@@ -50,7 +53,12 @@ function ProtectedDashboard() {
       // Pod leader accessing pod seeker dashboard, redirect to their dashboard
       navigate('/pod-leader-dashboard', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate]);
+  
+  // Show loading state while fetching auth
+  if (isLoading) {
+    return null;
+  }
   
   const userData = user as any;
   if (!userData?.hasCompletedOnboarding || userData?.userType === 'pod_leader') {
@@ -61,10 +69,13 @@ function ProtectedDashboard() {
 }
 
 function ProtectedPodLeaderDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   
   useEffect(() => {
+    // Don't redirect while loading to avoid race conditions
+    if (isLoading) return;
+    
     const userData = user as any;
     if (!userData?.hasCompletedOnboarding || !userData?.userType) {
       // User hasn't completed onboarding, redirect to appropriate flow
@@ -73,7 +84,12 @@ function ProtectedPodLeaderDashboard() {
       // Pod seeker accessing pod leader dashboard, redirect to their dashboard
       navigate('/dashboard', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate]);
+  
+  // Show loading state while fetching auth
+  if (isLoading) {
+    return null;
+  }
   
   const userData = user as any;
   if (!userData?.hasCompletedOnboarding || userData?.userType === 'pod_seeker') {
