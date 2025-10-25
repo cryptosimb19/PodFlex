@@ -39,29 +39,33 @@ function LoginRedirect() {
 
 function RootRouter() {
   const { user } = useAuth();
-  const userData = user as any;
-  const userType = userData?.userType;
-  const hasCompletedOnboarding = userData?.hasCompletedOnboarding;
+  const [, navigate] = useLocation();
   
-  // For authenticated users, check onboarding status from database
-  if (!userType) {
-    return <UserTypeSelection />;
-  }
-  
-  if (!hasCompletedOnboarding) {
-    if (userType === 'pod_leader') {
-      return <PodLeaderRegistration />;
+  useEffect(() => {
+    const userData = user as any;
+    const userType = userData?.userType;
+    const hasCompletedOnboarding = userData?.hasCompletedOnboarding;
+    
+    // For authenticated users, redirect based on onboarding status from database
+    if (!userType) {
+      navigate('/user-type-selection', { replace: true });
+    } else if (!hasCompletedOnboarding) {
+      if (userType === 'pod_leader') {
+        navigate('/pod-leader-registration', { replace: true });
+      } else {
+        navigate('/onboarding', { replace: true });
+      }
     } else {
-      return <OnboardingWizard />;
+      // User has completed onboarding, redirect to appropriate dashboard
+      if (userType === 'pod_leader') {
+        navigate('/pod-leader-dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
-  }
+  }, [user, navigate]);
   
-  // User has completed onboarding, show appropriate dashboard
-  if (userType === 'pod_leader') {
-    return <PodLeaderDashboard />;
-  } else {
-    return <Dashboard />;
-  }
+  return null;
 }
 
 
