@@ -37,6 +37,52 @@ function LoginRedirect() {
   return null;
 }
 
+function ProtectedDashboard() {
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+  
+  useEffect(() => {
+    const userData = user as any;
+    if (!userData?.hasCompletedOnboarding || !userData?.userType) {
+      // User hasn't completed onboarding, redirect to appropriate flow
+      navigate('/', { replace: true });
+    } else if (userData.userType === 'pod_leader') {
+      // Pod leader accessing pod seeker dashboard, redirect to their dashboard
+      navigate('/pod-leader-dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+  
+  const userData = user as any;
+  if (!userData?.hasCompletedOnboarding || userData?.userType === 'pod_leader') {
+    return null;
+  }
+  
+  return <Dashboard />;
+}
+
+function ProtectedPodLeaderDashboard() {
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+  
+  useEffect(() => {
+    const userData = user as any;
+    if (!userData?.hasCompletedOnboarding || !userData?.userType) {
+      // User hasn't completed onboarding, redirect to appropriate flow
+      navigate('/', { replace: true });
+    } else if (userData.userType === 'pod_seeker') {
+      // Pod seeker accessing pod leader dashboard, redirect to their dashboard
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+  
+  const userData = user as any;
+  if (!userData?.hasCompletedOnboarding || userData?.userType === 'pod_seeker') {
+    return null;
+  }
+  
+  return <PodLeaderDashboard />;
+}
+
 function RootRouter() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -125,8 +171,8 @@ function Router() {
           <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
           <Route path="/pods" component={SearchScreen} />
           <Route path="/pod/:id" component={PodDetail} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/pod-leader-dashboard" component={PodLeaderDashboard} />
+          <Route path="/dashboard" component={ProtectedDashboard} />
+          <Route path="/pod-leader-dashboard" component={ProtectedPodLeaderDashboard} />
         </>
       )}
       <Route component={NotFound} />
