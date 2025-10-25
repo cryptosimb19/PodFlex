@@ -75,6 +75,16 @@ Preferred communication style: Simple, everyday language.
 - **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
 
 ### Recent Changes
+- **October 25, 2025**: Implemented Smart Redirect System for Returning Users - Users are now automatically redirected to their dashboard when logging in with completed onboarding:
+  1. **Database-Driven Routing**: Added userType and hasCompletedOnboarding fields to users table to track onboarding state
+  2. **Smart Login Redirect**: Login flow checks user's onboarding status and redirects to appropriate dashboard (pod seekers → /dashboard, pod leaders → /pod-leader-dashboard)
+  3. **URL Matching**: Fixed issue where page content didn't match browser URL - now uses proper navigation with replace:true
+  4. **Onboarding Status Persistence**: User type selection, pod seeker onboarding, and pod leader registration all save status to database
+  5. **Session Management**: User data synced from database to localStorage for consistent UI state
+  6. **Direct URL Access**: Users can directly navigate to their dashboard URL and stay there (no redirect loops)
+  
+  Technical details: App.tsx uses LoginRedirect and RootRouter components with useEffect + navigate() to properly redirect users based on database values (userType, hasCompletedOnboarding). Profile update endpoint (PUT /api/users/profile) accepts these fields. Login success handler fetches user data and redirects accordingly. This eliminates the need for users to re-complete onboarding on every login.
+
 - **October 24, 2025**: Added Pod Image Update Feature - Pod leaders can now update images for their pods:
   1. **Storage Layer**: Added `updatePod` method to storage interface for partial pod updates
   2. **API Endpoint**: New PATCH /api/pods/:id endpoint with authentication and authorization (only pod leader can update their pods)
