@@ -280,6 +280,7 @@ export default function OnboardingWizard() {
       // Save user data to localStorage for join requests
       localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.setItem('flexpod_onboarding_complete', 'true');
+      localStorage.setItem('flexpod_user_type', 'pod_seeker');
       
       // Update user profile with membership information and mark onboarding as complete
       const response = await fetch('/api/users/profile', {
@@ -297,21 +298,29 @@ export default function OnboardingWizard() {
       });
 
       if (!response.ok) {
-        console.warn('Failed to update user profile, but continuing...');
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Failed to update user profile:', errorData);
+        throw new Error(`Profile update failed: ${errorData.message}`);
       }
       
-      console.log("✅ Onboarding complete! Redirecting to dashboard...");
-      console.log("User data:", userData);
+      // Get the updated user data from the response
+      const updatedUserData = await response.json();
+      console.log("✅ Profile updated successfully:", updatedUserData);
       
-      // Small delay to ensure session is persisted before redirect
-      setTimeout(() => {
-        console.log("🔄 Executing redirect to /dashboard");
-        window.location.href = '/dashboard';
-      }, 500);
+      // Manually update the auth query cache with the new user data
+      queryClient.setQueryData(['/api/auth/user'], updatedUserData);
+      console.log("📋 Auth cache updated with new user data");
+      
+      // Add a small delay to ensure React has re-rendered with new auth state
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      console.log("🚀 Navigating to /dashboard");
+      // Use client-side navigation instead of full page reload
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error("❌ Error during onboarding completion:", error);
       // Still navigate to dashboard even if profile update fails
-      window.location.href = '/dashboard';
+      navigate('/dashboard', { replace: true });
     }
   };
 

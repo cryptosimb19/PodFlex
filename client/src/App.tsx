@@ -100,10 +100,13 @@ function ProtectedPodLeaderDashboard() {
 }
 
 function RootRouter() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   
   useEffect(() => {
+    // Don't redirect while loading to avoid race conditions with logout
+    if (isLoading) return;
+    
     const userData = user as any;
     const userType = userData?.userType;
     const hasCompletedOnboarding = userData?.hasCompletedOnboarding;
@@ -125,7 +128,7 @@ function RootRouter() {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate]);
   
   return null;
 }

@@ -423,18 +423,27 @@ export default function PodLeaderRegistration() {
       const createdPod = await podResponse.json();
       console.log("Pod created successfully:", createdPod);
       
-      console.log("✅ Pod leader registration complete! Redirecting...");
-      console.log("Pod Leader Registration Data:", formData);
+      console.log("✅ Pod leader registration complete!");
       
-      // Small delay to ensure session is persisted before redirect
-      setTimeout(() => {
-        console.log("🔄 Executing redirect to /pod-leader-dashboard");
-        window.location.href = '/pod-leader-dashboard';
-      }, 500);
+      // The profile was already updated when we saved userType and hasCompletedOnboarding earlier
+      // Fetch the latest user data to update the cache
+      const authResponse = await fetch('/api/auth/user', { credentials: 'include' });
+      if (authResponse.ok) {
+        const updatedUserData = await authResponse.json();
+        queryClient.setQueryData(['/api/auth/user'], updatedUserData);
+        console.log("📋 Auth cache updated with new user data");
+      }
+      
+      // Add a small delay to ensure React has re-rendered with new auth state
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      console.log("🚀 Navigating to /pod-leader-dashboard");
+      // Use client-side navigation instead of full page reload
+      navigate('/pod-leader-dashboard', { replace: true });
     } catch (error) {
       console.error("❌ Error during pod leader registration:", error);
       // Still navigate even if pod creation fails
-      window.location.href = '/pod-leader-dashboard';
+      navigate('/pod-leader-dashboard', { replace: true });
     }
   };
 

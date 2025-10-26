@@ -22,33 +22,40 @@ export default function Navigation({ userType }: NavigationProps) {
 
   const handleLogout = async () => {
     try {
+      console.log("🔓 Logging out...");
       await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });
+      
       // Clear localStorage first
       localStorage.removeItem('userData');
       localStorage.removeItem('flexpod_user_type');
       localStorage.removeItem('flexpod_onboarding_complete');
       localStorage.removeItem('flexpod_seen_welcome');
+      
       // Clear all React Query cache to remove user data
       queryClient.clear();
-      // Invalidate and refetch auth query to update isAuthenticated immediately
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      // Navigate to login page
-      navigate('/login', { replace: true });
+      
+      // Set auth query data to null AFTER clearing (so it persists)
+      queryClient.setQueryData(['/api/auth/user'], null);
+      
+      console.log("📋 Auth set to null, cache cleared");
+      console.log("✅ Logout successful, redirecting to Welcome page");
+      
+      // Use full page reload for logout to ensure clean state
+      window.location.href = '/';
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('❌ Logout failed:', error);
       // Clear cache and localStorage even on error
       localStorage.removeItem('userData');
       localStorage.removeItem('flexpod_user_type');
       localStorage.removeItem('flexpod_onboarding_complete');
       localStorage.removeItem('flexpod_seen_welcome');
       queryClient.clear();
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      navigate('/login', { replace: true });
+      queryClient.setQueryData(['/api/auth/user'], null);
+      // Use full page reload for logout to ensure clean state
+      window.location.href = '/';
     }
   };
 
