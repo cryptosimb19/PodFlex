@@ -303,20 +303,11 @@ export default function OnboardingWizard() {
         throw new Error(`Profile update failed: ${errorData.message}`);
       }
       
-      // Get the updated user data from the response
-      const updatedUserData = await response.json();
-      console.log("✅ Profile updated successfully:", updatedUserData);
-      
-      // Manually update the auth query cache with the new user data
-      queryClient.setQueryData(['/api/auth/user'], updatedUserData);
-      console.log("📋 Auth cache updated with new user data");
-      
-      // Add a small delay to ensure React has re-rendered with new auth state
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      console.log("✅ Profile updated successfully");
       console.log("🚀 Navigating to /dashboard");
-      // Use client-side navigation instead of full page reload
-      navigate('/dashboard', { replace: true });
+      
+      // Use full page reload to ensure fresh auth state and avoid race conditions
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error("❌ Error during onboarding completion:", error);
       // Still navigate to dashboard even if profile update fails

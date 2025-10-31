@@ -75,6 +75,18 @@ export default function Navigation({ userType }: NavigationProps) {
   ];
 
   const isActive = (path: string) => location === path;
+  
+  // Don't allow logo navigation during onboarding flows
+  const isOnboardingPage = location === '/user-type-selection' || 
+                           location === '/onboarding' || 
+                           location === '/pod-leader-registration';
+  
+  const handleLogoClick = () => {
+    // Prevent navigation during onboarding to avoid losing progress
+    if (!isOnboardingPage) {
+      navigate('/');
+    }
+  };
 
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 shadow-sm">
@@ -82,8 +94,8 @@ export default function Navigation({ userType }: NavigationProps) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div 
-            className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => navigate('/')}
+            className={`flex items-center space-x-2 ${!isOnboardingPage ? 'cursor-pointer hover:opacity-80' : 'cursor-default'} transition-opacity`}
+            onClick={handleLogoClick}
             data-testid="nav-logo"
           >
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">

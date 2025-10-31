@@ -426,21 +426,13 @@ export default function PodLeaderRegistration() {
       
       console.log("✅ Pod leader registration complete!");
       
-      // The profile was already updated when we saved userType and hasCompletedOnboarding earlier
-      // Fetch the latest user data to update the cache
-      const authResponse = await fetch('/api/auth/user', { credentials: 'include' });
-      if (authResponse.ok) {
-        const updatedUserData = await authResponse.json();
-        queryClient.setQueryData(['/api/auth/user'], updatedUserData);
-        console.log("📋 Auth cache updated with new user data");
-      }
-      
-      // Add a small delay to ensure React has re-rendered with new auth state
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Update localStorage immediately to ensure consistency
+      localStorage.setItem('flexpod_user_type', 'pod_leader');
+      localStorage.setItem('flexpod_onboarding_complete', 'true');
       
       console.log("🚀 Navigating to /pod-leader-dashboard");
-      // Use client-side navigation instead of full page reload
-      navigate('/pod-leader-dashboard', { replace: true });
+      // Use full page reload to ensure fresh auth state and avoid race conditions with cache
+      window.location.href = '/pod-leader-dashboard';
     } catch (error) {
       console.error("❌ Error during pod leader registration:", error);
       // Still navigate even if pod creation fails
@@ -671,8 +663,9 @@ export default function PodLeaderRegistration() {
               <div className="flex space-x-3 pt-4">
                 <Button 
                   variant="outline"
-                  onClick={() => navigate("/user-type")}
+                  onClick={() => navigate("/user-type-selection")}
                   className="flex-1"
+                  data-testid="back-btn"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
@@ -681,6 +674,7 @@ export default function PodLeaderRegistration() {
                   onClick={() => setCurrentStep(2)}
                   disabled={!canProceedStep1}
                   className="flex-1"
+                  data-testid="continue-btn"
                 >
                   Continue
                   <ArrowRight className="w-4 h-4 ml-2" />
