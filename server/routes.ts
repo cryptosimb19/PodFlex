@@ -9,7 +9,7 @@ import passport from "passport";
 import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification } from "./emailService";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
-import type { User } from "@shared/schema";
+import type { User, Pod } from "@shared/schema";
 
 // Sanitize user data to remove sensitive fields
 function sanitizeUser(user: User) {
@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate and update pod data
       const updateSchema = insertPodSchema.partial();
-      const updateData = updateSchema.parse(req.body);
+      const updateData = updateSchema.parse(req.body) as Partial<Pod>;
       const updatedPod = await storage.updatePod(id, updateData);
       
       res.json(updatedPod);
