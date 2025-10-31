@@ -13,7 +13,7 @@ import {
   type UpsertUser,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, and, inArray } from "drizzle-orm";
+import { eq, like, and, inArray, or, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - mandatory for Replit Auth
@@ -234,11 +234,25 @@ export class DatabaseStorage implements IStorage {
       return;
     }
     
-    // Clear existing sample data first (only on first-time setup)
-    await db.delete(podMembers);
-    await db.delete(joinRequests);  
-    await db.delete(pods);
-    await db.delete(users);
+    console.log('[Storage] Initializing sample pods for first-time setup');
+    
+    // IMPORTANT: Only delete sample data, NOT real user data
+    // Delete sample pods and related data (sample pods have leadId starting with "sample-lead-")
+    const samplePodIds = await db.select({ id: pods.id }).from(pods).where(like(pods.leadId, 'sample-lead-%'));
+    if (samplePodIds.length > 0) {
+      const podIds = samplePodIds.map(p => p.id);
+      await db.delete(podMembers).where(inArray(podMembers.podId, podIds));
+      await db.delete(joinRequests).where(inArray(joinRequests.podId, podIds));
+    }
+    await db.delete(pods).where(like(pods.leadId, 'sample-lead-%'));
+    
+    // Delete only sample users (those with IDs starting with "sample-" or "member-")
+    await db.delete(users).where(
+      or(
+        like(users.id, 'sample-%'),
+        like(users.id, 'member-%')
+      )
+    );
 
     // First create sample users for pod leads
     const sampleUsers = [

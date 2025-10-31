@@ -1,147 +1,54 @@
 # FlexPod - Gym Membership Pod Sharing Platform
 
 ## Overview
-FlexPod is a mobile-first web application that facilitates sharing high-end gym memberships, starting with Bay Club, to make them more affordable. It replaces manual coordination with a secure, streamlined platform for discovering, joining, and managing shared membership "pods." The project aims to solve the problem of scattered pod information, unclear pricing, and manual trust/payment handling by providing a centralized app where users can find the right pod, request to join, and manage their shared membership. This offers significant value to pod seekers looking for lower fees and pod leads needing to fill their shared accounts.
+FlexPod is a mobile-first web application designed to facilitate the sharing of high-end gym memberships, specifically starting with Bay Club, to make them more affordable. It provides a secure and streamlined platform for users to discover, join, and manage shared membership "pods," addressing issues like scattered information, unclear pricing, and manual coordination. The platform aims to centralize pod discovery and management, offering value to both "pod seekers" looking for lower fees and "pod leaders" needing to fill their shared accounts.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **UI Library**: Radix UI components with shadcn/ui styling
-- **Styling**: Tailwind CSS with custom CSS variables
-- **State Management**: TanStack Query for server state, React hooks for local state
-- **Routing**: Wouter
-- **PWA Features**: Service worker, manifest, and offline capabilities
+### UI/UX Decisions
+- **Design Approach**: Mobile-first responsive design.
+- **Styling**: Tailwind CSS with custom CSS variables, incorporating a purple-branded aesthetic, animations, and glass effects.
+- **Accessibility**: WCAG-compliant.
 
-### Backend Architecture
-- **Runtime**: Node.js with Express server
-- **Database**: PostgreSQL with Drizzle ORM
-- **Database Provider**: Neon serverless PostgreSQL
-- **API Design**: RESTful endpoints with Express routing
+### Technical Implementations
+- **Frontend**: React 18 with TypeScript, Vite, Radix UI components styled with shadcn/ui, TanStack Query for server state, Wouter for routing, and PWA capabilities (service worker, manifest, offline support).
+- **Backend**: Node.js with Express server, RESTful API.
+- **Database**: PostgreSQL with Drizzle ORM, hosted on Neon serverless PostgreSQL.
+- **Authentication**: Email magic links and Google OAuth, session management.
+- **Core Features**:
+    - **Pod Discovery**: Region-based filtering (e.g., Bay Club campuses), membership type categorization, advanced filtering, search functionality.
+    - **Membership Management**: Pod creation/management for leaders, join request workflow with approval, member tracking, rich pod profiles.
+    - **User Experience**: Offline capability, push notifications.
+- **Data Flow**: Structured for user onboarding, pod discovery, join request processing, and pod management.
+- **Database Schema**: Includes tables for Users (profile, preferences, membership), Pods (membership info, availability, pricing, amenities), and Join Requests (user-pod connections, approval status).
+- **Functional Requirements**: Comprehensive user management (registration, profiles, roles, authentication), robust pod discovery and management, efficient membership coordination (join requests, member tracking), dedicated dashboards for users and pod leaders, and integration with authentic Bay Club data.
 
-### Project Structure
-- `client/`: Frontend React application
-- `server/`: Express backend server
-- `shared/`: Shared TypeScript schemas and types
-- `migrations/`: Database migration files
-
-### Key Components
-- **Authentication System**: Email magic links and Google OAuth integration, session management.
-- **Pod Discovery Engine**: Region-based filtering (e.g., Bay Club campuses), membership type categorization (Single-Club, Multi-Club, Family), advanced filtering by price/amenities/availability, search functionality.
-- **Membership Management**: Pod creation/management for leads, join request workflow with approval, member tracking, rich pod profiles.
-- **User Experience**: Mobile-first responsive design, offline capability, push notifications, accessibility features.
-
-### Data Flow
-- **User Onboarding**: Preference collection, local storage, server sync.
-- **Pod Discovery**: Search/filter, API request, results rendering.
-- **Join Request**: User selection, request creation, lead notification.
-- **Pod Management**: Lead approval, member update, status sync.
-
-### Database Schema
-- **Users**: Profile, preferences, membership details.
-- **Pods**: Membership info, availability, pricing, amenities.
-- **Join Requests**: User-pod connections, approval status.
-
-### Functional Requirements Summary
-- **User Management**: Registration (Pod Seeker vs Pod Leader), profile management, role-based access, authentication.
-- **Pod Discovery & Management**: Pod creation, search/filtering by location/type/amenities, regional organization based on authentic Bay Club data, rich pod listings.
-- **Membership Coordination**: Join request system (approval/rejection), member management, status tracking.
-- **Dashboard Systems**: User Dashboard (active pods, requests), Pod Leader Dashboard (join requests, pod members, my pods, analytics).
-- **Data Integration**: Authentic Bay Club location data, membership tiers, pricing, and location-based features.
-- **User Experience**: Mobile-first, modern UI (purple-branded, animations, glass effects), WCAG-compliant accessibility, Progressive Web App (PWA).
-- **Technical Architecture**: Full-stack TypeScript, TanStack Query for real-time data, secure RESTful API, scalable PostgreSQL with Drizzle ORM.
+### System Design Choices
+- **Full-stack TypeScript**: Ensures type safety across the entire application.
+- **Scalable Database**: PostgreSQL with Drizzle ORM for robust data management.
+- **Real-time Data**: TanStack Query for efficient server state management.
+- **Modular Project Structure**: Separated client, server, shared, and migrations folders.
+- **Onboarding Flow**: Streamlined user onboarding with conditional redirects based on completion status and user type, protecting dashboard routes.
+- **Email Handling**: Robust email notification system with status tracking and resend capabilities for join requests.
 
 ## External Dependencies
 
-### Core Dependencies
-- `@neondatabase/serverless`: PostgreSQL database connectivity
-- `drizzle-orm`: Type-safe database operations
-- `@tanstack/react-query`: Server state management
-- `@radix-ui/react-***`: Accessible UI components
-- `wouter`: Lightweight routing
-- `zod`: Runtime type validation
-
-### Development Tools
-- `Vite`: Build tool and development server
-- `TypeScript`: Static type checking
-- `Tailwind CSS`: Utility-first styling
-- `ESBuild`: Production bundling
+### Core Libraries
+- `@neondatabase/serverless`: PostgreSQL database connectivity.
+- `drizzle-orm`: Type-safe ORM for database operations.
+- `@tanstack/react-query`: Server state management.
+- `@radix-ui/react-***`: Accessible UI components.
+- `wouter`: Lightweight client-side routing.
+- `zod`: Runtime type validation.
 
 ### Third-Party Services
-- **MailerSend**: Fully configured for email notifications. Sends professional emails to pod leaders when users request to join their pods, acceptance/rejection notifications to applicants. Includes branded HTML templates with gradient headers, applicant details, and dashboard links. Note: Trial accounts require verified sender domains and can only send to admin/verified emails. Production use requires domain verification.
+- **MailerSend**: Used for email notifications (e.g., join requests, acceptance/rejection) with branded HTML templates. Configured with API token and dynamic domain handling.
 
-### Recent Changes
-- **October 25, 2025**: Protected Dashboard Routes - Added route protection to prevent users from accessing dashboards before completing onboarding:
-  1. **ProtectedDashboard Component**: Checks hasCompletedOnboarding before rendering /dashboard - redirects incomplete users to '/' (which routes to onboarding)
-  2. **ProtectedPodLeaderDashboard Component**: Checks hasCompletedOnboarding before rendering /pod-leader-dashboard - redirects incomplete users to '/'
-  3. **Cross-Type Protection**: Pod seekers trying to access /pod-leader-dashboard are redirected to /dashboard and vice versa
-  4. **URL/Page Sync**: Users now see correct content matching their URL - no more "Welcome to FlexPod" message at /dashboard URL
-  5. **Replace Navigation**: All redirects use replace:true to prevent back-button issues
-  6. **No Redirect Loops**: Protected routes check user state in useEffect with proper dependencies
-  
-  Technical details: ProtectedDashboard/ProtectedPodLeaderDashboard wrap Dashboard/PodLeaderDashboard components, check userData.hasCompletedOnboarding and userData.userType, redirect to '/' when prerequisites fail (RootRouter then routes to onboarding), return null during redirect. This ensures users completing user type selection are redirected to onboarding (not dashboard) and can't manually navigate to dashboards until onboarding is complete.
-
-- **October 25, 2025**: Implemented Smart Redirect System for Returning Users - Users are now automatically redirected to their dashboard when logging in with completed onboarding:
-  1. **Database-Driven Routing**: Added userType and hasCompletedOnboarding fields to users table to track onboarding state
-  2. **Smart Login Redirect**: Login flow checks user's onboarding status and redirects to appropriate dashboard (pod seekers → /dashboard, pod leaders → /pod-leader-dashboard)
-  3. **URL Matching**: Fixed issue where page content didn't match browser URL - now uses proper navigation with replace:true
-  4. **Onboarding Status Persistence**: User type selection, pod seeker onboarding, and pod leader registration all save status to database
-  5. **Session Management**: User data synced from database to localStorage for consistent UI state
-  6. **Direct URL Access**: Users can directly navigate to their dashboard URL and stay there (no redirect loops)
-  
-  Technical details: App.tsx uses LoginRedirect and RootRouter components with useEffect + navigate() to properly redirect users based on database values (userType, hasCompletedOnboarding). Profile update endpoint (PUT /api/users/profile) accepts these fields. Login success handler fetches user data and redirects accordingly. This eliminates the need for users to re-complete onboarding on every login.
-
-- **October 24, 2025**: Added Pod Image Update Feature - Pod leaders can now update images for their pods:
-  1. **Storage Layer**: Added `updatePod` method to storage interface for partial pod updates
-  2. **API Endpoint**: New PATCH /api/pods/:id endpoint with authentication and authorization (only pod leader can update their pods)
-  3. **UI Dialog**: Edit button in "My Pods" tab opens dialog with image URL input and live preview
-  4. **Authorization Fix**: Pod leader dashboard now fetches authenticated user ID to properly filter and display user's pods (previously hardcoded to 'sample-lead-1')
-  5. **User Experience**: Image preview with error handling, success/error toasts, automatic cache invalidation
-  
-  Technical details: Endpoint validates with partial insertPodSchema, checks leadId === req.user.id for authorization, frontend uses Dialog component with controlled input state and useMutation for updates. Dashboard queries now properly use authUser.id instead of hardcoded values.
-
-- **October 18, 2025**: Implemented Email Failure Handling with Recovery - Join request creation no longer fails when email delivery encounters errors:
-  1. **Email Status Tracking**: Added `emailStatus` field to join_requests table ('sent', 'failed', 'pending') to track delivery state
-  2. **Graceful Failure**: Join requests are saved to database even when MailerSend fails (important for trial account limitations)
-  3. **Visual Indicators**: Dashboard shows orange "Email not sent" badge with MailWarning icon when emailStatus='failed'
-  4. **Resend Capability**: Users can retry failed email notifications via resend button in dashboard
-  5. **User Feedback**: Toast notifications inform users at creation time when emails fail, ensuring transparency
-  6. **API Endpoint**: New POST /api/join-requests/:id/resend-email endpoint enables retry functionality
-  7. **Query Optimization**: Added refetchOnWindowFocus to dashboard join requests query for better data freshness
-  
-  Technical details: Backend catches MailerSend errors and records emailStatus, frontend displays status badges and resend button for 'failed' status, query invalidation ensures dashboard reflects latest state. This prevents user frustration from trial account email restrictions while maintaining full functionality.
-
-- **October 24, 2025**: Enhanced Logout Functionality - Completely clears all user data and session:
-  1. **Backend Session Destruction**: Logout route calls req.session.destroy() to completely clear the session
-  2. **Cookie Cleanup**: Added res.clearCookie('connect.sid') to remove session cookie
-  3. **Frontend Cache Clearing**: Navigation component calls queryClient.clear() to remove all cached user data
-  4. **Complete localStorage Cleanup**: Explicitly removes userData, flexpod_user_type, flexpod_onboarding_complete, and flexpod_seen_welcome
-  5. **Reliable Redirect**: User reliably redirected to login page after logout
-  6. **Protected Route Security**: Users cannot access protected routes after logout - automatic redirect to login
-  
-  Technical details: Backend destroys Express session and clears cookie, frontend clears TanStack Query cache AND all localStorage items before navigation, App.tsx automatically clears localStorage when !isAuthenticated.
-
-- **October 11, 2025**: Streamlined Onboarding UX - Removed duplicate welcome form and consolidated onboarding flow:
-  1. **Pod Seeker Onboarding**: Reduced from 2 steps to 1 step - users now start directly at Bay Club membership form since name/email already collected during signup
-  2. **Pod Leader Registration**: Reduced from 4 steps to 3 steps - removed redundant personal info step
-  3. **Auto-fetch User Data**: Both flows now automatically fetch firstName, lastName, and email from authentication endpoint on mount
-  4. **Phone Number Repositioned**: Moved phone number field to Bay Club membership form, positioned above address section for better flow
-  5. **Progress Indicators Updated**: Pod seeker shows single step indicator, pod leader shows accurate "Step X of 3" progress
-  
-  E2E tests confirm all validations work correctly and navigation flows successfully complete to dashboard/pod-leader-dashboard.
-
-- **October 11, 2025**: Fixed multiple critical join request bugs:
-  1. **Type Mismatch Fix**: pod-detail.tsx now fetches authenticated user and uses actual user.id (string) instead of hardcoded number - fixes 400 error
-  2. **Dashboard User ID Fix**: Dashboard fetches authenticated user ID before querying join requests (was using hardcoded userId=1)
-  3. **Cache Refresh Fix**: Changed from invalidateQueries to refetchQueries with await to ensure fresh data before navigation
-  4. **Query Configuration**: Added refetchOnMount: true and staleTime: 0 to dashboard join requests query for guaranteed fresh data
-  5. **CRITICAL Data Persistence Fix**: Modified initializeSamplePods() to only run on first startup when pods table is empty - prevents join requests from being deleted on every server restart/hot-reload
-  
-  Also: Created `.npmrc` file with `production=false` to force npm to install devDependencies (tsx, typescript, vite, drizzle-kit) despite `REPLIT_ENVIRONMENT=production`. Updated all email templates to use dynamic `REPLIT_DEV_DOMAIN` instead of hardcoded URLs. Created EMAIL_TROUBLESHOOTING.md to help debug MailerSend trial account limitations. Configured MailerSend API token for email notifications.
-- **October 4, 2025**: Replaced SendGrid with MailerSend for email notifications. Updated emailService.ts to use MailerSend SDK with proper email templates for join requests, acceptances, and rejections.
-- **October 4, 2025**: Fixed 404 flash issue after login/signup by properly awaiting authentication state updates (invalidateQueries + refetchQueries) before navigation.
-- **August 18, 2025**: Bay Club Membership ID Made Optional - Updated both onboarding and pod-leader registration forms to make the Bay Club Membership ID field optional. Users can now complete registration without providing their membership ID and add it later. This improves user accessibility and reduces signup friction.
+### Development Tools
+- `Vite`: Build tool and development server.
+- `TypeScript`: Static type checking.
+- `Tailwind CSS`: Utility-first CSS framework.
+- `ESBuild`: Production bundling.
