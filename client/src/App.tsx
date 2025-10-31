@@ -130,7 +130,17 @@ function RootRouter() {
     }
   }, [user, isLoading, navigate]);
   
-  return null;
+  // Show loading indicator during redirect
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg mx-auto mb-4 animate-pulse">
+          <Zap className="w-8 h-8 text-white" />
+        </div>
+        <p className="text-gray-600 dark:text-gray-300">Redirecting...</p>
+      </div>
+    </div>
+  );
 }
 
 
