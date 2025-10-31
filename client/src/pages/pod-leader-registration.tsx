@@ -383,6 +383,7 @@ export default function PodLeaderRegistration() {
         body: JSON.stringify({
           membershipId: formData.membershipId || undefined,
           preferredRegion: formData.primaryCampus || undefined,
+          userType: 'pod_leader', // Ensure userType is set for pod leaders
           hasCompletedOnboarding: true,
         }),
       });
