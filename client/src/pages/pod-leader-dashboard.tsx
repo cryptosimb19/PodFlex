@@ -57,27 +57,14 @@ export default function PodLeaderDashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<JoinRequestWithUser | null>(null);
   const [selectedMember, setSelectedMember] = useState<PodMemberWithUser | null>(null);
   const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
   const [editImageUrl, setEditImageUrl] = useState("");
 
-  // Load user data from localStorage
-  useEffect(() => {
-    try {
-      const storedData = localStorage.getItem('userData');
-      if (storedData) {
-        setUserData(JSON.parse(storedData));
-      }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-    }
-  }, []);
-
-  // Fetch authenticated user
-  const { data: authUser } = useQuery({
+  // Fetch authenticated user with all profile data from database
+  const { data: authUser, isLoading: authLoading } = useQuery({
     queryKey: ['/api/auth/user'],
     queryFn: async () => {
       const response = await fetch('/api/auth/user', { credentials: 'include' });
@@ -85,6 +72,18 @@ export default function PodLeaderDashboard() {
       return response.json();
     },
   });
+
+  // Map authenticated user data to userData format
+  const userData: UserData | null = authUser ? {
+    firstName: authUser.firstName || '',
+    lastName: authUser.lastName || '',
+    email: authUser.email || '',
+    phone: authUser.phone || '',
+    primaryCampus: authUser.preferredRegion || '',
+    primaryClub: authUser.primaryClub || '',
+    membershipLevel: authUser.membershipLevel || '',
+    membershipId: authUser.membershipId || '',
+  } : null;
 
   // Fetch pods where user is the leader
   const { data: leaderPods, isLoading: podsLoading } = useQuery<Pod[]>({
@@ -244,7 +243,8 @@ export default function PodLeaderDashboard() {
   const totalMembers = leaderPods?.reduce((sum, pod) => sum + (pod.availableSpots || 0), 0) || 0;
   const totalRevenue = leaderPods?.reduce((sum, pod) => sum + (pod.costPerPerson * (pod.availableSpots || 0)), 0) || 0;
 
-  if (!userData) {
+  // Show loading state while fetching user data from database
+  if (authLoading || !userData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -252,14 +252,9 @@ export default function PodLeaderDashboard() {
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
               <Zap className="w-8 h-8 text-white" />
             </div>
-            <CardTitle>Dashboard</CardTitle>
-            <p className="text-muted-foreground">Complete your profile to access your dashboard</p>
+            <CardTitle>Loading Your Dashboard</CardTitle>
+            <p className="text-muted-foreground">Please wait while we load your profile...</p>
           </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/pod-leader-registration')} className="w-full">
-              Get Started
-            </Button>
-          </CardContent>
         </Card>
       </div>
     );
@@ -361,7 +356,13 @@ export default function PodLeaderDashboard() {
                   <span>{userData.primaryClub}</span>
                 </div>
                 <Separator />
-                <Button variant="outline" size="sm" className="w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => navigate('/edit-profile')}
+                  data-testid="button-edit-profile"
+                >
                   <Edit3 className="w-4 h-4 mr-2" />
                   Edit Profile
                 </Button>
