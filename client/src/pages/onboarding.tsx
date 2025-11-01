@@ -443,6 +443,7 @@ export default function OnboardingWizard() {
                   value={userData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="(555) 123-4567"
+                  data-testid="input-phone"
                 />
               </div>
               
@@ -453,20 +454,23 @@ export default function OnboardingWizard() {
                     value={userData.street}
                     onChange={(e) => handleInputChange('street', e.target.value)}
                     placeholder="Street Address"
+                    data-testid="input-street"
                   />
                   <Input
                     value={userData.aptUnit}
                     onChange={(e) => handleInputChange('aptUnit', e.target.value)}
                     placeholder="Apt/Unit (Optional)"
+                    data-testid="input-apt-unit"
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       value={userData.city}
                       onChange={(e) => handleInputChange('city', e.target.value)}
                       placeholder="City"
+                      data-testid="input-city"
                     />
                     <Select value={userData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="select-state">
                         <SelectValue placeholder="State" />
                       </SelectTrigger>
                       <SelectContent>
@@ -529,11 +533,13 @@ export default function OnboardingWizard() {
                       value={userData.zipCode}
                       onChange={(e) => handleInputChange('zipCode', e.target.value)}
                       placeholder="Zip Code"
+                      data-testid="input-zip-code"
                     />
                     <Input
                       value={userData.country}
                       onChange={(e) => handleInputChange('country', e.target.value)}
                       placeholder="Country"
+                      data-testid="input-country"
                     />
                   </div>
                 </div>
@@ -545,6 +551,7 @@ export default function OnboardingWizard() {
                   type="date"
                   value={userData.dateOfBirth}
                   onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                  data-testid="input-date-of-birth"
                 />
               </div>
               
@@ -552,9 +559,27 @@ export default function OnboardingWizard() {
                 onClick={handleFinish}
                 disabled={!canFinish}
                 className="w-full"
+                data-testid="button-complete-registration"
               >
                 Complete Registration
               </Button>
+              
+              {/* Debug validation status */}
+              {!canFinish && (
+                <div className="text-xs text-red-500 mt-2">
+                  Missing fields: 
+                  {!userData.primaryCampus && " Primary Campus,"}
+                  {!userData.primaryClub && " Primary Club,"}
+                  {!userData.membershipLevel && " Membership Level,"}
+                  {!userData.phone && " Phone,"}
+                  {!userData.street && " Street,"}
+                  {!userData.city && " City,"}
+                  {!userData.state && " State,"}
+                  {!userData.zipCode && " ZIP,"}
+                  {!userData.country && " Country,"}
+                  {!userData.dateOfBirth && " Date of Birth"}
+                </div>
+              )}
             </CardContent>
           </Card>
         );
