@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Navigation from "@/components/Navigation";
 import { Zap, Users, MapPin, DollarSign, Calendar, Shield, ArrowRight, ArrowLeft } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface PodLeaderData {
   // Personal Info
@@ -44,6 +45,7 @@ interface PodLeaderData {
 }
 
 export default function PodLeaderRegistration() {
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1); // Will start at Bay Club form (3 steps total now)
   const [formData, setFormData] = useState<PodLeaderData>({
     firstName: "",
@@ -345,37 +347,16 @@ export default function PodLeaderRegistration() {
 
   const handleSubmit = async () => {
     try {
+      console.log("🔄 Saving profile to database...");
+      
       // Get current user data for the pod leadId
       const userResponse = await fetch('/api/auth/user');
       if (!userResponse.ok) {
         throw new Error('Failed to get user information');
       }
       const currentUser = await userResponse.json();
-
-      // Save user data to localStorage for use in join requests
-      const userData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        primaryCampus: formData.primaryCampus,
-        primaryClub: formData.primaryClub,
-        membershipLevel: formData.membershipLevel,
-        membershipId: formData.membershipId,
-        street: formData.street,
-        aptUnit: formData.aptUnit,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zipCode,
-        country: formData.country,
-        dateOfBirth: formData.dateOfBirth,
-      };
-      localStorage.setItem('userData', JSON.stringify(userData));
-      localStorage.setItem('flexpod_onboarding_complete', 'true');
       
       // Update user profile with ALL membership information and mark onboarding as complete
-      console.log("🔄 Updating user profile with all fields");
-      
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: {
@@ -402,27 +383,32 @@ export default function PodLeaderRegistration() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('❌ Failed to update user profile:', response.status, errorData);
-        throw new Error(`Profile update failed: ${errorData.message || response.statusText}`);
+        console.error('❌ Failed to save profile to database:', errorData);
+        toast({
+          title: "Error",
+          description: `Failed to save your profile: ${errorData.message}. Please try again.`,
+          variant: "destructive",
+        });
+        return;
       }
       
       const updatedProfile = await response.json();
-      console.log("✅ Profile updated successfully:", updatedProfile);
+      console.log("✅ Profile saved successfully to database:", updatedProfile);
 
       // Create the pod
       const podData = {
         leadId: currentUser.id,
         clubName: formData.primaryClub,
         clubRegion: formData.primaryCampus,
-        clubAddress: `${formData.primaryClub}, ${formData.primaryCampus}`, // Basic address
+        clubAddress: `${formData.primaryClub}, ${formData.primaryCampus}`,
         membershipType: formData.membershipLevel,
         title: formData.podName,
         description: formData.podDescription,
-        costPerPerson: Math.round(parseFloat(formData.monthlyFee) * 100), // Convert to cents
+        costPerPerson: Math.round(parseFloat(formData.monthlyFee) * 100),
         totalSpots: parseInt(formData.availableSpots),
         availableSpots: parseInt(formData.availableSpots),
-        amenities: [], // Default empty, can be enhanced later
-        rules: formData.requirements.join(', '), // Convert requirements array to string
+        amenities: [],
+        rules: formData.requirements.join(', '),
         isActive: true,
       };
 
@@ -435,15 +421,38 @@ export default function PodLeaderRegistration() {
       });
 
       if (!podResponse.ok) {
-        throw new Error('Failed to create pod');
+        const errorData = await podResponse.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('❌ Failed to create pod:', errorData);
+        toast({
+          title: "Error",
+          description: `Failed to create your pod: ${errorData.message}. Please try again.`,
+          variant: "destructive",
+        });
+        return;
       }
 
       const createdPod = await podResponse.json();
-      console.log("Pod created successfully:", createdPod);
+      console.log("✅ Pod created successfully:", createdPod);
       
-      console.log("✅ Pod leader registration complete!");
-      
-      // Update localStorage immediately to ensure consistency
+      // ONLY set localStorage after database confirms save
+      const userData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        primaryCampus: formData.primaryCampus,
+        primaryClub: formData.primaryClub,
+        membershipLevel: formData.membershipLevel,
+        membershipId: formData.membershipId,
+        street: formData.street,
+        aptUnit: formData.aptUnit,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        country: formData.country,
+        dateOfBirth: formData.dateOfBirth,
+      };
+      localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.setItem('flexpod_user_type', 'pod_leader');
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       
@@ -452,12 +461,14 @@ export default function PodLeaderRegistration() {
       await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
       
       console.log("🚀 Navigating to /pod-leader-dashboard");
-      // Navigate using router after cache is updated
       navigate('/pod-leader-dashboard', { replace: true });
     } catch (error) {
       console.error("❌ Error during pod leader registration:", error);
-      // Still navigate even if pod creation fails
-      navigate('/pod-leader-dashboard', { replace: true });
+      toast({
+        title: "Error",
+        description: "Failed to complete registration. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

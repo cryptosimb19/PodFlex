@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { Zap, Users, MapPin } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserData {
   firstName: string;
@@ -27,6 +28,7 @@ interface UserData {
 }
 
 export default function OnboardingWizard() {
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1); // Will only have 1 step now
   const [userData, setUserData] = useState<UserData>({
     firstName: "",
@@ -277,10 +279,7 @@ export default function OnboardingWizard() {
 
   const handleFinish = async () => {
     try {
-      // Save user data to localStorage for join requests
-      localStorage.setItem('userData', JSON.stringify(userData));
-      localStorage.setItem('flexpod_onboarding_complete', 'true');
-      localStorage.setItem('flexpod_user_type', 'pod_seeker');
+      console.log("🔄 Saving profile to database...");
       
       // Update user profile with ALL membership information and mark onboarding as complete
       const response = await fetch('/api/users/profile', {
@@ -309,23 +308,35 @@ export default function OnboardingWizard() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('Failed to update user profile:', errorData);
-        throw new Error(`Profile update failed: ${errorData.message}`);
+        console.error('❌ Failed to save profile to database:', errorData);
+        toast({
+          title: "Error",
+          description: `Failed to save your profile: ${errorData.message}. Please try again.`,
+          variant: "destructive",
+        });
+        return;
       }
       
-      console.log("✅ Profile updated successfully");
+      console.log("✅ Profile saved successfully to database");
+      
+      // ONLY set localStorage after database confirms save
+      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('flexpod_onboarding_complete', 'true');
+      localStorage.setItem('flexpod_user_type', 'pod_seeker');
       
       // Invalidate auth cache and wait for refetch to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
       
       console.log("🚀 Navigating to /dashboard");
-      // Navigate using router after cache is updated
       navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error("❌ Error during onboarding completion:", error);
-      // Still navigate to dashboard even if profile update fails
-      navigate('/dashboard', { replace: true });
+      toast({
+        title: "Error",
+        description: "Failed to complete onboarding. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
