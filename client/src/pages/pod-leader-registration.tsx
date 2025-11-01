@@ -456,6 +456,10 @@ export default function PodLeaderRegistration() {
       localStorage.setItem('flexpod_user_type', 'pod_leader');
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       
+      // Add small delay to ensure session is fully persisted to PostgreSQL
+      console.log("⏳ Waiting for session persistence...");
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Force reload to ensure all auth state is fresh
       console.log("🚀 Reloading page to refresh auth state");
       window.location.href = '/pod-leader-dashboard';
