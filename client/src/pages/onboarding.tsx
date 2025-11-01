@@ -324,12 +324,9 @@ export default function OnboardingWizard() {
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       localStorage.setItem('flexpod_user_type', 'pod_seeker');
       
-      // Invalidate auth cache and wait for refetch to ensure fresh data
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      
-      console.log("🚀 Navigating to /dashboard");
-      navigate('/dashboard', { replace: true });
+      // Force reload to ensure all auth state is fresh
+      console.log("🚀 Reloading page to refresh auth state");
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error("❌ Error during onboarding completion:", error);
       toast({
@@ -365,7 +362,7 @@ export default function OnboardingWizard() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Primary Campus</label>
                 <Select value={userData.primaryCampus} onValueChange={(value) => handleInputChange('primaryCampus', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="select-primary-campus">
                     <SelectValue placeholder="Select your primary campus" />
                   </SelectTrigger>
                   <SelectContent>
@@ -390,7 +387,7 @@ export default function OnboardingWizard() {
                   onValueChange={(value) => handleInputChange('primaryClub', value)}
                   disabled={!userData.primaryCampus}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="select-primary-club">
                     <SelectValue placeholder={userData.primaryCampus ? "Select your primary club" : "Select campus first"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -410,7 +407,7 @@ export default function OnboardingWizard() {
                   onValueChange={(value) => handleInputChange('membershipLevel', value)}
                   disabled={!userData.primaryClub}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="select-membership-level">
                     <SelectValue placeholder={userData.primaryClub ? "Select membership level" : "Select club first"} />
                   </SelectTrigger>
                   <SelectContent>

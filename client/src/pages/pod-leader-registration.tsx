@@ -456,12 +456,9 @@ export default function PodLeaderRegistration() {
       localStorage.setItem('flexpod_user_type', 'pod_leader');
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       
-      // Invalidate auth cache and wait for refetch to ensure fresh data
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
-      
-      console.log("🚀 Navigating to /pod-leader-dashboard");
-      navigate('/pod-leader-dashboard', { replace: true });
+      // Force reload to ensure all auth state is fresh
+      console.log("🚀 Reloading page to refresh auth state");
+      window.location.href = '/pod-leader-dashboard';
     } catch (error) {
       console.error("❌ Error during pod leader registration:", error);
       toast({
