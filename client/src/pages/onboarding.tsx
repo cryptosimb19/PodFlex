@@ -304,10 +304,14 @@ export default function OnboardingWizard() {
       }
       
       console.log("✅ Profile updated successfully");
-      console.log("🚀 Navigating to /dashboard");
       
-      // Use full page reload to ensure fresh auth state and avoid race conditions
-      window.location.href = '/dashboard';
+      // Invalidate auth cache and wait for refetch to ensure fresh data
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+      
+      console.log("🚀 Navigating to /dashboard");
+      // Navigate using router after cache is updated
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error("❌ Error during onboarding completion:", error);
       // Still navigate to dashboard even if profile update fails
