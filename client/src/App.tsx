@@ -15,6 +15,7 @@ import SearchScreen from "@/pages/search";
 import PodDetail from "@/pages/pod-detail";
 import Dashboard from "@/pages/dashboard";
 import PodLeaderDashboard from "@/pages/pod-leader-dashboard";
+import EditProfile from "@/pages/edit-profile";
 import { useEffect } from "react";
 
 function LoginRedirect() {
@@ -202,6 +203,7 @@ function Router() {
           <Route path="/pod/:id" component={PodDetail} />
           <Route path="/dashboard" component={ProtectedDashboard} />
           <Route path="/pod-leader-dashboard" component={ProtectedPodLeaderDashboard} />
+          <Route path="/edit-profile" component={EditProfile} />
         </>
       )}
       <Route component={NotFound} />

@@ -220,7 +220,13 @@ export default function Dashboard() {
                   <span className="truncate">{userData.primaryCampus} Campus</span>
                 </div>
                 <Separator />
-                <Button variant="outline" size="sm" className="w-full" data-testid="button-edit-profile">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full" 
+                  onClick={() => navigate('/edit-profile')}
+                  data-testid="button-edit-profile"
+                >
                   <Edit3 className="w-4 h-4 mr-2" />
                   Edit Profile
                 </Button>
