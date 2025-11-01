@@ -373,13 +373,8 @@ export default function PodLeaderRegistration() {
       localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       
-      // Update user profile with membership information and mark onboarding as complete
-      console.log("🔄 Updating user profile with:", {
-        membershipId: formData.membershipId,
-        preferredRegion: formData.primaryCampus,
-        userType: 'pod_leader',
-        hasCompletedOnboarding: true
-      });
+      // Update user profile with ALL membership information and mark onboarding as complete
+      console.log("🔄 Updating user profile with all fields");
       
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
@@ -390,7 +385,17 @@ export default function PodLeaderRegistration() {
         body: JSON.stringify({
           membershipId: formData.membershipId || undefined,
           preferredRegion: formData.primaryCampus || undefined,
-          userType: 'pod_leader', // Ensure userType is set for pod leaders
+          primaryClub: formData.primaryClub || undefined,
+          membershipLevel: formData.membershipLevel || undefined,
+          phone: formData.phone || undefined,
+          street: formData.street || undefined,
+          aptUnit: formData.aptUnit || undefined,
+          city: formData.city || undefined,
+          state: formData.state || undefined,
+          zipCode: formData.zipCode || undefined,
+          country: formData.country || undefined,
+          dateOfBirth: formData.dateOfBirth || undefined,
+          userType: 'pod_leader',
           hasCompletedOnboarding: true,
         }),
       });

@@ -42,23 +42,10 @@ interface UserData {
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
-  const [userData, setUserData] = useState<UserData | null>(null);
   const { toast } = useToast();
 
-  // Load user data from localStorage
-  useEffect(() => {
-    try {
-      const storedData = localStorage.getItem('userData');
-      if (storedData) {
-        setUserData(JSON.parse(storedData));
-      }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-    }
-  }, []);
-
-  // Fetch authenticated user
-  const { data: authUser } = useQuery({
+  // Fetch authenticated user with all profile data
+  const { data: authUser, isLoading: authLoading } = useQuery({
     queryKey: ['/api/auth/user'],
     queryFn: async () => {
       const response = await fetch('/api/auth/user', { credentials: 'include' });
@@ -66,6 +53,18 @@ export default function Dashboard() {
       return response.json();
     },
   });
+
+  // Map authenticated user data to userData format
+  const userData: UserData | null = authUser ? {
+    firstName: authUser.firstName || '',
+    lastName: authUser.lastName || '',
+    email: authUser.email || '',
+    phone: authUser.phone || '',
+    primaryCampus: authUser.preferredRegion || '',
+    primaryClub: authUser.primaryClub || '',
+    membershipLevel: authUser.membershipLevel || '',
+    membershipId: authUser.membershipId || '',
+  } : null;
 
   // Fetch user's join requests
   const { data: joinRequests, isLoading: requestsLoading } = useQuery<JoinRequest[]>({
@@ -164,7 +163,8 @@ export default function Dashboard() {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  if (!userData) {
+  // Show loading state while fetching user data
+  if (authLoading || !userData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -172,14 +172,9 @@ export default function Dashboard() {
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
               <Zap className="w-8 h-8 text-white" />
             </div>
-            <CardTitle>Welcome to FlexPod</CardTitle>
-            <p className="text-muted-foreground">Complete your profile to access your dashboard</p>
+            <CardTitle>Loading Your Dashboard</CardTitle>
+            <p className="text-muted-foreground">Please wait while we load your profile...</p>
           </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/user-type-selection')} className="w-full">
-              Get Started
-            </Button>
-          </CardContent>
         </Card>
       </div>
     );

@@ -282,7 +282,7 @@ export default function OnboardingWizard() {
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       localStorage.setItem('flexpod_user_type', 'pod_seeker');
       
-      // Update user profile with membership information and mark onboarding as complete
+      // Update user profile with ALL membership information and mark onboarding as complete
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: {
@@ -292,7 +292,17 @@ export default function OnboardingWizard() {
         body: JSON.stringify({
           membershipId: userData.membershipId || undefined,
           preferredRegion: userData.primaryCampus || undefined,
-          userType: 'pod_seeker', // Ensure userType is set for pod seekers
+          primaryClub: userData.primaryClub || undefined,
+          membershipLevel: userData.membershipLevel || undefined,
+          phone: userData.phone || undefined,
+          street: userData.street || undefined,
+          aptUnit: userData.aptUnit || undefined,
+          city: userData.city || undefined,
+          state: userData.state || undefined,
+          zipCode: userData.zipCode || undefined,
+          country: userData.country || undefined,
+          dateOfBirth: userData.dateOfBirth || undefined,
+          userType: 'pod_seeker',
           hasCompletedOnboarding: true,
         }),
       });

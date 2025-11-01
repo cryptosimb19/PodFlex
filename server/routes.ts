@@ -488,9 +488,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/users/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { membershipId, preferredRegion, userType, hasCompletedOnboarding } = req.body;
+      const { 
+        membershipId, 
+        preferredRegion, 
+        primaryClub,
+        membershipLevel,
+        phone,
+        street,
+        aptUnit,
+        city,
+        state,
+        zipCode,
+        country,
+        dateOfBirth,
+        userType, 
+        hasCompletedOnboarding 
+      } = req.body;
       
-      // Update user with membership information and onboarding status
+      // Update user with all onboarding information
       const updatedUser = await storage.upsertUser({
         id: userId,
         email: req.user.email,
@@ -499,6 +514,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: req.user.profileImageUrl,
         ...(membershipId !== undefined && { membershipId }),
         ...(preferredRegion !== undefined && { preferredRegion }),
+        ...(primaryClub !== undefined && { primaryClub }),
+        ...(membershipLevel !== undefined && { membershipLevel }),
+        ...(phone !== undefined && { phone }),
+        ...(street !== undefined && { street }),
+        ...(aptUnit !== undefined && { aptUnit }),
+        ...(city !== undefined && { city }),
+        ...(state !== undefined && { state }),
+        ...(zipCode !== undefined && { zipCode }),
+        ...(country !== undefined && { country }),
+        ...(dateOfBirth !== undefined && { dateOfBirth }),
         ...(userType !== undefined && { userType }),
         ...(hasCompletedOnboarding !== undefined && { hasCompletedOnboarding })
       });
