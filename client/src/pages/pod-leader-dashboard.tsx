@@ -22,7 +22,6 @@ import {
   Zap,
   UserCheck,
   UserX,
-  TrendingUp,
   Mail,
   Phone,
   LogOut
@@ -241,7 +240,6 @@ export default function PodLeaderDashboard() {
 
   const pendingRequests = allJoinRequests?.filter(req => req.status === 'pending') || [];
   const totalMembers = leaderPods?.reduce((sum, pod) => sum + (pod.availableSpots || 0), 0) || 0;
-  const totalRevenue = leaderPods?.reduce((sum, pod) => sum + (pod.costPerPerson * (pod.availableSpots || 0)), 0) || 0;
 
   // Show loading state while fetching user data from database
   if (authLoading || !userData) {
@@ -267,7 +265,7 @@ export default function PodLeaderDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Stats Cards */}
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -305,20 +303,6 @@ export default function PodLeaderDashboard() {
                   </div>
                   <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                     <Clock className="w-6 h-6 text-yellow-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Monthly Members Fees</p>
-                    <p className="text-2xl font-bold text-gray-900">${totalRevenue}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-pink-600" />
                   </div>
                 </div>
               </CardContent>
