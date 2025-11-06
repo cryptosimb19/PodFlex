@@ -25,6 +25,9 @@ export interface IStorage {
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, userData: Partial<User>): Promise<User | undefined>;
+  setPasswordResetToken(email: string, token: string, expires: Date): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
+  clearPasswordResetToken(userId: string): Promise<User | undefined>;
   
   // Pod operations
   getPods(): Promise<Pod[]>;
@@ -99,6 +102,45 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       })
       .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async setPasswordResetToken(email: string, token: string, expires: Date): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        passwordResetToken: token,
+        passwordResetExpires: expires,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.email, email))
+      .returning();
+    return user;
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.passwordResetToken, token),
+          sql`${users.passwordResetExpires} > NOW()`
+        )
+      );
+    return user;
+  }
+
+  async clearPasswordResetToken(userId: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        passwordResetToken: null,
+        passwordResetExpires: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

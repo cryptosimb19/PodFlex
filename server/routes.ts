@@ -4,9 +4,10 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
-import { setupAuth, isAuthenticated, hashPassword } from "./multiAuth";
+import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail } from "./emailService";
+import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 import type { User, Pod } from "@shared/schema";
@@ -163,6 +164,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     });
   });
+
+  // Forgot password route
+  const forgotPasswordSchema = z.object({
+    email: z.string().email("Invalid email format"),
+  });
+
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const validatedData = forgotPasswordSchema.parse(req.body);
+      
+      // Check if user exists
+      const user = await storage.getUserByEmail(validatedData.email);
+      
+      // Always return success to prevent email enumeration
+      // But only send email if user exists
+      if (user && user.authProvider === 'local') {
+        // Generate reset token (32 bytes, hex encoded = 64 characters)
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        
+        // Set token expiration to 1 hour from now
+        const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+        
+        // Save token to database
+        await storage.setPasswordResetToken(validatedData.email, resetToken, resetExpires);
+        
+        // Send password reset email
+        const fromEmail = process.env.FROM_EMAIL || "noreply@flexpod.com";
+        const userName = user.firstName || user.email.split('@')[0];
+        
+        await sendPasswordResetEmail(
+          user.email,
+          userName,
+          resetToken,
+          fromEmail
+        );
+      }
+      
+      // Always return success message
+      res.json({ 
+        message: "If an account exists with that email, a password reset link has been sent." 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid email format", 
+          errors: error.errors 
+        });
+      }
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "An error occurred. Please try again." });
+    }
+  });
+
+  // Reset password route
+  const resetPasswordSchema = z.object({
+    token: z.string().min(1, "Reset token is required"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  });
+
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const validatedData = resetPasswordSchema.parse(req.body);
+      
+      // Get user by reset token (validates token and expiration)
+      const user = await storage.getUserByResetToken(validatedData.token);
+      
+      if (!user) {
+        return res.status(400).json({ 
+          message: "Invalid or expired reset token. Please request a new password reset." 
+        });
+      }
+      
+      // Hash new password
+      const passwordHash = await hashPassword(validatedData.newPassword);
+      
+      // Update user password
+      await storage.updateUser(user.id, { passwordHash });
+      
+      // Clear reset token
+      await storage.clearPasswordResetToken(user.id);
+      
+      res.json({ message: "Password reset successful. You can now log in with your new password." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "An error occurred. Please try again." });
+    }
+  });
+
   // Get all pods
   app.get("/api/pods", async (req, res) => {
     try {
