@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/welcome";
 import LoginPage from "@/pages/login";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import ResetPasswordPage from "@/pages/reset-password";
 import OnboardingWizard from "@/pages/onboarding";
 import UserTypeSelection from "@/pages/user-type-selection";
 import PodLeaderRegistration from "@/pages/pod-leader-registration";
@@ -191,6 +193,8 @@ function Router() {
           <Route path="/" component={Welcome} />
           <Route path="/signin" component={Welcome} />
           <Route path="/login" component={LoginPage} />
+          <Route path="/forgot-password" component={ForgotPasswordPage} />
+          <Route path="/reset-password" component={ResetPasswordPage} />
         </>
       ) : (
         <>
