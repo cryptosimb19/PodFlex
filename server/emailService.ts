@@ -252,3 +252,79 @@ export async function sendJoinRequestRejectedNotification(
     text
   });
 }
+
+// Template for password reset notification
+export async function sendPasswordResetEmail(
+  userEmail: string,
+  userName: string,
+  resetToken: string,
+  fromEmail: string
+): Promise<boolean> {
+  const subject = 'Reset Your Password - FlexPod';
+  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://your-domain.com';
+  const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Password Reset Request</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${userName},</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #8B5CF6;">
+          <p style="color: #4b5563; margin: 0;">We received a request to reset your password. Click the button below to create a new password:</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Reset Password
+          </a>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <p style="color: #92400e; margin: 0; font-size: 14px;">
+            <strong>Security Notice:</strong> This link will expire in 1 hour for your security. If you didn't request this reset, please ignore this email.
+          </p>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          If the button doesn't work, copy and paste this link into your browser:
+        </p>
+        <p style="color: #8B5CF6; font-size: 12px; word-break: break-all; background: #f3f4f6; padding: 10px; border-radius: 4px;">
+          ${resetUrl}
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>This email was sent by FlexPod in response to a password reset request.</p>
+        <p>If you didn't request this, your account is still secure.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Password Reset Request - FlexPod
+    
+    Hi ${userName},
+    
+    We received a request to reset your password. Click the link below to create a new password:
+    
+    ${resetUrl}
+    
+    This link will expire in 1 hour for your security.
+    
+    If you didn't request this reset, please ignore this email.
+  `;
+
+  return await sendEmail({
+    to: userEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text
+  });
+}
