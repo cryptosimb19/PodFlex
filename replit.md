@@ -45,7 +45,7 @@ Preferred communication style: Simple, everyday language.
 - `zod`: Runtime type validation.
 
 ### Third-Party Services
-- **MailerSend**: Used for email notifications (e.g., join requests, acceptance/rejection) with branded HTML templates. Configured with API token and dynamic domain handling.
+- **SendGrid**: Used for email notifications (e.g., join requests, acceptance/rejection) with branded HTML templates. Configured with API key via `SENDGRID_API_KEY` environment variable.
 
 ### Development Tools
 - `Vite`: Build tool and development server.

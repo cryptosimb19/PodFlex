@@ -1,14 +1,13 @@
-import { MailerSend, EmailParams as MSEmailParams, Sender, Recipient } from 'mailersend';
+import sgMail from '@sendgrid/mail';
 
-let mailerSend: MailerSend | null = null;
+let sendGridInitialized = false;
 
-if (process.env.MAILERSEND_API_KEY) {
-  mailerSend = new MailerSend({
-    apiKey: process.env.MAILERSEND_API_KEY,
-  });
-  console.log('MailerSend email service initialized');
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  sendGridInitialized = true;
+  console.log('SendGrid email service initialized');
 } else {
-  console.log('MailerSend API key not found - email notifications disabled');
+  console.log('SendGrid API key not found - email notifications disabled');
 }
 
 interface EmailParams {
@@ -20,28 +19,25 @@ interface EmailParams {
 }
 
 export async function sendEmail(params: EmailParams): Promise<boolean> {
-  if (!mailerSend) {
+  if (!sendGridInitialized) {
     console.log('Email service not available - skipping email to', params.to);
     return false;
   }
   
   try {
-    const sentFrom = new Sender(params.from, 'FlexPod');
-    const recipients = [new Recipient(params.to)];
+    const msg = {
+      to: params.to,
+      from: params.from,
+      subject: params.subject,
+      text: params.text || '',
+      html: params.html || '',
+    };
     
-    const emailParams = new MSEmailParams()
-      .setFrom(sentFrom)
-      .setTo(recipients)
-      .setSubject(params.subject);
-    
-    if (params.html) emailParams.setHtml(params.html);
-    if (params.text) emailParams.setText(params.text);
-    
-    await mailerSend.email.send(emailParams);
+    await sgMail.send(msg);
     console.log(`Email sent successfully to ${params.to}`);
     return true;
   } catch (error) {
-    console.error('MailerSend email error:', error);
+    console.error('SendGrid email error:', error);
     return false;
   }
 }
