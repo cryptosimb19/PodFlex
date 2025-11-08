@@ -51,7 +51,7 @@ export async function sendJoinRequestNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `New Join Request for ${podTitle} - FlexPod`;
-  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://podmembership.com';
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -116,7 +116,7 @@ export async function sendJoinRequestAcceptedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `🎉 Welcome to ${podTitle} - FlexPod`;
-  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://podmembership.com';
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -190,7 +190,7 @@ export async function sendJoinRequestRejectedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `Update on ${podTitle} Request - FlexPod`;
-  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://podmembership.com';
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -261,7 +261,7 @@ export async function sendPasswordResetEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = 'Reset Your Password - FlexPod';
-  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'https://podmembership.com';
+  const baseUrl = 'https://podmembership.com';
   const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
   
   const html = `
