@@ -348,6 +348,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a pod
+  app.delete("/api/pods/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const pod = await storage.getPod(id);
+      
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+      
+      // Check if user is the pod leader
+      if (pod.leadId !== req.user.id) {
+        return res.status(403).json({ message: "Only the pod leader can delete this pod" });
+      }
+      
+      // Delete the pod (includes cascade deletion of members and join requests)
+      const success = await storage.deletePod(id);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to delete pod" });
+      }
+      
+      res.json({ message: "Pod deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting pod:", error);
+      res.status(500).json({ message: "Failed to delete pod" });
+    }
+  });
+
   // Create a join request
   app.post("/api/join-requests", async (req, res) => {
     try {

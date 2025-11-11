@@ -213,15 +213,21 @@ export class DatabaseStorage implements IStorage {
 
   async deletePod(id: number): Promise<boolean> {
     try {
-      // Delete in transaction to ensure data integrity
-      // 1. Delete all join requests for this pod
-      await db.delete(joinRequests).where(eq(joinRequests.podId, id));
-      
-      // 2. Delete all pod members
-      await db.delete(podMembers).where(eq(podMembers.podId, id));
-      
-      // 3. Delete the pod itself
-      const result = await db.delete(pods).where(eq(pods.id, id));
+      // Use transaction to ensure data integrity
+      await db.transaction(async (tx) => {
+        // 1. Delete all join requests for this pod
+        await tx.delete(joinRequests).where(eq(joinRequests.podId, id));
+        
+        // 2. Delete all pod members
+        await tx.delete(podMembers).where(eq(podMembers.podId, id));
+        
+        // 3. Delete the pod itself
+        const deletedPods = await tx.delete(pods).where(eq(pods.id, id)).returning();
+        
+        if (deletedPods.length === 0) {
+          throw new Error('Pod not found');
+        }
+      });
       
       return true;
     } catch (error) {
