@@ -24,7 +24,8 @@ import {
   UserX,
   Mail,
   Phone,
-  LogOut
+  LogOut,
+  Trash2
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -61,6 +62,7 @@ export default function PodLeaderDashboard() {
   const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
 
   // Fetch authenticated user with all profile data from database
   const { data: authUser, isLoading: authLoading } = useQuery({
@@ -188,6 +190,40 @@ export default function PodLeaderDashboard() {
       toast({
         title: "Error",
         description: "Failed to update pod. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to delete pod
+  const deletePodMutation = useMutation({
+    mutationFn: async (podId: number) => {
+      const response = await fetch(`/api/pods/${podId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete pod');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Pod deleted",
+        description: "Your pod has been permanently deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'leader'] });
+      if (deletingPod?.id === selectedPodForMembers) {
+        setSelectedPodForMembers(null);
+      }
+      setDeletingPod(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deleting pod",
+        description: error.message || "Failed to delete pod. Please try again.",
         variant: "destructive",
       });
     },
@@ -791,6 +827,62 @@ export default function PodLeaderDashboard() {
                                           data-testid="button-save-pod-image"
                                         >
                                           {updatePodMutation.isPending ? "Saving..." : "Save"}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                                <Dialog open={deletingPod?.id === pod.id} onOpenChange={(open) => !open && setDeletingPod(null)}>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="destructive" 
+                                      size="sm"
+                                      onClick={() => setDeletingPod(pod)}
+                                      data-testid={`button-delete-pod-${pod.id}`}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Delete Pod</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <div className="flex items-start space-x-3">
+                                          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                                          <div>
+                                            <h4 className="text-sm font-semibold text-red-800 mb-1">Warning: This action cannot be undone</h4>
+                                            <p className="text-sm text-red-700">
+                                              Deleting this pod will permanently remove:
+                                            </p>
+                                            <ul className="text-sm text-red-700 list-disc list-inside mt-2 space-y-1">
+                                              <li>The pod and all its details</li>
+                                              <li>All current members</li>
+                                              <li>All pending join requests</li>
+                                            </ul>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-gray-600">
+                                        Are you sure you want to delete <strong>{pod.clubName}</strong>?
+                                      </p>
+                                      <div className="flex justify-end space-x-2">
+                                        <Button 
+                                          variant="outline" 
+                                          onClick={() => setDeletingPod(null)}
+                                          disabled={deletePodMutation.isPending}
+                                          data-testid="button-cancel-delete"
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button 
+                                          variant="destructive"
+                                          onClick={() => deletePodMutation.mutate(pod.id)}
+                                          disabled={deletePodMutation.isPending}
+                                          data-testid="button-confirm-delete"
+                                        >
+                                          {deletePodMutation.isPending ? "Deleting..." : "Delete Pod"}
                                         </Button>
                                       </div>
                                     </div>
