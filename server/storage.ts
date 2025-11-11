@@ -37,6 +37,7 @@ export interface IStorage {
   createPod(pod: InsertPod): Promise<Pod>;
   updatePod(id: number, podData: Partial<Pod>): Promise<Pod | undefined>;
   updatePodAvailability(id: number, availableSpots: number): Promise<Pod | undefined>;
+  deletePod(id: number): Promise<boolean>;
   
   // Join request operations
   createJoinRequest(request: InsertJoinRequest): Promise<JoinRequest>;
@@ -208,6 +209,25 @@ export class DatabaseStorage implements IStorage {
       .where(eq(pods.id, id))
       .returning();
     return pod;
+  }
+
+  async deletePod(id: number): Promise<boolean> {
+    try {
+      // Delete in transaction to ensure data integrity
+      // 1. Delete all join requests for this pod
+      await db.delete(joinRequests).where(eq(joinRequests.podId, id));
+      
+      // 2. Delete all pod members
+      await db.delete(podMembers).where(eq(podMembers.podId, id));
+      
+      // 3. Delete the pod itself
+      const result = await db.delete(pods).where(eq(pods.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting pod:', error);
+      return false;
+    }
   }
 
   // Join request operations
