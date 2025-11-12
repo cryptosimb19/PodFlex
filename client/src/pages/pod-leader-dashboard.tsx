@@ -176,7 +176,10 @@ export default function PodLeaderDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
-      if (!response.ok) throw new Error('Failed to update pod');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update pod');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -191,10 +194,10 @@ export default function PodLeaderDashboard() {
       setEditCostPerPerson(0);
       setEditAvailableSpots(0);
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to update pod. Please try again.",
+        description: error.message || "Failed to update pod. Please try again.",
         variant: "destructive",
       });
     },
@@ -248,20 +251,20 @@ export default function PodLeaderDashboard() {
   const handleSavePod = () => {
     if (!editingPod) return;
 
-    // Client-side validation
-    if (editCostPerPerson <= 0) {
+    // Client-side validation - check for valid numbers first
+    if (!Number.isFinite(editCostPerPerson) || editCostPerPerson <= 0) {
       toast({
         title: "Invalid cost",
-        description: "Cost per person must be greater than 0.",
+        description: "Please enter a valid cost per person greater than 0.",
         variant: "destructive",
       });
       return;
     }
 
-    if (editAvailableSpots < 0) {
+    if (!Number.isFinite(editAvailableSpots) || editAvailableSpots < 0) {
       toast({
         title: "Invalid spots",
-        description: "Available spots cannot be negative.",
+        description: "Please enter a valid number of available spots (0 or more).",
         variant: "destructive",
       });
       return;
