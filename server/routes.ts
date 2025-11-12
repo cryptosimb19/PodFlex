@@ -337,6 +337,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate and update pod data
       const updateSchema = insertPodSchema.partial();
       const updateData = updateSchema.parse(req.body) as Partial<Pod>;
+      
+      // Server-side bounds checking
+      if (updateData.costPerPerson !== undefined && updateData.costPerPerson <= 0) {
+        return res.status(400).json({ message: "Cost per person must be greater than 0" });
+      }
+      
+      if (updateData.availableSpots !== undefined) {
+        if (updateData.availableSpots < 0) {
+          return res.status(400).json({ message: "Available spots cannot be negative" });
+        }
+        
+        const totalSpots = updateData.totalSpots ?? pod.totalSpots;
+        if (updateData.availableSpots > totalSpots) {
+          return res.status(400).json({ 
+            message: `Available spots (${updateData.availableSpots}) cannot exceed total spots (${totalSpots})` 
+          });
+        }
+      }
+      
       const updatedPod = await storage.updatePod(id, updateData);
       
       res.json(updatedPod);
