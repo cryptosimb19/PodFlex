@@ -363,8 +363,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only the pod leader can delete this pod" });
       }
       
-      // Delete the pod (includes cascade deletion of members and join requests)
-      const success = await storage.deletePod(id);
+      // Soft delete the pod (includes soft deletion of members and join requests)
+      const success = await storage.deletePod(id, req.user.id);
       
       if (!success) {
         return res.status(500).json({ message: "Failed to delete pod" });
@@ -676,6 +676,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Admin Audit Log Endpoints - View deleted records
+  app.get("/api/admin/deleted-pods", isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin (for now, just check if they're authenticated)
+      // TODO: Add proper admin role checking
+      const deletedPods = await storage.getDeletedPods();
+      
+      // Include user who deleted each pod
+      const podsWithDetails = await Promise.all(
+        deletedPods.map(async (pod) => {
+          const deletedByUser = pod.deletedBy ? await storage.getUser(pod.deletedBy) : null;
+          return {
+            ...pod,
+            deletedByUser: deletedByUser ? sanitizeUser(deletedByUser) : null
+          };
+        })
+      );
+      
+      res.json(podsWithDetails);
+    } catch (error) {
+      console.error("Error fetching deleted pods:", error);
+      res.status(500).json({ message: "Failed to fetch deleted pods" });
+    }
+  });
+
+  app.get("/api/admin/deleted-join-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const deletedRequests = await storage.getDeletedJoinRequests();
+      
+      const requestsWithDetails = await Promise.all(
+        deletedRequests.map(async (request) => {
+          const deletedByUser = request.deletedBy ? await storage.getUser(request.deletedBy) : null;
+          return {
+            ...request,
+            deletedByUser: deletedByUser ? sanitizeUser(deletedByUser) : null
+          };
+        })
+      );
+      
+      res.json(requestsWithDetails);
+    } catch (error) {
+      console.error("Error fetching deleted join requests:", error);
+      res.status(500).json({ message: "Failed to fetch deleted join requests" });
+    }
+  });
+
+  app.get("/api/admin/deleted-members", isAuthenticated, async (req: any, res) => {
+    try {
+      const deletedMembers = await storage.getDeletedPodMembers();
+      
+      const membersWithDetails = await Promise.all(
+        deletedMembers.map(async (member) => {
+          const deletedByUser = member.deletedBy ? await storage.getUser(member.deletedBy) : null;
+          const user = await storage.getUser(member.userId);
+          return {
+            ...member,
+            user: user ? sanitizeUser(user) : null,
+            deletedByUser: deletedByUser ? sanitizeUser(deletedByUser) : null
+          };
+        })
+      );
+      
+      res.json(membersWithDetails);
+    } catch (error) {
+      console.error("Error fetching deleted members:", error);
+      res.status(500).json({ message: "Failed to fetch deleted members" });
     }
   });
 

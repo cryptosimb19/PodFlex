@@ -37,7 +37,10 @@ export interface IStorage {
   createPod(pod: InsertPod): Promise<Pod>;
   updatePod(id: number, podData: Partial<Pod>): Promise<Pod | undefined>;
   updatePodAvailability(id: number, availableSpots: number): Promise<Pod | undefined>;
-  deletePod(id: number): Promise<boolean>;
+  deletePod(id: number, userId: string): Promise<boolean>;
+  getDeletedPods(): Promise<Pod[]>;
+  getDeletedJoinRequests(): Promise<JoinRequest[]>;
+  getDeletedPodMembers(): Promise<PodMember[]>;
   
   // Join request operations
   createJoinRequest(request: InsertJoinRequest): Promise<JoinRequest>;
@@ -148,11 +151,21 @@ export class DatabaseStorage implements IStorage {
 
   // Pod operations
   async getPods(): Promise<Pod[]> {
-    return await db.select().from(pods).where(eq(pods.isActive, true));
+    return await db.select().from(pods).where(
+      and(
+        eq(pods.isActive, true),
+        sql`${pods.deletedAt} IS NULL`
+      )
+    );
   }
 
   async getPod(id: number): Promise<Pod | undefined> {
-    const [pod] = await db.select().from(pods).where(eq(pods.id, id));
+    const [pod] = await db.select().from(pods).where(
+      and(
+        eq(pods.id, id),
+        sql`${pods.deletedAt} IS NULL`
+      )
+    );
     return pod;
   }
 
@@ -163,13 +176,17 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(pods.isActive, true),
-          like(pods.title, `%${query}%`)
+          like(pods.title, `%${query}%`),
+          sql`${pods.deletedAt} IS NULL`
         )
       );
   }
 
   async filterPods(filters: { region?: string; membershipType?: string; amenities?: string[] }): Promise<Pod[]> {
-    let conditions = [eq(pods.isActive, true)];
+    let conditions = [
+      eq(pods.isActive, true),
+      sql`${pods.deletedAt} IS NULL`
+    ];
     
     if (filters.region) {
       conditions.push(eq(pods.clubRegion, filters.region));
@@ -211,18 +228,30 @@ export class DatabaseStorage implements IStorage {
     return pod;
   }
 
-  async deletePod(id: number): Promise<boolean> {
+  async deletePod(id: number, userId: string): Promise<boolean> {
     try {
+      const now = new Date();
+      
       // Use transaction to ensure data integrity
       await db.transaction(async (tx) => {
-        // 1. Delete all join requests for this pod
-        await tx.delete(joinRequests).where(eq(joinRequests.podId, id));
+        // 1. Soft delete all join requests for this pod
+        await tx
+          .update(joinRequests)
+          .set({ deletedAt: now, deletedBy: userId })
+          .where(eq(joinRequests.podId, id));
         
-        // 2. Delete all pod members
-        await tx.delete(podMembers).where(eq(podMembers.podId, id));
+        // 2. Soft delete all pod members
+        await tx
+          .update(podMembers)
+          .set({ deletedAt: now, deletedBy: userId })
+          .where(eq(podMembers.podId, id));
         
-        // 3. Delete the pod itself
-        const deletedPods = await tx.delete(pods).where(eq(pods.id, id)).returning();
+        // 3. Soft delete the pod itself
+        const deletedPods = await tx
+          .update(pods)
+          .set({ deletedAt: now, deletedBy: userId })
+          .where(eq(pods.id, id))
+          .returning();
         
         if (deletedPods.length === 0) {
           throw new Error('Pod not found');
@@ -231,9 +260,34 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error deleting pod:', error);
+      console.error('Error soft-deleting pod:', error);
       return false;
     }
+  }
+
+  // Audit log methods to view deleted records
+  async getDeletedPods(): Promise<Pod[]> {
+    return await db
+      .select()
+      .from(pods)
+      .where(sql`${pods.deletedAt} IS NOT NULL`)
+      .orderBy(sql`${pods.deletedAt} DESC`);
+  }
+
+  async getDeletedJoinRequests(): Promise<JoinRequest[]> {
+    return await db
+      .select()
+      .from(joinRequests)
+      .where(sql`${joinRequests.deletedAt} IS NOT NULL`)
+      .orderBy(sql`${joinRequests.deletedAt} DESC`);
+  }
+
+  async getDeletedPodMembers(): Promise<PodMember[]> {
+    return await db
+      .select()
+      .from(podMembers)
+      .where(sql`${podMembers.deletedAt} IS NOT NULL`)
+      .orderBy(sql`${podMembers.deletedAt} DESC`);
   }
 
   // Join request operations
@@ -249,14 +303,24 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(joinRequests)
-      .where(eq(joinRequests.podId, podId));
+      .where(
+        and(
+          eq(joinRequests.podId, podId),
+          sql`${joinRequests.deletedAt} IS NULL`
+        )
+      );
   }
 
   async getJoinRequestsForUser(userId: string): Promise<JoinRequest[]> {
     return await db
       .select()
       .from(joinRequests)
-      .where(eq(joinRequests.userId, userId));
+      .where(
+        and(
+          eq(joinRequests.userId, userId),
+          sql`${joinRequests.deletedAt} IS NULL`
+        )
+      );
   }
 
   async updateJoinRequestStatus(id: number, status: "accepted" | "rejected"): Promise<JoinRequest | undefined> {
@@ -282,7 +346,13 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(podMembers)
-      .where(and(eq(podMembers.podId, podId), eq(podMembers.isActive, true)));
+      .where(
+        and(
+          eq(podMembers.podId, podId),
+          eq(podMembers.isActive, true),
+          sql`${podMembers.deletedAt} IS NULL`
+        )
+      );
   }
 
   async addPodMember(podId: number, userId: string): Promise<PodMember> {
