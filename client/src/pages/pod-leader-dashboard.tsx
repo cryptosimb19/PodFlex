@@ -246,16 +246,44 @@ export default function PodLeaderDashboard() {
   };
 
   const handleSavePod = () => {
-    if (editingPod) {
-      updatePodMutation.mutate({ 
-        podId: editingPod.id, 
-        updates: {
-          imageUrl: editImageUrl,
-          costPerPerson: editCostPerPerson,
-          availableSpots: editAvailableSpots
-        }
+    if (!editingPod) return;
+
+    // Client-side validation
+    if (editCostPerPerson <= 0) {
+      toast({
+        title: "Invalid cost",
+        description: "Cost per person must be greater than 0.",
+        variant: "destructive",
       });
+      return;
     }
+
+    if (editAvailableSpots < 0) {
+      toast({
+        title: "Invalid spots",
+        description: "Available spots cannot be negative.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (editAvailableSpots > editingPod.totalSpots) {
+      toast({
+        title: "Invalid spots",
+        description: `Available spots cannot exceed total spots (${editingPod.totalSpots}).`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updatePodMutation.mutate({ 
+      podId: editingPod.id, 
+      updates: {
+        imageUrl: editImageUrl,
+        costPerPerson: editCostPerPerson,
+        availableSpots: editAvailableSpots
+      }
+    });
   };
 
   const getStatusColor = (status: string) => {
