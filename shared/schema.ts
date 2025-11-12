@@ -68,6 +68,8 @@ export const pods = pgTable("pods", {
   imageUrl: text("image_url"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: varchar("deleted_by").references(() => users.id),
 });
 
 export const joinRequests = pgTable("join_requests", {
@@ -84,6 +86,8 @@ export const joinRequests = pgTable("join_requests", {
   emailStatus: text("email_status").notNull().default("sent"), // "sent", "failed", "pending"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: varchar("deleted_by").references(() => users.id),
 });
 
 export const podMembers = pgTable("pod_members", {
@@ -92,6 +96,8 @@ export const podMembers = pgTable("pod_members", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
   isActive: boolean("is_active").default(true),
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: varchar("deleted_by").references(() => users.id),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
