@@ -835,8 +835,8 @@ export default function PodLeaderDashboard() {
                                           type="number"
                                           min="0"
                                           placeholder="250"
-                                          value={editCostPerPerson}
-                                          onChange={(e) => setEditCostPerPerson(parseInt(e.target.value) || 0)}
+                                          value={editCostPerPerson || ''}
+                                          onChange={(e) => setEditCostPerPerson(parseInt(e.target.value))}
                                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           data-testid="input-pod-cost"
                                         />
@@ -854,8 +854,8 @@ export default function PodLeaderDashboard() {
                                           min="0"
                                           max={editingPod?.totalSpots || 10}
                                           placeholder="2"
-                                          value={editAvailableSpots}
-                                          onChange={(e) => setEditAvailableSpots(parseInt(e.target.value) || 0)}
+                                          value={editAvailableSpots || ''}
+                                          onChange={(e) => setEditAvailableSpots(parseInt(e.target.value))}
                                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           data-testid="input-pod-spots"
                                         />
