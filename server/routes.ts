@@ -339,11 +339,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = updateSchema.parse(req.body) as Partial<Pod>;
       
       // Server-side bounds checking
-      if (updateData.costPerPerson !== undefined && updateData.costPerPerson <= 0) {
-        return res.status(400).json({ message: "Cost per person must be greater than 0" });
+      if (updateData.costPerPerson !== undefined) {
+        if (!Number.isFinite(updateData.costPerPerson)) {
+          return res.status(400).json({ message: "Please enter a valid cost per person" });
+        }
+        if (updateData.costPerPerson <= 0) {
+          return res.status(400).json({ message: "Cost per person must be greater than 0" });
+        }
       }
       
       if (updateData.availableSpots !== undefined) {
+        if (!Number.isFinite(updateData.availableSpots)) {
+          return res.status(400).json({ message: "Please enter a valid number of available spots" });
+        }
         if (updateData.availableSpots < 0) {
           return res.status(400).json({ message: "Available spots cannot be negative" });
         }
