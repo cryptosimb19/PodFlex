@@ -62,6 +62,8 @@ export default function PodLeaderDashboard() {
   const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [editCostPerPerson, setEditCostPerPerson] = useState<number>(0);
+  const [editAvailableSpots, setEditAvailableSpots] = useState<number>(0);
   const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
 
   // Fetch authenticated user with all profile data from database
@@ -168,11 +170,11 @@ export default function PodLeaderDashboard() {
 
   // Mutation to update pod
   const updatePodMutation = useMutation({
-    mutationFn: async ({ podId, imageUrl }: { podId: number; imageUrl: string }) => {
+    mutationFn: async ({ podId, updates }: { podId: number; updates: { imageUrl?: string; costPerPerson?: number; availableSpots?: number } }) => {
       const response = await fetch(`/api/pods/${podId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl }),
+        body: JSON.stringify(updates),
       });
       if (!response.ok) throw new Error('Failed to update pod');
       return response.json();
@@ -180,11 +182,14 @@ export default function PodLeaderDashboard() {
     onSuccess: () => {
       toast({
         title: "Pod updated",
-        description: "Your pod image has been updated successfully.",
+        description: "Your pod details have been updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'leader'] });
       setEditingPod(null);
       setEditImageUrl("");
+      setEditCostPerPerson(0);
+      setEditAvailableSpots(0);
     },
     onError: () => {
       toast({
@@ -236,11 +241,20 @@ export default function PodLeaderDashboard() {
   const handleEditPod = (pod: Pod) => {
     setEditingPod(pod);
     setEditImageUrl(pod.imageUrl || "");
+    setEditCostPerPerson(pod.costPerPerson);
+    setEditAvailableSpots(pod.availableSpots || 0);
   };
 
-  const handleSavePodImage = () => {
+  const handleSavePod = () => {
     if (editingPod) {
-      updatePodMutation.mutate({ podId: editingPod.id, imageUrl: editImageUrl });
+      updatePodMutation.mutate({ 
+        podId: editingPod.id, 
+        updates: {
+          imageUrl: editImageUrl,
+          costPerPerson: editCostPerPerson,
+          availableSpots: editAvailableSpots
+        }
+      });
     }
   };
 
@@ -776,11 +790,48 @@ export default function PodLeaderDashboard() {
                                       <Edit3 className="w-4 h-4" />
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent>
+                                  <DialogContent className="max-w-2xl">
                                     <DialogHeader>
-                                      <DialogTitle>Edit Pod Image</DialogTitle>
+                                      <DialogTitle>Edit Pod Details</DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
+                                      <div>
+                                        <label htmlFor="costPerPerson" className="block text-sm font-medium text-gray-700 mb-2">
+                                          Cost Per Person ($/month)
+                                        </label>
+                                        <input
+                                          id="costPerPerson"
+                                          type="number"
+                                          min="0"
+                                          placeholder="250"
+                                          value={editCostPerPerson}
+                                          onChange={(e) => setEditCostPerPerson(parseInt(e.target.value) || 0)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          data-testid="input-pod-cost"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-1">
+                                          Monthly cost per member
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <label htmlFor="availableSpots" className="block text-sm font-medium text-gray-700 mb-2">
+                                          Available Spots
+                                        </label>
+                                        <input
+                                          id="availableSpots"
+                                          type="number"
+                                          min="0"
+                                          max={editingPod?.totalSpots || 10}
+                                          placeholder="2"
+                                          value={editAvailableSpots}
+                                          onChange={(e) => setEditAvailableSpots(parseInt(e.target.value) || 0)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          data-testid="input-pod-spots"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-1">
+                                          Number of spots currently available (max: {editingPod?.totalSpots})
+                                        </p>
+                                      </div>
                                       <div>
                                         <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
                                           Image URL
@@ -822,11 +873,11 @@ export default function PodLeaderDashboard() {
                                           Cancel
                                         </Button>
                                         <Button 
-                                          onClick={handleSavePodImage}
+                                          onClick={handleSavePod}
                                           disabled={updatePodMutation.isPending}
-                                          data-testid="button-save-pod-image"
+                                          data-testid="button-save-pod"
                                         >
-                                          {updatePodMutation.isPending ? "Saving..." : "Save"}
+                                          {updatePodMutation.isPending ? "Saving..." : "Save Changes"}
                                         </Button>
                                       </div>
                                     </div>
