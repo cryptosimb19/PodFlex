@@ -53,7 +53,7 @@ export const users = pgTable("users", {
 
 export const pods = pgTable("pods", {
   id: serial("id").primaryKey(),
-  leadId: varchar("lead_id").references(() => users.id).notNull(),
+  leadId: varchar("lead_id").references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
   clubName: text("club_name").notNull(), // "Bay Club Courtside", "Bay Club San Francisco", etc.
   clubRegion: text("club_region").notNull(), // "San Jose", "San Francisco", etc.
   clubAddress: text("club_address").notNull(), // Full address of the club
@@ -74,8 +74,8 @@ export const pods = pgTable("pods", {
 
 export const joinRequests = pgTable("join_requests", {
   id: serial("id").primaryKey(),
-  podId: integer("pod_id").references(() => pods.id).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
   status: text("status").notNull().default("pending"), // "pending", "accepted", "rejected"
   message: text("message"), // Optional message from requester
   userInfo: json("user_info").$type<{
@@ -92,8 +92,8 @@ export const joinRequests = pgTable("join_requests", {
 
 export const podMembers = pgTable("pod_members", {
   id: serial("id").primaryKey(),
-  podId: integer("pod_id").references(() => pods.id).notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
   isActive: boolean("is_active").default(true),
   deletedAt: timestamp("deleted_at"),
