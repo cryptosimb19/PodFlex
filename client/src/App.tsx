@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/welcome";
 import LoginPage from "@/pages/login";
@@ -188,28 +189,51 @@ function Router() {
 
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Welcome} />
-          <Route path="/signin" component={Welcome} />
-          <Route path="/login" component={LoginPage} />
-          <Route path="/forgot-password" component={ForgotPasswordPage} />
-          <Route path="/reset-password" component={ResetPasswordPage} />
-        </>
-      ) : (
-        <>
-          <Route path="/login" component={LoginRedirect} />
-          <Route path="/" component={RootRouter} />
-          <Route path="/user-type-selection" component={UserTypeSelection} />
-          <Route path="/onboarding" component={OnboardingWizard} />
-          <Route path="/pod-leader-registration" component={PodLeaderRegistration} />
-          <Route path="/pods" component={SearchScreen} />
-          <Route path="/pod/:id" component={PodDetail} />
-          <Route path="/dashboard" component={ProtectedDashboard} />
-          <Route path="/pod-leader-dashboard" component={ProtectedPodLeaderDashboard} />
-          <Route path="/edit-profile" component={EditProfile} />
-        </>
-      )}
+      <Route path="/" component={isAuthenticated ? RootRouter : Welcome} />
+      <Route path="/signin" component={Welcome} />
+      <Route path="/login" component={isAuthenticated ? LoginRedirect : LoginPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
+      
+      <Route path="/user-type-selection">
+        <ProtectedRoute>
+          <UserTypeSelection />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/onboarding">
+        <ProtectedRoute>
+          <OnboardingWizard />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/pod-leader-registration">
+        <ProtectedRoute>
+          <PodLeaderRegistration />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/pods">
+        <ProtectedRoute requireOnboarding>
+          <SearchScreen />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/pod/:id">
+        <ProtectedRoute requireOnboarding>
+          <PodDetail />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard" component={ProtectedDashboard} />
+      <Route path="/pod-leader-dashboard" component={ProtectedPodLeaderDashboard} />
+      
+      <Route path="/edit-profile">
+        <ProtectedRoute requireOnboarding>
+          <EditProfile />
+        </ProtectedRoute>
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );
