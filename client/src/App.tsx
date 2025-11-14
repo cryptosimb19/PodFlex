@@ -225,8 +225,17 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/dashboard" component={ProtectedDashboard} />
-      <Route path="/pod-leader-dashboard" component={ProtectedPodLeaderDashboard} />
+      <Route path="/dashboard">
+        <ProtectedRoute requireOnboarding>
+          <ProtectedDashboard />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/pod-leader-dashboard">
+        <ProtectedRoute requireOnboarding>
+          <ProtectedPodLeaderDashboard />
+        </ProtectedRoute>
+      </Route>
       
       <Route path="/edit-profile">
         <ProtectedRoute requireOnboarding>
