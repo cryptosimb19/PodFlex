@@ -338,13 +338,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateSchema = insertPodSchema.partial();
       const updateData = updateSchema.parse(req.body) as Partial<Pod>;
       
-      // Server-side bounds checking
+      // Validate required text fields
+      if (updateData.title !== undefined && !updateData.title.trim()) {
+        return res.status(400).json({ message: "Pod title cannot be empty" });
+      }
+      
+      if (updateData.description !== undefined && !updateData.description.trim()) {
+        return res.status(400).json({ message: "Pod description cannot be empty" });
+      }
+      
+      if (updateData.clubName !== undefined && !updateData.clubName.trim()) {
+        return res.status(400).json({ message: "Club name cannot be empty" });
+      }
+      
+      if (updateData.clubRegion !== undefined && !updateData.clubRegion.trim()) {
+        return res.status(400).json({ message: "Club region cannot be empty" });
+      }
+      
+      if (updateData.clubAddress !== undefined && !updateData.clubAddress.trim()) {
+        return res.status(400).json({ message: "Club address cannot be empty" });
+      }
+      
+      // Server-side bounds checking for numeric fields
       if (updateData.costPerPerson !== undefined) {
         if (!Number.isFinite(updateData.costPerPerson)) {
           return res.status(400).json({ message: "Please enter a valid cost per person" });
         }
         if (updateData.costPerPerson <= 0) {
           return res.status(400).json({ message: "Cost per person must be greater than 0" });
+        }
+      }
+      
+      if (updateData.totalSpots !== undefined) {
+        if (!Number.isFinite(updateData.totalSpots)) {
+          return res.status(400).json({ message: "Please enter a valid number of total spots" });
+        }
+        if (updateData.totalSpots <= 0) {
+          return res.status(400).json({ message: "Total spots must be at least 1" });
+        }
+        
+        // Check if reducing total spots would affect existing members
+        const currentMembers = pod.totalSpots - pod.availableSpots;
+        if (updateData.totalSpots < currentMembers) {
+          return res.status(400).json({ 
+            message: `Cannot reduce total spots to ${updateData.totalSpots}. You have ${currentMembers} current members.` 
+          });
         }
       }
       
