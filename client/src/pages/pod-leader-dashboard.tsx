@@ -61,9 +61,16 @@ export default function PodLeaderDashboard() {
   const [selectedMember, setSelectedMember] = useState<PodMemberWithUser | null>(null);
   const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editClubName, setEditClubName] = useState("");
+  const [editClubRegion, setEditClubRegion] = useState("");
+  const [editClubAddress, setEditClubAddress] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editCostPerPerson, setEditCostPerPerson] = useState<number>(0);
+  const [editTotalSpots, setEditTotalSpots] = useState<number>(0);
   const [editAvailableSpots, setEditAvailableSpots] = useState<number>(0);
+  const [editAmenities, setEditAmenities] = useState<string[]>([]);
   const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
 
   // Fetch authenticated user with all profile data from database
@@ -243,15 +250,68 @@ export default function PodLeaderDashboard() {
 
   const handleEditPod = (pod: Pod) => {
     setEditingPod(pod);
+    setEditTitle(pod.title || "");
+    setEditDescription(pod.description || "");
+    setEditClubName(pod.clubName || "");
+    setEditClubRegion(pod.clubRegion || "");
+    setEditClubAddress(pod.clubAddress || "");
     setEditImageUrl(pod.imageUrl || "");
     setEditCostPerPerson(pod.costPerPerson);
+    setEditTotalSpots(pod.totalSpots);
     setEditAvailableSpots(pod.availableSpots || 0);
+    setEditAmenities(pod.amenities || []);
   };
 
   const handleSavePod = () => {
     if (!editingPod) return;
 
-    // Client-side validation - check for valid numbers first
+    // Validate required text fields
+    if (!editTitle.trim()) {
+      toast({
+        title: "Invalid title",
+        description: "Please enter a pod title.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!editDescription.trim()) {
+      toast({
+        title: "Invalid description",
+        description: "Please enter a pod description.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!editClubName.trim()) {
+      toast({
+        title: "Invalid club name",
+        description: "Please enter the club name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!editClubRegion.trim()) {
+      toast({
+        title: "Invalid region",
+        description: "Please enter the club region.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!editClubAddress.trim()) {
+      toast({
+        title: "Invalid address",
+        description: "Please enter the club address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate numeric fields
     if (!Number.isFinite(editCostPerPerson) || editCostPerPerson <= 0) {
       toast({
         title: "Invalid cost",
@@ -261,19 +321,39 @@ export default function PodLeaderDashboard() {
       return;
     }
 
+    if (!Number.isFinite(editTotalSpots) || editTotalSpots <= 0) {
+      toast({
+        title: "Invalid total spots",
+        description: "Please enter a valid number of total spots (at least 1).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!Number.isFinite(editAvailableSpots) || editAvailableSpots < 0) {
       toast({
-        title: "Invalid spots",
+        title: "Invalid available spots",
         description: "Please enter a valid number of available spots (0 or more).",
         variant: "destructive",
       });
       return;
     }
 
-    if (editAvailableSpots > editingPod.totalSpots) {
+    if (editAvailableSpots > editTotalSpots) {
       toast({
         title: "Invalid spots",
-        description: `Available spots cannot exceed total spots (${editingPod.totalSpots}).`,
+        description: `Available spots cannot exceed total spots (${editTotalSpots}).`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if reducing total spots would affect existing members
+    const currentMembers = editingPod.totalSpots - editingPod.availableSpots;
+    if (editTotalSpots < currentMembers) {
+      toast({
+        title: "Cannot reduce total spots",
+        description: `You have ${currentMembers} current members. Total spots must be at least ${currentMembers}.`,
         variant: "destructive",
       });
       return;
@@ -282,9 +362,16 @@ export default function PodLeaderDashboard() {
     updatePodMutation.mutate({ 
       podId: editingPod.id, 
       updates: {
-        imageUrl: editImageUrl,
+        title: editTitle.trim(),
+        description: editDescription.trim(),
+        clubName: editClubName.trim(),
+        clubRegion: editClubRegion.trim(),
+        clubAddress: editClubAddress.trim(),
+        imageUrl: editImageUrl.trim(),
         costPerPerson: editCostPerPerson,
-        availableSpots: editAvailableSpots
+        totalSpots: editTotalSpots,
+        availableSpots: editAvailableSpots,
+        amenities: editAmenities
       }
     });
   };
@@ -821,38 +908,131 @@ export default function PodLeaderDashboard() {
                                       <Edit3 className="w-4 h-4" />
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent className="max-w-2xl">
+                                  <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                                     <DialogHeader>
                                       <DialogTitle>Edit Pod Details</DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div>
-                                        <label htmlFor="costPerPerson" className="block text-sm font-medium text-gray-700 mb-2">
-                                          Cost Per Person ($/month)
+                                        <label htmlFor="podTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                                          Pod Title *
                                         </label>
                                         <input
-                                          id="costPerPerson"
-                                          type="number"
-                                          min="0"
-                                          placeholder="250"
-                                          value={editCostPerPerson || ''}
-                                          onChange={(e) => setEditCostPerPerson(parseInt(e.target.value))}
+                                          id="podTitle"
+                                          type="text"
+                                          placeholder="Downtown Fitness Group"
+                                          value={editTitle}
+                                          onChange={(e) => setEditTitle(e.target.value)}
                                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                          data-testid="input-pod-cost"
+                                          data-testid="input-pod-title"
                                         />
-                                        <p className="text-sm text-gray-500 mt-1">
-                                          Monthly cost per member
-                                        </p>
                                       </div>
+
+                                      <div>
+                                        <label htmlFor="podDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                                          Description *
+                                        </label>
+                                        <textarea
+                                          id="podDescription"
+                                          rows={3}
+                                          placeholder="Describe your pod..."
+                                          value={editDescription}
+                                          onChange={(e) => setEditDescription(e.target.value)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          data-testid="input-pod-description"
+                                        />
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label htmlFor="clubName" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Club Name *
+                                          </label>
+                                          <input
+                                            id="clubName"
+                                            type="text"
+                                            placeholder="Bay Club Courtside"
+                                            value={editClubName}
+                                            onChange={(e) => setEditClubName(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            data-testid="input-club-name"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <label htmlFor="clubRegion" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Region *
+                                          </label>
+                                          <input
+                                            id="clubRegion"
+                                            type="text"
+                                            placeholder="San Jose"
+                                            value={editClubRegion}
+                                            onChange={(e) => setEditClubRegion(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            data-testid="input-club-region"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <label htmlFor="clubAddress" className="block text-sm font-medium text-gray-700 mb-2">
+                                          Club Address *
+                                        </label>
+                                        <input
+                                          id="clubAddress"
+                                          type="text"
+                                          placeholder="5252 Prospect Rd, San Jose, CA 95129"
+                                          value={editClubAddress}
+                                          onChange={(e) => setEditClubAddress(e.target.value)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          data-testid="input-club-address"
+                                        />
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label htmlFor="costPerPerson" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Cost Per Person ($/month) *
+                                          </label>
+                                          <input
+                                            id="costPerPerson"
+                                            type="number"
+                                            min="0"
+                                            placeholder="250"
+                                            value={editCostPerPerson || ''}
+                                            onChange={(e) => setEditCostPerPerson(parseInt(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            data-testid="input-pod-cost"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <label htmlFor="totalSpots" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Total Spots *
+                                          </label>
+                                          <input
+                                            id="totalSpots"
+                                            type="number"
+                                            min="1"
+                                            placeholder="5"
+                                            value={editTotalSpots || ''}
+                                            onChange={(e) => setEditTotalSpots(parseInt(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            data-testid="input-total-spots"
+                                          />
+                                        </div>
+                                      </div>
+
                                       <div>
                                         <label htmlFor="availableSpots" className="block text-sm font-medium text-gray-700 mb-2">
-                                          Available Spots
+                                          Available Spots *
                                         </label>
                                         <input
                                           id="availableSpots"
                                           type="number"
                                           min="0"
-                                          max={editingPod?.totalSpots || 10}
+                                          max={editTotalSpots || 10}
                                           placeholder="2"
                                           value={editAvailableSpots || ''}
                                           onChange={(e) => setEditAvailableSpots(parseInt(e.target.value))}
@@ -860,9 +1040,36 @@ export default function PodLeaderDashboard() {
                                           data-testid="input-pod-spots"
                                         />
                                         <p className="text-sm text-gray-500 mt-1">
-                                          Number of spots currently available (max: {editingPod?.totalSpots})
+                                          Number of spots currently available (max: {editTotalSpots})
                                         </p>
                                       </div>
+
+                                      <div>
+                                        <label htmlFor="amenities" className="block text-sm font-medium text-gray-700 mb-2">
+                                          Amenities
+                                        </label>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                          {['tennis', 'pickleball', 'pool', 'spa', 'fitness', 'basketball', 'yoga'].map((amenity) => (
+                                            <label key={amenity} className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full cursor-pointer hover:bg-gray-200">
+                                              <input
+                                                type="checkbox"
+                                                checked={editAmenities.includes(amenity)}
+                                                onChange={(e) => {
+                                                  if (e.target.checked) {
+                                                    setEditAmenities([...editAmenities, amenity]);
+                                                  } else {
+                                                    setEditAmenities(editAmenities.filter(a => a !== amenity));
+                                                  }
+                                                }}
+                                                className="rounded text-purple-600 focus:ring-purple-500"
+                                                data-testid={`checkbox-amenity-${amenity}`}
+                                              />
+                                              <span className="text-sm capitalize">{amenity}</span>
+                                            </label>
+                                          ))}
+                                        </div>
+                                      </div>
+
                                       <div>
                                         <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
                                           Image URL
@@ -895,7 +1102,7 @@ export default function PodLeaderDashboard() {
                                           />
                                         </div>
                                       )}
-                                      <div className="flex justify-end space-x-2">
+                                      <div className="flex justify-end space-x-2 pt-4 border-t">
                                         <Button 
                                           variant="outline" 
                                           onClick={() => setEditingPod(null)}
