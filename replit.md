@@ -20,7 +20,7 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Email magic links and Google OAuth, session management, password reset functionality.
 - **Core Features**:
     - **Pod Discovery**: Region-based filtering (e.g., Bay Club campuses), membership type categorization, advanced filtering, search functionality.
-    - **Membership Management**: Pod creation/management for leaders, join request workflow with approval, member tracking, rich pod profiles.
+    - **Membership Management**: Pod creation/management for leaders, comprehensive pod editing with 10+ editable fields (title, description, club details, amenities, pricing, capacity), join request workflow with approval, member tracking, rich pod profiles.
     - **User Experience**: Offline capability, push notifications.
 - **Data Flow**: Structured for user onboarding, pod discovery, join request processing, and pod management.
 - **Database Schema**: Includes tables for Users (profile, preferences, membership), Pods (membership info, availability, pricing, amenities), and Join Requests (user-pod connections, approval status).
