@@ -33,6 +33,7 @@ Preferred communication style: Simple, everyday language.
 - **Modular Project Structure**: Separated client, server, shared, and migrations folders.
 - **Onboarding Flow**: Streamlined user onboarding with conditional redirects based on completion status and user type, protecting dashboard routes.
 - **Email Handling**: Robust email notification system with status tracking and resend capabilities for join requests, password reset emails with secure token-based authentication.
+- **Route Protection**: Comprehensive authentication guards using ProtectedRoute component that redirects unauthenticated users to login page, with dual-layer protection for dashboards (authentication check + user type validation) and onboarding requirement checks for sensitive routes.
 
 ## External Dependencies
 
