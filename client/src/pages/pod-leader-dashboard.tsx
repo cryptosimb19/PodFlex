@@ -177,7 +177,21 @@ export default function PodLeaderDashboard() {
 
   // Mutation to update pod
   const updatePodMutation = useMutation({
-    mutationFn: async ({ podId, updates }: { podId: number; updates: { imageUrl?: string; costPerPerson?: number; availableSpots?: number } }) => {
+    mutationFn: async ({ podId, updates }: { 
+      podId: number; 
+      updates: { 
+        title?: string; 
+        description?: string; 
+        clubName?: string; 
+        clubRegion?: string; 
+        clubAddress?: string;
+        imageUrl?: string; 
+        costPerPerson?: number; 
+        totalSpots?: number;
+        availableSpots?: number;
+        amenities?: string[];
+      } 
+    }) => {
       const response = await fetch(`/api/pods/${podId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -197,9 +211,16 @@ export default function PodLeaderDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
       queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'leader'] });
       setEditingPod(null);
+      setEditTitle("");
+      setEditDescription("");
+      setEditClubName("");
+      setEditClubRegion("");
+      setEditClubAddress("");
       setEditImageUrl("");
       setEditCostPerPerson(0);
+      setEditTotalSpots(0);
       setEditAvailableSpots(0);
+      setEditAmenities([]);
     },
     onError: (error: Error) => {
       toast({
