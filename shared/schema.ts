@@ -39,9 +39,12 @@ export const users = pgTable("users", {
   hasCompletedOnboarding: boolean("has_completed_onboarding").default(false),
   // Local authentication fields
   passwordHash: varchar("password_hash"), // For local authentication
-  authProvider: varchar("auth_provider").notNull().default("local"), // "local", "google", "replit"
+  authProvider: varchar("auth_provider").notNull().default("local"), // "local", "google", "apple", "phone", "replit"
   googleId: varchar("google_id"), // For Google OAuth
+  appleId: varchar("apple_id"), // For Apple OAuth
   replitId: varchar("replit_id"), // For Replit Auth
+  // Phone verification
+  phoneVerified: boolean("phone_verified").default(false),
   // Account verification
   isEmailVerified: boolean("is_email_verified").default(false),
   emailVerificationToken: varchar("email_verification_token"),
@@ -100,6 +103,15 @@ export const podMembers = pgTable("pod_members", {
   deletedBy: varchar("deleted_by").references(() => users.id),
 });
 
+export const otpVerifications = pgTable("otp_verifications", {
+  id: serial("id").primaryKey(),
+  phoneNumber: varchar("phone_number").notNull(),
+  otp: varchar("otp").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   firstName: true,
@@ -112,7 +124,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
   passwordHash: true,
   authProvider: true,
   googleId: true,
+  appleId: true,
   replitId: true,
+  phone: true,
+  phoneVerified: true,
   isEmailVerified: true,
   emailVerificationToken: true,
 }).partial().extend({
@@ -152,6 +167,11 @@ export const insertJoinRequestSchema = createInsertSchema(joinRequests).omit({
   updatedAt: true,
 });
 
+export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -160,3 +180,5 @@ export type Pod = typeof pods.$inferSelect;
 export type InsertJoinRequest = z.infer<typeof insertJoinRequestSchema>;
 export type JoinRequest = typeof joinRequests.$inferSelect;
 export type PodMember = typeof podMembers.$inferSelect;
+export type OtpVerification = typeof otpVerifications.$inferSelect;
+export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;

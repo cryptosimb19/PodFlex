@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import AppleStrategy from "passport-apple";
 import bcrypt from "bcryptjs";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -128,6 +129,116 @@ export async function setupAuth(app: Express) {
       }
     ));
   }
+
+  // Apple OAuth strategy
+  if (process.env.APPLE_TEAM_ID && process.env.APPLE_CLIENT_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+    passport.use(new AppleStrategy(
+      {
+        clientID: process.env.APPLE_CLIENT_ID,
+        teamID: process.env.APPLE_TEAM_ID,
+        callbackURL: "/api/auth/apple/callback",
+        keyID: process.env.APPLE_KEY_ID,
+        privateKeyString: process.env.APPLE_PRIVATE_KEY,
+        passReqToCallback: true
+      },
+      async (req: any, accessToken: string, refreshToken: string, idToken: any, profile: any, done: any) => {
+        try {
+          const appleId = idToken.sub;
+          const email = idToken.email;
+          
+          // Check if user already exists with Apple ID
+          let user = await storage.getUserByAppleId(appleId);
+          
+          if (user) {
+            return done(null, user);
+          }
+
+          // Check if user exists with same email
+          if (email) {
+            user = await storage.getUserByEmail(email);
+            
+            if (user) {
+              // Link Apple account to existing user
+              await storage.updateUser(user.id, {
+                appleId: appleId,
+                authProvider: "apple",
+              });
+              user = await storage.getUser(user.id);
+              return done(null, user);
+            }
+          }
+
+          // Apple sends name in POST body on first login only
+          const firstTimeUser = req.body.user ? JSON.parse(req.body.user) : undefined;
+
+          // Create new user with Apple account
+          const newUser = await storage.createUser({
+            email: email || `${appleId}@privaterelay.appleid.com`,
+            firstName: firstTimeUser?.name?.firstName || "User",
+            lastName: firstTimeUser?.name?.lastName || "",
+            authProvider: "apple",
+            appleId: appleId,
+            isEmailVerified: true, // Apple emails are pre-verified
+          });
+
+          return done(null, newUser);
+        } catch (error) {
+          return done(error);
+        }
+      }
+    ));
+  }
+
+  // Phone number authentication strategy (OTP-based)
+  passport.use('phone', new LocalStrategy(
+    {
+      usernameField: 'phoneNumber',
+      passwordField: 'otp',
+    },
+    async (phoneNumber, otp, done) => {
+      try {
+        // Verify OTP
+        const otpRecord = await storage.getOtpVerification(phoneNumber);
+        
+        if (!otpRecord) {
+          return done(null, false, { message: 'Invalid or expired OTP' });
+        }
+
+        if (otpRecord.otp !== otp) {
+          return done(null, false, { message: 'Invalid OTP code' });
+        }
+
+        // Mark OTP as verified
+        await storage.markOtpAsVerified(phoneNumber);
+
+        // Find or create user with this phone number
+        let user = await storage.getUserByPhone(phoneNumber);
+        
+        if (!user) {
+          // Create new user with phone number
+          user = await storage.createUser({
+            email: `${phoneNumber.replace(/\D/g, '')}@phone.flexpod.app`,
+            firstName: "User",
+            lastName: "",
+            phone: phoneNumber,
+            phoneVerified: true,
+            authProvider: "phone",
+            isEmailVerified: false,
+          });
+        } else {
+          // Update existing user to mark phone as verified
+          await storage.updateUser(user.id, {
+            phoneVerified: true,
+          });
+          user = await storage.getUser(user.id);
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  ));
 
   // Serialize/deserialize user for session
   passport.serializeUser((user: any, done) => {

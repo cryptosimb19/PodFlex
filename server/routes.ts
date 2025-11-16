@@ -11,6 +11,7 @@ import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 import type { User, Pod } from "@shared/schema";
+import rateLimit from "express-rate-limit";
 
 // Sanitize user data to remove sensitive fields
 function sanitizeUser(user: User) {
@@ -125,6 +126,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       providers.push('google');
     }
+    if (process.env.APPLE_TEAM_ID && process.env.APPLE_CLIENT_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+      providers.push('apple');
+    }
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
+      providers.push('phone');
+    }
     res.json({ providers });
   });
 
@@ -147,6 +154,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(503).json({ message: "Google OAuth is not configured" });
     });
   }
+
+  // Apple OAuth routes (only if configured)
+  if (process.env.APPLE_TEAM_ID && process.env.APPLE_CLIENT_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+    app.get('/api/auth/apple',
+      passport.authenticate('apple')
+    );
+
+    app.post('/api/auth/apple/callback',
+      passport.authenticate('apple', { failureRedirect: '/login' }),
+      (req, res) => {
+        // Successful authentication, redirect to user type selection
+        res.redirect('/user-type-selection');
+      }
+    );
+  } else {
+    // Return error if Apple OAuth is not configured
+    app.get('/api/auth/apple', (req, res) => {
+      res.status(503).json({ message: "Apple OAuth is not configured. Please configure Apple OAuth credentials." });
+    });
+  }
+
+  // Phone number authentication routes - Rate limiting
+  const otpSendLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 3, // Limit each phone number to 3 OTP requests per window
+    message: "Too many OTP requests. Please try again later.",
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.body.phoneNumber || 'unknown', // Rate limit by phone number
+    skip: (req) => !req.body.phoneNumber, // Skip if no phone number provided
+  });
+
+  const otpVerifyLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each phone number to 5 verification attempts per window
+    message: "Too many verification attempts. Please request a new code.",
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.body.phoneNumber || 'unknown',
+    skip: (req) => !req.body.phoneNumber,
+  });
+
+  app.post('/api/auth/phone/send-otp', otpSendLimiter, async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      
+      if (!phoneNumber) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      // Basic phone number validation
+      const phoneRegex = /^\+?[1-9]\d{1,14}$/; // E.164 format
+      if (!phoneRegex.test(phoneNumber.replace(/[\s()-]/g, ''))) {
+        return res.status(400).json({ message: "Please enter a valid phone number" });
+      }
+
+      // Check if Twilio is configured
+      if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
+        return res.status(503).json({ 
+          message: "SMS service is not configured. Please contact support." 
+        });
+      }
+
+      // Clean up any existing OTPs for this phone number before creating new one
+      await storage.cleanupExpiredOtps();
+      await storage.markOtpAsVerified(phoneNumber); // Remove any pending OTPs
+
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store OTP in database with 5 minute expiration
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      await storage.createOtpVerification({
+        phoneNumber,
+        otp,
+        expiresAt,
+      });
+
+      // Send SMS with Twilio
+      const twilio = require('twilio');
+      const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+      
+      await twilioClient.messages.create({
+        body: `Your FlexPod verification code is: ${otp}. This code expires in 5 minutes.`,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: phoneNumber
+      });
+
+      res.json({ 
+        message: "OTP sent successfully", 
+        expiresIn: 300 // 5 minutes in seconds
+      });
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      res.status(500).json({ message: "Failed to send OTP. Please try again." });
+    }
+  });
+
+  app.post('/api/auth/phone/verify', otpVerifyLimiter, (req, res, next) => {
+    passport.authenticate('phone', (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Verification error" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info.message || "Invalid OTP" });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Failed to log in" });
+        }
+        res.json({ 
+          user: sanitizeUser(user), 
+          message: "Phone verification successful" 
+        });
+      });
+    })(req, res, next);
+  });
 
   // Logout route
   app.post('/api/auth/logout', (req, res) => {

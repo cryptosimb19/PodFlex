@@ -17,7 +17,8 @@ Preferred communication style: Simple, everyday language.
 - **Frontend**: React 18 with TypeScript, Vite, Radix UI components styled with shadcn/ui, TanStack Query for server state, Wouter for routing, and PWA capabilities (service worker, manifest, offline support).
 - **Backend**: Node.js with Express server, RESTful API.
 - **Database**: PostgreSQL with Drizzle ORM, hosted on Neon serverless PostgreSQL.
-- **Authentication**: Email magic links and Google OAuth, session management, password reset functionality.
+- **Authentication**: Multi-method authentication including email/password, Google OAuth, Apple OAuth, and phone number authentication (SMS OTP) using Passport.js strategies. Session management and password reset functionality included.
+  - **Security Measures**: Rate limiting (3 OTP requests/15min, 5 verify attempts/15min), one-time OTP use with deletion after verification, phone number validation (E.164 format), OTP cleanup before new creation.
 - **Core Features**:
     - **Pod Discovery**: Region-based filtering (e.g., Bay Club campuses), membership type categorization, advanced filtering, search functionality.
     - **Membership Management**: Pod creation/management for leaders, comprehensive pod editing with 10+ editable fields (title, description, club details, amenities, pricing, capacity), join request workflow with approval, member tracking, rich pod profiles.
@@ -51,6 +52,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Third-Party Services
 - **SendGrid**: Used for email notifications (e.g., join requests, acceptance/rejection, password reset) with branded HTML templates. Configured with API key via `SENDGRID_API_KEY` environment variable. Note: Sender email address must be verified in SendGrid before emails can be sent.
+- **Twilio**: Used for SMS-based phone number authentication with OTP verification. Configured with `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` environment variables.
+- **Apple OAuth**: Sign in with Apple authentication configured with `APPLE_TEAM_ID`, `APPLE_CLIENT_ID`, `APPLE_KEY_ID`, and `APPLE_PRIVATE_KEY` environment variables.
 
 ### Development Tools
 - `Vite`: Build tool and development server.

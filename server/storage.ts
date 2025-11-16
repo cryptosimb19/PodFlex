@@ -3,6 +3,7 @@ import {
   pods,
   joinRequests,
   podMembers,
+  otpVerifications,
   type User,
   type Pod,
   type InsertUser,
@@ -11,6 +12,8 @@ import {
   type InsertJoinRequest,
   type PodMember,
   type UpsertUser,
+  type OtpVerification,
+  type InsertOtpVerification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, inArray, or, sql } from "drizzle-orm";
@@ -23,11 +26,19 @@ export interface IStorage {
   // Additional user operations
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  getUserByAppleId(appleId: string): Promise<User | undefined>;
+  getUserByPhone(phone: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, userData: Partial<User>): Promise<User | undefined>;
   setPasswordResetToken(email: string, token: string, expires: Date): Promise<User | undefined>;
   getUserByResetToken(token: string): Promise<User | undefined>;
   clearPasswordResetToken(userId: string): Promise<User | undefined>;
+  
+  // OTP verification operations
+  createOtpVerification(otp: InsertOtpVerification): Promise<OtpVerification>;
+  getOtpVerification(phoneNumber: string): Promise<OtpVerification | undefined>;
+  markOtpAsVerified(phoneNumber: string): Promise<void>;
+  cleanupExpiredOtps(): Promise<void>;
   
   // Pod operations
   getPods(): Promise<Pod[]>;
@@ -99,6 +110,16 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByAppleId(appleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.appleId, appleId));
+    return user;
+  }
+
+  async getUserByPhone(phone: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.phone, phone));
+    return user;
+  }
+
   async updateUser(id: string, userData: Partial<User>): Promise<User | undefined> {
     const [user] = await db
       .update(users)
@@ -148,6 +169,49 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+
+  // OTP verification operations
+  async createOtpVerification(otpData: InsertOtpVerification): Promise<OtpVerification> {
+    const [otp] = await db
+      .insert(otpVerifications)
+      .values(otpData)
+      .returning();
+    return otp;
+  }
+
+  async getOtpVerification(phoneNumber: string): Promise<OtpVerification | undefined> {
+    const [otp] = await db
+      .select()
+      .from(otpVerifications)
+      .where(
+        and(
+          eq(otpVerifications.phoneNumber, phoneNumber),
+          eq(otpVerifications.verified, false),
+          sql`${otpVerifications.expiresAt} > NOW()`
+        )
+      )
+      .orderBy(sql`${otpVerifications.createdAt} DESC`)
+      .limit(1);
+    return otp;
+  }
+
+  async markOtpAsVerified(phoneNumber: string): Promise<void> {
+    // Delete OTP after verification to prevent reuse
+    await db
+      .delete(otpVerifications)
+      .where(
+        and(
+          eq(otpVerifications.phoneNumber, phoneNumber),
+          eq(otpVerifications.verified, false)
+        )
+      );
+  }
+
+  async cleanupExpiredOtps(): Promise<void> {
+    await db
+      .delete(otpVerifications)
+      .where(sql`${otpVerifications.expiresAt} < NOW()`);
   }
 
   // Pod operations
