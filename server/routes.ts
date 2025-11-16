@@ -153,11 +153,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Successful authentication, redirect based on user type
         // Fetch fresh user data from database to ensure we have latest userType
         const sessionUser = req.user as any;
-        if (!sessionUser?.id) {
-          return res.redirect('/login');
+        
+        // Try to fetch by email first (more reliable), fallback to ID if no valid email
+        let user;
+        if (sessionUser?.email && sessionUser.email.trim() !== '') {
+          user = await storage.getUserByEmail(sessionUser.email);
         }
         
-        const user = await storage.getUser(sessionUser.id);
+        // Fallback to ID if email lookup failed or email was invalid
+        if (!user && sessionUser?.id) {
+          user = await storage.getUser(sessionUser.id);
+        }
+        
         if (!user) {
           return res.redirect('/login');
         }
@@ -194,11 +201,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Successful authentication, redirect based on user type
         // Fetch fresh user data from database to ensure we have latest userType
         const sessionUser = req.user as any;
-        if (!sessionUser?.id) {
-          return res.redirect('/login');
+        
+        // Try to fetch by email first (more reliable), fallback to ID if no valid email
+        let user;
+        if (sessionUser?.email && sessionUser.email.trim() !== '') {
+          user = await storage.getUserByEmail(sessionUser.email);
         }
         
-        const user = await storage.getUser(sessionUser.id);
+        // Fallback to ID if email lookup failed or email was invalid
+        if (!user && sessionUser?.id) {
+          user = await storage.getUser(sessionUser.id);
+        }
+        
         if (!user) {
           return res.redirect('/login');
         }
