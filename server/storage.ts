@@ -32,6 +32,7 @@ export interface IStorage {
   // Pod operations
   getPods(): Promise<Pod[]>;
   getPod(id: number): Promise<Pod | undefined>;
+  getPodsByLeaderId(leadId: string): Promise<Pod[]>;
   searchPods(query: string): Promise<Pod[]>;
   filterPods(filters: { region?: string; membershipType?: string; amenities?: string[] }): Promise<Pod[]>;
   createPod(pod: InsertPod): Promise<Pod>;
@@ -167,6 +168,15 @@ export class DatabaseStorage implements IStorage {
       )
     );
     return pod;
+  }
+
+  async getPodsByLeaderId(leadId: string): Promise<Pod[]> {
+    return await db.select().from(pods).where(
+      and(
+        eq(pods.leadId, leadId),
+        sql`${pods.deletedAt} IS NULL`
+      )
+    );
   }
 
   async searchPods(query: string): Promise<Pod[]> {

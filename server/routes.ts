@@ -306,9 +306,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new pod
-  app.post("/api/pods", async (req, res) => {
+  app.post("/api/pods", isAuthenticated, async (req: any, res) => {
     try {
       const podData = insertPodSchema.parse(req.body);
+      
+      // Validate total spots doesn't exceed 8
+      if (podData.totalSpots > 8) {
+        return res.status(400).json({ message: "Total spots cannot exceed 8 members" });
+      }
+      
+      // Check if the leader already has a pod
+      const existingPods = await storage.getPodsByLeaderId(req.user.id);
+      if (existingPods && existingPods.length > 0) {
+        return res.status(400).json({ message: "You can only create one pod. Please edit your existing pod or delete it to create a new one." });
+      }
+      
       const pod = await storage.createPod(podData);
       res.status(201).json(pod);
     } catch (error) {
@@ -375,6 +387,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         if (updateData.totalSpots <= 0) {
           return res.status(400).json({ message: "Total spots must be at least 1" });
+        }
+        if (updateData.totalSpots > 8) {
+          return res.status(400).json({ message: "Total spots cannot exceed 8 members" });
         }
         
         // Check if reducing total spots would affect existing members
