@@ -456,9 +456,10 @@ export default function PodLeaderRegistration() {
       localStorage.setItem('flexpod_user_type', 'pod_leader');
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       
-      // Add small delay to ensure session is fully persisted to PostgreSQL
+      // Add delay to ensure session is fully persisted to PostgreSQL
+      // Increased from 500ms to 1500ms to prevent race condition on reload
       console.log("⏳ Waiting for session persistence...");
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Force reload to ensure all auth state is fresh
       console.log("🚀 Reloading page to refresh auth state");

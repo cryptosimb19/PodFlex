@@ -321,7 +321,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You can only create one pod. Please edit your existing pod or delete it to create a new one." });
       }
       
-      const pod = await storage.createPod(podData);
+      // Set the leadId from the authenticated user
+      const pod = await storage.createPod({
+        ...podData,
+        leadId: req.user.id
+      });
       res.status(201).json(pod);
     } catch (error) {
       if (error instanceof z.ZodError) {

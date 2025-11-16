@@ -31,9 +31,13 @@ Preferred communication style: Simple, everyday language.
 - **Scalable Database**: PostgreSQL with Drizzle ORM for robust data management.
 - **Real-time Data**: TanStack Query for efficient server state management.
 - **Modular Project Structure**: Separated client, server, shared, and migrations folders.
-- **Onboarding Flow**: Streamlined user onboarding with conditional redirects based on completion status and user type, protecting dashboard routes.
+- **Onboarding Flow**: Streamlined user onboarding with conditional redirects based on completion status and user type, protecting dashboard routes. Session persistence delay of 1500ms ensures PostgreSQL session data is fully persisted before page reload.
 - **Email Handling**: Robust email notification system with status tracking and resend capabilities for join requests, password reset emails with secure token-based authentication.
 - **Route Protection**: Comprehensive authentication guards using ProtectedRoute component that redirects unauthenticated users to login page, with dual-layer protection for dashboards (authentication check + user type validation) and onboarding requirement checks for sensitive routes.
+- **Business Rules Enforcement**:
+  - **One Pod Per Leader**: Pod leaders can only create one active pod. Backend validates via `getPodsByLeaderId()` which filters out deleted pods (`deletedAt IS NULL`). If a leader already has a pod, creation returns 400 with descriptive error message.
+  - **Maximum 8 Members Per Pod**: Enforced on both pod creation (POST /api/pods) and editing (PATCH /api/pods/:id). Backend validates `totalSpots <= 8` and returns 400 if exceeded. Frontend forms include `max="8"` attribute for immediate user feedback.
+  - **Pod Leader Assignment**: When creating a pod, `leadId` is automatically set from the authenticated user's ID (`req.user.id`), ensuring pods are correctly associated with their leaders and appear on the leader dashboard.
 
 ## External Dependencies
 
