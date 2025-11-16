@@ -328,3 +328,99 @@ export async function sendPasswordResetEmail(
     text
   });
 }
+
+// Template for welcome email to new users
+export async function sendWelcomeEmail(
+  userEmail: string,
+  userName: string,
+  fromEmail: string
+): Promise<boolean> {
+  const subject = '🎉 Welcome to FlexPod!';
+  const baseUrl = 'https://podmembership.com';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 30px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 32px;">FlexPod</h1>
+        <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">🎉 Welcome Aboard!</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${userName}! 👋</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #8B5CF6;">
+          <p style="color: #4b5563; margin: 0; line-height: 1.6;">
+            Thank you for joining FlexPod! We're excited to help you discover affordable Bay Club memberships through our pod-sharing community.
+          </p>
+        </div>
+        
+        <div style="background: #f3e8ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #8B5CF6; margin: 0 0 15px 0;">What's Next?</h3>
+          <ul style="color: #4b5563; margin: 0; padding-left: 20px; line-height: 1.8;">
+            <li><strong>Complete your profile</strong> - Tell us about your fitness goals and preferences</li>
+            <li><strong>Browse available pods</strong> - Find the perfect gym membership match in your area</li>
+            <li><strong>Join a pod or create your own</strong> - Start saving on your Bay Club membership today!</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${baseUrl}/pods" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin-right: 10px;">
+            Browse Pods
+          </a>
+          <a href="${baseUrl}/user-type-selection" 
+             style="background: #EC4899; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Get Started
+          </a>
+        </div>
+        
+        <div style="background: #ecfdf5; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #10B981;">
+          <h4 style="color: #059669; margin: 0 0 10px 0;">💡 Pro Tip</h4>
+          <p style="color: #4b5563; margin: 0; font-size: 14px;">
+            Complete your profile to increase your chances of getting accepted into pods. Pod leaders love members who share their fitness goals!
+          </p>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px; line-height: 1.6;">
+          Have questions? Reply to this email or visit our help center. We're here to help you make the most of your FlexPod experience.
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p style="margin: 5px 0;">Welcome to the FlexPod community!</p>
+        <p style="margin: 5px 0;">Let's make fitness affordable together 💪</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    🎉 Welcome to FlexPod!
+    
+    Hi ${userName}!
+    
+    Thank you for joining FlexPod! We're excited to help you discover affordable Bay Club memberships through our pod-sharing community.
+    
+    What's Next?
+    - Complete your profile - Tell us about your fitness goals and preferences
+    - Browse available pods - Find the perfect gym membership match in your area
+    - Join a pod or create your own - Start saving on your Bay Club membership today!
+    
+    💡 Pro Tip: Complete your profile to increase your chances of getting accepted into pods. Pod leaders love members who share their fitness goals!
+    
+    Get started: ${baseUrl}/user-type-selection
+    Browse pods: ${baseUrl}/pods
+    
+    Have questions? Reply to this email or visit our help center. We're here to help you make the most of your FlexPod experience.
+    
+    Welcome to the FlexPod community!
+    Let's make fitness affordable together 💪
+  `;
+
+  return await sendEmail({
+    to: userEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text
+  });
+}

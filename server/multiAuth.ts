@@ -7,6 +7,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { Express } from "express";
 import { storage } from "./storage";
+import { sendWelcomeEmail } from "./emailService";
 
 // Session configuration
 export function getSession() {
@@ -122,6 +123,14 @@ export async function setupAuth(app: Express) {
             isEmailVerified: true, // Google emails are pre-verified
           });
 
+          // Send welcome email to new user
+          const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+          sendWelcomeEmail(
+            newUser.email, 
+            newUser.firstName || 'there', 
+            fromEmail
+          ).catch(error => console.error('Failed to send welcome email:', error));
+
           return done(null, newUser);
         } catch (error) {
           return done(error);
@@ -181,6 +190,14 @@ export async function setupAuth(app: Express) {
             isEmailVerified: true, // Apple emails are pre-verified
           });
 
+          // Send welcome email to new user
+          const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+          sendWelcomeEmail(
+            newUser.email, 
+            newUser.firstName || 'there', 
+            fromEmail
+          ).catch(error => console.error('Failed to send welcome email:', error));
+
           return done(null, newUser);
         } catch (error) {
           return done(error);
@@ -225,6 +242,14 @@ export async function setupAuth(app: Express) {
             authProvider: "phone",
             isEmailVerified: false,
           });
+
+          // Send welcome email to new user
+          const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+          sendWelcomeEmail(
+            user.email, 
+            user.firstName || 'there', 
+            fromEmail
+          ).catch(error => console.error('Failed to send welcome email:', error));
         } else {
           // Update existing user to mark phone as verified
           await storage.updateUser(user.id, {

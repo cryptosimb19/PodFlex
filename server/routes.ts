@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -72,6 +72,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) {
           return res.status(500).json({ message: "Failed to log in after registration" });
         }
+        
+        // Send welcome email to new user
+        const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+        sendWelcomeEmail(user.email, user.firstName || 'there', fromEmail)
+          .catch(error => console.error('Failed to send welcome email:', error));
+        
         res.status(201).json({ user: sanitizeUser(user), message: "Registration successful" });
       });
     } catch (error) {
