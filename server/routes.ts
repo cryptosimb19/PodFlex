@@ -149,10 +149,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     app.get('/api/auth/google/callback',
       passport.authenticate('google', { failureRedirect: '/login' }),
-      (req, res) => {
+      async (req, res) => {
         // Successful authentication, redirect based on user type
-        const user = req.user as any;
-        if (user?.userType) {
+        // Fetch fresh user data from database to ensure we have latest userType
+        const sessionUser = req.user as any;
+        if (!sessionUser?.id) {
+          return res.redirect('/login');
+        }
+        
+        const user = await storage.getUser(sessionUser.id);
+        if (!user) {
+          return res.redirect('/login');
+        }
+        
+        if (user.userType) {
           // User has already selected a type, redirect to their dashboard
           if (user.userType === 'pod_leader') {
             res.redirect('/pod-leader-dashboard');
@@ -180,10 +190,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     app.post('/api/auth/apple/callback',
       passport.authenticate('apple', { failureRedirect: '/login' }),
-      (req, res) => {
+      async (req, res) => {
         // Successful authentication, redirect based on user type
-        const user = req.user as any;
-        if (user?.userType) {
+        // Fetch fresh user data from database to ensure we have latest userType
+        const sessionUser = req.user as any;
+        if (!sessionUser?.id) {
+          return res.redirect('/login');
+        }
+        
+        const user = await storage.getUser(sessionUser.id);
+        if (!user) {
+          return res.redirect('/login');
+        }
+        
+        if (user.userType) {
           // User has already selected a type, redirect to their dashboard
           if (user.userType === 'pod_leader') {
             res.redirect('/pod-leader-dashboard');
