@@ -150,8 +150,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.get('/api/auth/google/callback',
       passport.authenticate('google', { failureRedirect: '/login' }),
       (req, res) => {
-        // Successful authentication, redirect to user type selection
-        res.redirect('/user-type-selection');
+        // Successful authentication, redirect based on user type
+        const user = req.user as any;
+        if (user?.userType) {
+          // User has already selected a type, redirect to appropriate page
+          res.redirect('/browse');
+        } else {
+          // User needs to select user type
+          res.redirect('/user-type-selection');
+        }
       }
     );
   } else {
@@ -170,8 +177,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.post('/api/auth/apple/callback',
       passport.authenticate('apple', { failureRedirect: '/login' }),
       (req, res) => {
-        // Successful authentication, redirect to user type selection
-        res.redirect('/user-type-selection');
+        // Successful authentication, redirect based on user type
+        const user = req.user as any;
+        if (user?.userType) {
+          // User has already selected a type, redirect to appropriate page
+          res.redirect('/browse');
+        } else {
+          // User needs to select user type
+          res.redirect('/user-type-selection');
+        }
       }
     );
   } else {
