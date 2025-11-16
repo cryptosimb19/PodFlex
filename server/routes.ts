@@ -153,8 +153,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Successful authentication, redirect based on user type
         const user = req.user as any;
         if (user?.userType) {
-          // User has already selected a type, redirect to appropriate page
-          res.redirect('/browse');
+          // User has already selected a type, redirect to their dashboard
+          if (user.userType === 'pod_leader') {
+            res.redirect('/pod-leader-dashboard');
+          } else {
+            res.redirect('/dashboard');
+          }
         } else {
           // User needs to select user type
           res.redirect('/user-type-selection');
@@ -180,8 +184,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Successful authentication, redirect based on user type
         const user = req.user as any;
         if (user?.userType) {
-          // User has already selected a type, redirect to appropriate page
-          res.redirect('/browse');
+          // User has already selected a type, redirect to their dashboard
+          if (user.userType === 'pod_leader') {
+            res.redirect('/pod-leader-dashboard');
+          } else {
+            res.redirect('/dashboard');
+          }
         } else {
           // User needs to select user type
           res.redirect('/user-type-selection');
