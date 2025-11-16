@@ -351,6 +351,15 @@ export default function PodLeaderDashboard() {
       return;
     }
 
+    if (editTotalSpots > 8) {
+      toast({
+        title: "Invalid total spots",
+        description: "Total spots cannot exceed 8 members.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!Number.isFinite(editAvailableSpots) || editAvailableSpots < 0) {
       toast({
         title: "Invalid available spots",
@@ -1036,12 +1045,14 @@ export default function PodLeaderDashboard() {
                                             id="totalSpots"
                                             type="number"
                                             min="1"
+                                            max="8"
                                             placeholder="5"
                                             value={editTotalSpots || ''}
                                             onChange={(e) => setEditTotalSpots(parseInt(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             data-testid="input-total-spots"
                                           />
+                                          <p className="text-xs text-gray-500 mt-1">Maximum 8 members</p>
                                         </div>
                                       </div>
 

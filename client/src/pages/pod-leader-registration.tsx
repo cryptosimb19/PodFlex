@@ -776,10 +776,13 @@ export default function PodLeaderRegistration() {
                   <label className="text-sm font-medium">Available Spots</label>
                   <Input
                     type="number"
+                    min="1"
+                    max="8"
                     value={formData.availableSpots}
                     onChange={(e) => handleInputChange('availableSpots', e.target.value)}
                     placeholder="3"
                   />
+                  <p className="text-xs text-muted-foreground">Maximum 8 members per pod</p>
                 </div>
               </div>
               
