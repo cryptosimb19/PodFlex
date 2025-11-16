@@ -243,13 +243,15 @@ export async function setupAuth(app: Express) {
             isEmailVerified: false,
           });
 
-          // Send welcome email to new user
-          const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
-          sendWelcomeEmail(
-            user.email, 
-            user.firstName || 'there', 
-            fromEmail
-          ).catch(error => console.error('Failed to send welcome email:', error));
+          // Send welcome email to new user (skip for phone-only accounts with placeholder emails)
+          if (!user.email.includes('@phone.flexpod.app')) {
+            const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+            sendWelcomeEmail(
+              user.email, 
+              user.firstName || 'there', 
+              fromEmail
+            ).catch(error => console.error('Failed to send welcome email:', error));
+          }
         } else {
           // Update existing user to mark phone as verified
           await storage.updateUser(user.id, {
