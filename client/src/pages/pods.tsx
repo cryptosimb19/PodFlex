@@ -40,8 +40,8 @@ export default function PodsPage() {
     return matchesSearch && matchesRegion && matchesType;
   });
 
-  const formatPrice = (amount: number) => {
-    return `$${amount}`;
+  const formatPrice = (cents: number) => {
+    return `$${Math.round(cents / 100)}`;
   };
 
   const getBadgeColor = (type: string) => {
