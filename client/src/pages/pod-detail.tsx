@@ -132,8 +132,8 @@ export default function PodDetail() {
     joinMutation.mutate({ message: joinMessage, userInfo });
   };
 
-  const formatPrice = (cents: number) => {
-    return `$${Math.round(cents / 100)}`;
+  const formatPrice = (amount: number) => {
+    return `$${amount}`;
   };
 
   const formatDate = (date: string | Date | null) => {

@@ -72,8 +72,8 @@ export default function SearchScreen() {
     setSearchQuery("");
   };
 
-  const formatPrice = (cents: number) => {
-    return `$${(cents / 100).toFixed(0)}/month`;
+  const formatPrice = (amount: number) => {
+    return `$${amount}/month`;
   };
 
   const handlePodClick = (podId: number) => {
