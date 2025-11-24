@@ -577,9 +577,6 @@ export default function PodLeaderRegistration() {
                   placeholder="BC123456"
                   className="font-mono"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Found on your Bay Club membership card or app. You can add this later.
-                </p>
               </div>
               
               <div className="space-y-2">
