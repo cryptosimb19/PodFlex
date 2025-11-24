@@ -204,13 +204,51 @@ export default function EditProfile() {
                               <SelectValue placeholder="Select your primary club" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Bay Club Courtside">Bay Club Courtside</SelectItem>
-                            <SelectItem value="Bay Club Marin">Bay Club Marin</SelectItem>
-                            <SelectItem value="Bay Club Redwood Shores">Bay Club Redwood Shores</SelectItem>
-                            <SelectItem value="Bay Club San Francisco">Bay Club San Francisco</SelectItem>
-                            <SelectItem value="Bay Club Santa Clara">Bay Club Santa Clara</SelectItem>
-                            <SelectItem value="Bay Club StoneTree">Bay Club StoneTree</SelectItem>
+                          <SelectContent className="max-h-[300px]">
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">San Francisco</div>
+                            <SelectItem value="Financial District">Financial District</SelectItem>
+                            <SelectItem value="Gateway">Gateway</SelectItem>
+                            <SelectItem value="San Francisco">San Francisco</SelectItem>
+                            <SelectItem value="South San Francisco">South San Francisco</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Marin</div>
+                            <SelectItem value="Marin">Marin</SelectItem>
+                            <SelectItem value="StoneTree Golf Club">StoneTree Golf Club</SelectItem>
+                            <SelectItem value="Rolling Hills">Rolling Hills</SelectItem>
+                            <SelectItem value="Ross Valley">Ross Valley</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">East Bay</div>
+                            <SelectItem value="Pleasanton">Pleasanton</SelectItem>
+                            <SelectItem value="Fremont">Fremont</SelectItem>
+                            <SelectItem value="Crow Canyon Country Club">Crow Canyon Country Club</SelectItem>
+                            <SelectItem value="Walnut Creek">Walnut Creek</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Peninsula</div>
+                            <SelectItem value="Broadway Tennis">Broadway Tennis</SelectItem>
+                            <SelectItem value="Redwood Shores">Redwood Shores</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Santa Clara</div>
+                            <SelectItem value="Santa Clara">Santa Clara</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">San Jose</div>
+                            <SelectItem value="Boulder Ridge Golf Club">Boulder Ridge Golf Club</SelectItem>
+                            <SelectItem value="Courtside">Courtside</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Washington</div>
+                            <SelectItem value="PRO Club Seattle">PRO Club Seattle</SelectItem>
+                            <SelectItem value="PRO Club Bellevue">PRO Club Bellevue</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">San Diego</div>
+                            <SelectItem value="Carmel Valley">Carmel Valley</SelectItem>
+                            <SelectItem value="Fairbanks Ranch Country Club">Fairbanks Ranch Country Club</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Los Angeles</div>
+                            <SelectItem value="El Segundo">El Segundo</SelectItem>
+                            <SelectItem value="Redondo Beach">Redondo Beach</SelectItem>
+                            <SelectItem value="Santa Monica">Santa Monica</SelectItem>
+                            
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Oregon</div>
+                            <SelectItem value="Portland">Portland</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
