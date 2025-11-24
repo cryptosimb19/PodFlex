@@ -19,7 +19,6 @@ const editProfileSchema = z.object({
   phone: z.string().optional(),
   membershipId: z.string().optional(),
   primaryClub: z.string().optional(),
-  membershipLevel: z.string().optional(),
   street: z.string().optional(),
   aptUnit: z.string().optional(),
   city: z.string().optional(),
@@ -47,7 +46,6 @@ export default function EditProfile() {
       phone: authUser.phone || '',
       membershipId: authUser.membershipId || '',
       primaryClub: authUser.primaryClub || '',
-      membershipLevel: authUser.membershipLevel || '',
       street: authUser.street || '',
       aptUnit: authUser.aptUnit || '',
       city: authUser.city || '',
@@ -256,29 +254,6 @@ export default function EditProfile() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="membershipLevel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Membership Level</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-membership-level">
-                              <SelectValue placeholder="Select membership level" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Single Club">Single Club</SelectItem>
-                            <SelectItem value="Multi-Club">Multi-Club</SelectItem>
-                            <SelectItem value="Family">Family</SelectItem>
-                            <SelectItem value="Corporate">Corporate</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
                 <div className="space-y-4 border-t pt-4 mt-4">
