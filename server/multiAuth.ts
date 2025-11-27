@@ -7,7 +7,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { Express } from "express";
 import { storage } from "./storage";
-import { sendWelcomeEmail } from "./emailService";
+import { sendWelcomeEmail, FROM_EMAIL } from "./emailService";
 
 // Session configuration
 export function getSession() {
@@ -124,11 +124,11 @@ export async function setupAuth(app: Express) {
           });
 
           // Send welcome email to new user
-          const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+          console.log(`Sending welcome email to new Google user: ${newUser.email}`);
           sendWelcomeEmail(
             newUser.email, 
             newUser.firstName || 'there', 
-            fromEmail
+            FROM_EMAIL
           ).catch(error => console.error('Failed to send welcome email:', error));
 
           return done(null, newUser);
@@ -191,11 +191,11 @@ export async function setupAuth(app: Express) {
           });
 
           // Send welcome email to new user
-          const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+          console.log(`Sending welcome email to new Apple user: ${newUser.email}`);
           sendWelcomeEmail(
             newUser.email, 
             newUser.firstName || 'there', 
-            fromEmail
+            FROM_EMAIL
           ).catch(error => console.error('Failed to send welcome email:', error));
 
           return done(null, newUser);
@@ -245,11 +245,11 @@ export async function setupAuth(app: Express) {
 
           // Send welcome email to new user (skip for phone-only accounts with placeholder emails)
           if (!user.email.includes('@phone.flexpod.app')) {
-            const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+            console.log(`Sending welcome email to new phone user: ${user.email}`);
             sendWelcomeEmail(
               user.email, 
               user.firstName || 'there', 
-              fromEmail
+              FROM_EMAIL
             ).catch(error => console.error('Failed to send welcome email:', error));
           }
         } else {

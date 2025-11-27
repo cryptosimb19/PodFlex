@@ -2,10 +2,14 @@ import sgMail from '@sendgrid/mail';
 
 let sendGridInitialized = false;
 
+// Get the from email from environment - check both variable names for compatibility
+export const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || '';
+
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   sendGridInitialized = true;
   console.log('SendGrid email service initialized');
+  console.log('FROM_EMAIL configured:', FROM_EMAIL ? 'Yes' : 'No - emails may fail');
 } else {
   console.log('SendGrid API key not found - email notifications disabled');
 }
@@ -24,6 +28,13 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     return false;
   }
   
+  if (!params.from) {
+    console.error('Email send failed: No from email address configured');
+    return false;
+  }
+  
+  console.log(`Attempting to send email to ${params.to} from ${params.from} - Subject: ${params.subject}`);
+  
   try {
     const msg = {
       to: params.to,
@@ -36,8 +47,11 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     await sgMail.send(msg);
     console.log(`Email sent successfully to ${params.to}`);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('SendGrid email error:', error);
+    if (error.response) {
+      console.error('SendGrid error response:', JSON.stringify(error.response.body, null, 2));
+    }
     return false;
   }
 }

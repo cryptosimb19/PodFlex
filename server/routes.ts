@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, FROM_EMAIL } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -74,8 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Send welcome email to new user
-        const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
-        sendWelcomeEmail(user.email, user.firstName || 'there', fromEmail)
+        console.log(`Sending welcome email to ${user.email}`);
+        sendWelcomeEmail(user.email, user.firstName || 'there', FROM_EMAIL)
           .catch(error => console.error('Failed to send welcome email:', error));
         
         res.status(201).json({ user: sanitizeUser(user), message: "Registration successful" });
@@ -376,14 +376,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.setPasswordResetToken(validatedData.email, resetToken, resetExpires);
         
         // Send password reset email
-        const fromEmail = process.env.FROM_EMAIL || "noreply@flexpod.com";
         const userName = user.firstName || user.email.split('@')[0];
         
+        console.log(`Sending password reset email to ${user.email}`);
         await sendPasswordResetEmail(
           user.email,
           userName,
           resetToken,
-          fromEmail
+          FROM_EMAIL
         );
       }
       
@@ -514,14 +514,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Send congratulatory email to pod leader
-      const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+      console.log(`Sending pod created email to ${req.user.email}`);
       sendPodCreatedEmail(
         req.user.email,
         req.user.firstName || 'Pod Leader',
         pod.title,
         pod.clubName,
         pod.totalSpots,
-        fromEmail
+        FROM_EMAIL
       ).catch(error => console.error('Failed to send pod created email:', error));
       
       res.status(201).json(pod);
@@ -678,13 +678,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const applicant = await storage.getUser(joinRequest.userId);
         
         if (pod && podLead && applicant && podLead.email) {
-          const fromEmail = process.env.FROM_EMAIL || "noreply@your-domain.com";
+          console.log(`Sending join request notification to pod leader: ${podLead.email}`);
           const emailSent = await sendJoinRequestNotification(
             podLead.email,
             pod.title,
             `${applicant.firstName} ${applicant.lastName}`,
             applicant.email || "",
-            fromEmail
+            FROM_EMAIL
           );
           
           emailStatus = emailSent ? "sent" : "failed";
@@ -752,26 +752,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const pod = await storage.getPod(updatedRequest.podId);
         const applicant = await storage.getUser(updatedRequest.userId);
-        const fromEmail = process.env.FROM_EMAIL || "noreply@your-domain.com";
         
         if (pod && applicant && applicant.email) {
           if (status === "accepted") {
             const podLeader = await storage.getUser(pod.leadId);
             const podLeaderName = podLeader ? `${podLeader.firstName} ${podLeader.lastName}` : "Pod Leader";
             
+            console.log(`Sending join request accepted email to ${applicant.email}`);
             await sendJoinRequestAcceptedNotification(
               applicant.email,
               `${applicant.firstName} ${applicant.lastName}`,
               pod.title,
               podLeaderName,
-              fromEmail
+              FROM_EMAIL
             );
           } else if (status === "rejected") {
+            console.log(`Sending join request rejected email to ${applicant.email}`);
             await sendJoinRequestRejectedNotification(
               applicant.email,
               `${applicant.firstName} ${applicant.lastName}`,
               pod.title,
-              fromEmail
+              FROM_EMAIL
             );
           }
         }
@@ -846,13 +847,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const applicant = await storage.getUser(joinRequest.userId);
         
         if (pod && podLead && applicant && podLead.email) {
-          const fromEmail = process.env.FROM_EMAIL || "noreply@your-domain.com";
+          console.log(`Resending join request notification to pod leader: ${podLead.email}`);
           const emailSent = await sendJoinRequestNotification(
             podLead.email,
             pod.title,
             `${applicant.firstName} ${applicant.lastName}`,
             applicant.email || "",
-            fromEmail
+            FROM_EMAIL
           );
           
           emailStatus = emailSent ? "sent" : "failed";
