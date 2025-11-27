@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -512,6 +512,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...podData,
         leadId: req.user.id
       });
+      
+      // Send congratulatory email to pod leader
+      const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@flexpod.app';
+      sendPodCreatedEmail(
+        req.user.email,
+        req.user.firstName || 'Pod Leader',
+        pod.title,
+        pod.clubName,
+        pod.totalSpots,
+        fromEmail
+      ).catch(error => console.error('Failed to send pod created email:', error));
+      
       res.status(201).json(pod);
     } catch (error) {
       if (error instanceof z.ZodError) {

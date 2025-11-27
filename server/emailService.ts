@@ -424,3 +424,110 @@ export async function sendWelcomeEmail(
     text
   });
 }
+
+// Send email when a pod leader creates a new pod
+export async function sendPodCreatedEmail(
+  leaderEmail: string,
+  leaderName: string,
+  podTitle: string,
+  clubName: string,
+  totalSpots: number,
+  fromEmail: string
+): Promise<boolean> {
+  const subject = '🎉 Congratulations! Your Pod is Live - FlexPod';
+  const baseUrl = 'https://podmembership.com';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 30px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 32px;">FlexPod</h1>
+        <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">🎉 Your Pod is Live!</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f0fdf4;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Congratulations ${leaderName}! 🏆</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10B981;">
+          <h3 style="color: #10B981; margin-top: 0;">Your pod "${podTitle}" is now live!</h3>
+          <p style="color: #4b5563; margin: 10px 0;"><strong>Club:</strong> ${clubName}</p>
+          <p style="color: #4b5563; margin: 10px 0;"><strong>Total Spots:</strong> ${totalSpots} members</p>
+          <p style="color: #4b5563; margin: 10px 0;">Your pod is now visible to potential members looking for affordable Bay Club memberships.</p>
+        </div>
+        
+        <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #059669; margin: 0 0 15px 0;">What Happens Next?</h3>
+          <ul style="color: #4b5563; margin: 0; padding-left: 20px; line-height: 1.8;">
+            <li><strong>Receive join requests</strong> - Members will start discovering your pod and requesting to join</li>
+            <li><strong>Review applications</strong> - Check your dashboard to review and approve/reject requests</li>
+            <li><strong>Build your team</strong> - Connect with members and coordinate your shared membership</li>
+            <li><strong>Start saving together</strong> - Enjoy the benefits of shared Bay Club access!</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${baseUrl}/pod-leader-dashboard" 
+             style="background: #10B981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            View My Dashboard
+          </a>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <h4 style="color: #d97706; margin: 0 0 10px 0;">💡 Pro Tips for Pod Leaders</h4>
+          <ul style="color: #4b5563; margin: 0; padding-left: 20px; font-size: 14px;">
+            <li>Keep your pod description detailed to attract the right members</li>
+            <li>Respond to join requests promptly - members appreciate quick responses</li>
+            <li>Set clear expectations about payment and usage schedules</li>
+          </ul>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px; line-height: 1.6;">
+          You'll receive email notifications when someone requests to join your pod. Good luck building your team!
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p style="margin: 5px 0;">Thank you for being a FlexPod leader!</p>
+        <p style="margin: 5px 0;">Together, we're making fitness more affordable 💪</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    🎉 Congratulations! Your Pod is Live - FlexPod
+    
+    Congratulations ${leaderName}!
+    
+    Your pod "${podTitle}" is now live!
+    
+    Club: ${clubName}
+    Total Spots: ${totalSpots} members
+    
+    Your pod is now visible to potential members looking for affordable Bay Club memberships.
+    
+    What Happens Next?
+    - Receive join requests - Members will start discovering your pod and requesting to join
+    - Review applications - Check your dashboard to review and approve/reject requests
+    - Build your team - Connect with members and coordinate your shared membership
+    - Start saving together - Enjoy the benefits of shared Bay Club access!
+    
+    💡 Pro Tips for Pod Leaders:
+    - Keep your pod description detailed to attract the right members
+    - Respond to join requests promptly - members appreciate quick responses
+    - Set clear expectations about payment and usage schedules
+    
+    View your dashboard: ${baseUrl}/pod-leader-dashboard
+    
+    You'll receive email notifications when someone requests to join your pod. Good luck building your team!
+    
+    Thank you for being a FlexPod leader!
+    Together, we're making fitness more affordable 💪
+  `;
+
+  return await sendEmail({
+    to: leaderEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text
+  });
+}
