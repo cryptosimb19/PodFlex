@@ -8,10 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Navigation from "@/components/Navigation";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const editProfileSchema = z.object({
   firstName: z.string().optional(),
@@ -168,9 +172,39 @@ export default function EditProfile() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date of Birth</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="date" data-testid="input-date-of-birth" />
-                        </FormControl>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                                data-testid="input-date-of-birth"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? (
+                                  format(parse(field.value, 'yyyy-MM-dd', new Date()), 'PPP')
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : undefined}
+                              onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                              initialFocus
+                              captionLayout="dropdown-buttons"
+                              fromYear={1920}
+                              toYear={new Date().getFullYear() - 18}
+                              defaultMonth={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}

@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Navigation from "@/components/Navigation";
-import { Zap, Users, MapPin } from "lucide-react";
+import { Zap, Users, MapPin, Calendar as CalendarIcon } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface UserData {
   firstName: string;
@@ -548,12 +552,37 @@ export default function OnboardingWizard() {
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Date of Birth</label>
-                <Input
-                  type="date"
-                  value={userData.dateOfBirth}
-                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                  data-testid="input-date-of-birth"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !userData.dateOfBirth && "text-muted-foreground"
+                      )}
+                      data-testid="input-date-of-birth"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {userData.dateOfBirth ? (
+                        format(parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()), 'PPP')
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
+                      onSelect={(date) => handleInputChange('dateOfBirth', date ? format(date, 'yyyy-MM-dd') : '')}
+                      initialFocus
+                      captionLayout="dropdown-buttons"
+                      fromYear={1920}
+                      toYear={new Date().getFullYear() - 18}
+                      defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               
               <Button 

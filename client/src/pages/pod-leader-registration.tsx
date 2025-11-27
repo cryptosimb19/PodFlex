@@ -7,10 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Navigation from "@/components/Navigation";
-import { Zap, Users, MapPin, DollarSign, Calendar, Shield, ArrowRight, ArrowLeft } from "lucide-react";
+import { Zap, Users, MapPin, DollarSign, Calendar as CalendarIcon, Shield, ArrowRight, ArrowLeft } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface PodLeaderData {
   // Personal Info
@@ -684,11 +688,37 @@ export default function PodLeaderRegistration() {
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Date of Birth</label>
-                <Input
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.dateOfBirth && "text-muted-foreground"
+                      )}
+                      data-testid="input-date-of-birth"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.dateOfBirth ? (
+                        format(parse(formData.dateOfBirth, 'yyyy-MM-dd', new Date()), 'PPP')
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.dateOfBirth ? parse(formData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
+                      onSelect={(date) => handleInputChange('dateOfBirth', date ? format(date, 'yyyy-MM-dd') : '')}
+                      initialFocus
+                      captionLayout="dropdown-buttons"
+                      fromYear={1920}
+                      toYear={new Date().getFullYear() - 18}
+                      defaultMonth={formData.dateOfBirth ? parse(formData.dateOfBirth, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               
               <div className="flex space-x-3 pt-4">
