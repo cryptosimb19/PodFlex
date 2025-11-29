@@ -5,6 +5,9 @@ let sendGridInitialized = false;
 // Get the from email from environment - check both variable names for compatibility
 export const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || '';
 
+// Get the app URL for email links - defaults to production URL
+export const APP_URL = process.env.APP_URL || 'https://podmembership.com';
+
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   sendGridInitialized = true;
@@ -65,7 +68,7 @@ export async function sendJoinRequestNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `New Join Request for ${podTitle} - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -130,7 +133,7 @@ export async function sendJoinRequestAcceptedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `🎉 Welcome to ${podTitle} - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -204,7 +207,7 @@ export async function sendJoinRequestRejectedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `Update on ${podTitle} Request - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -275,7 +278,7 @@ export async function sendPasswordResetEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = 'Reset Your Password - FlexPod';
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
   
   const html = `
@@ -350,7 +353,7 @@ export async function sendWelcomeEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Welcome to FlexPod!';
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -449,7 +452,7 @@ export async function sendPodCreatedEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Congratulations! Your Pod is Live - FlexPod';
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -555,7 +558,7 @@ export async function sendMemberRemovedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `Update: You've been removed from ${podTitle} - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

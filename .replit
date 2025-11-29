@@ -98,3 +98,8 @@ externalPort = 3002
 
 [agent]
 integrations = ["javascript_sendgrid:1.0.0", "javascript_log_in_with_replit:1.0.0"]
+
+[userenv]
+
+[userenv.production]
+APP_URL = "https://podmembership.com"
