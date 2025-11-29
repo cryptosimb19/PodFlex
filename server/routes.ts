@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, FROM_EMAIL } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, FROM_EMAIL } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -101,19 +101,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = loginSchema.parse(req.body);
       
-      passport.authenticate('local', (err: any, user: any, info: any) => {
+      passport.authenticate('local', async (err: any, user: any, info: any) => {
         if (err) {
           return res.status(500).json({ message: "Login error" });
         }
         if (!user) {
           return res.status(401).json({ message: info.message || "Invalid credentials" });
         }
-        req.login(user, (err) => {
-          if (err) {
-            return res.status(500).json({ message: "Failed to log in" });
+        
+        // Generate 6-digit 2FA verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+        
+        try {
+          // Store the 2FA verification code
+          await storage.createEmail2FAVerification({
+            userId: user.id,
+            code: verificationCode,
+            expiresAt,
+          });
+          
+          // Send verification email
+          const userName = user.firstName || user.email.split('@')[0];
+          const emailSent = await send2FAVerificationEmail(
+            user.email,
+            userName,
+            verificationCode,
+            FROM_EMAIL
+          );
+          
+          if (!emailSent) {
+            console.error('Failed to send 2FA verification email');
+            // Still continue - user can request a resend
           }
-          res.json({ user: sanitizeUser(user), message: "Login successful" });
-        });
+          
+          console.log(`2FA code generated for user ${user.email}`);
+          
+          // Return response indicating 2FA is required (without logging in)
+          return res.json({
+            requires2FA: true,
+            userId: user.id,
+            email: user.email,
+            message: "Verification code sent to your email"
+          });
+        } catch (error) {
+          console.error('Error creating 2FA verification:', error);
+          return res.status(500).json({ message: "Failed to send verification code" });
+        }
       })(req, res, next);
     } catch (error) {
       if (error instanceof z.ZodError) {
