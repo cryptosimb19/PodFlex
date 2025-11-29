@@ -160,6 +160,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 2FA verification endpoint
+  const verify2FASchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+    code: z.string().length(6, "Verification code must be 6 digits"),
+  });
+
+  // Rate limiter for 2FA verification attempts (5 attempts per 15 minutes)
+  const verify2FALimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: { message: "Too many verification attempts. Please try again later." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  app.post('/api/auth/verify-2fa', verify2FALimiter, async (req, res) => {
+    try {
+      const validatedData = verify2FASchema.parse(req.body);
+      
+      // Verify the 2FA code
+      const isValid = await storage.verifyEmail2FACode(validatedData.userId, validatedData.code);
+      
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid or expired verification code" });
+      }
+      
+      // Get the user
+      const user = await storage.getUser(validatedData.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Delete the 2FA verification record
+      await storage.deleteEmail2FAVerification(validatedData.userId);
+      
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Error logging in user after 2FA:', err);
+          return res.status(500).json({ message: "Failed to complete login" });
+        }
+        console.log(`2FA verification successful for user ${user.email}`);
+        res.json({ user: sanitizeUser(user), message: "Login successful" });
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input data", 
+          errors: error.errors 
+        });
+      }
+      console.error('Error verifying 2FA:', error);
+      return res.status(500).json({ message: "Verification failed" });
+    }
+  });
+
+  // Resend 2FA code endpoint
+  const resend2FASchema = z.object({
+    userId: z.string().min(1, "User ID is required"),
+  });
+
+  // Rate limiter for resending 2FA codes (3 requests per 15 minutes)
+  const resend2FALimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 3, // limit each IP to 3 requests per windowMs
+    message: { message: "Too many resend requests. Please try again later." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  app.post('/api/auth/resend-2fa', resend2FALimiter, async (req, res) => {
+    try {
+      const validatedData = resend2FASchema.parse(req.body);
+      
+      // Get the user
+      const user = await storage.getUser(validatedData.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Generate a new 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+      
+      // Store the new verification code (this deletes any existing code)
+      await storage.createEmail2FAVerification({
+        userId: user.id,
+        code: verificationCode,
+        expiresAt,
+      });
+      
+      // Send the verification email
+      const userName = user.firstName || user.email.split('@')[0];
+      const emailSent = await send2FAVerificationEmail(
+        user.email,
+        userName,
+        verificationCode,
+        FROM_EMAIL
+      );
+      
+      if (!emailSent) {
+        console.error('Failed to resend 2FA verification email');
+        return res.status(500).json({ message: "Failed to send verification code" });
+      }
+      
+      console.log(`2FA code resent for user ${user.email}`);
+      res.json({ message: "Verification code sent to your email" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input data", 
+          errors: error.errors 
+        });
+      }
+      console.error('Error resending 2FA code:', error);
+      return res.status(500).json({ message: "Failed to resend verification code" });
+    }
+  });
+
   // Auth providers endpoint
   app.get('/api/auth/providers', (req, res) => {
     const providers = ['local'];
