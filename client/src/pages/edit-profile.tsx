@@ -172,39 +172,54 @@ export default function EditProfile() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date of Birth</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                                data-testid="input-date-of-birth"
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? (
-                                  format(parse(field.value, 'yyyy-MM-dd', new Date()), 'PPP')
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : undefined}
-                              onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                              initialFocus
-                              captionLayout="dropdown-buttons"
-                              fromYear={1920}
-                              toYear={new Date().getFullYear() - 18}
-                              defaultMonth={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                        <div className="relative flex">
+                          <FormControl>
+                            <Input
+                              value={field.value ? format(parse(field.value, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy') : ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                  field.onChange('');
+                                  return;
+                                }
+                                const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+                                const match = val.match(dateRegex);
+                                if (match) {
+                                  const [, month, day, year] = match;
+                                  field.onChange(`${year}-${month}-${day}`);
+                                }
+                              }}
+                              placeholder="mm/dd/yyyy"
+                              className="pr-10"
+                              data-testid="input-date-of-birth"
                             />
-                          </PopoverContent>
-                        </Popover>
+                          </FormControl>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                data-testid="button-calendar-picker"
+                              >
+                                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                              <Calendar
+                                mode="single"
+                                selected={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : undefined}
+                                onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                                initialFocus
+                                captionLayout="dropdown-buttons"
+                                fromYear={1920}
+                                toYear={new Date().getFullYear() - 18}
+                                defaultMonth={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

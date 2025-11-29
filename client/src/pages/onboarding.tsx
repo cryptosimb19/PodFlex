@@ -554,37 +554,52 @@ export default function OnboardingWizard() {
                 <div></div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Date of Birth</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !userData.dateOfBirth && "text-muted-foreground"
-                        )}
-                        data-testid="input-date-of-birth"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {userData.dateOfBirth ? (
-                          format(parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()), 'PPP')
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
-                        onSelect={(date) => handleInputChange('dateOfBirth', date ? format(date, 'yyyy-MM-dd') : '')}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1920}
-                        toYear={new Date().getFullYear() - 18}
-                        defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <div className="relative flex">
+                    <Input
+                      value={userData.dateOfBirth ? format(parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy') : ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          handleInputChange('dateOfBirth', '');
+                          return;
+                        }
+                        const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+                        const match = val.match(dateRegex);
+                        if (match) {
+                          const [, month, day, year] = match;
+                          handleInputChange('dateOfBirth', `${year}-${month}-${day}`);
+                        }
+                      }}
+                      placeholder="mm/dd/yyyy"
+                      className="pr-10"
+                      data-testid="input-date-of-birth"
+                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          data-testid="button-calendar-picker"
+                        >
+                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="single"
+                          selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
+                          onSelect={(date) => handleInputChange('dateOfBirth', date ? format(date, 'yyyy-MM-dd') : '')}
+                          initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={1920}
+                          toYear={new Date().getFullYear() - 18}
+                          defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
               </div>
               
