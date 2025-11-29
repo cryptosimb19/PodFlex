@@ -53,7 +53,7 @@ export interface IStorage {
   // Pod operations
   getPods(): Promise<Pod[]>;
   getPod(id: number): Promise<Pod | undefined>;
-  getPodWithLeader(id: number): Promise<(Pod & { leaderName: string | null; leaderPhone: string | null }) | undefined>;
+  getPodWithLeader(id: number): Promise<(Pod & { leaderName: string | null; leaderPhone: string | null; leaderEmail: string | null }) | undefined>;
   getPodsByLeaderId(leadId: string): Promise<Pod[]>;
   searchPods(query: string): Promise<Pod[]>;
   filterPods(filters: { region?: string; membershipType?: string; amenities?: string[] }): Promise<Pod[]>;
@@ -308,13 +308,14 @@ export class DatabaseStorage implements IStorage {
     return pod;
   }
 
-  async getPodWithLeader(id: number): Promise<(Pod & { leaderName: string | null; leaderPhone: string | null }) | undefined> {
+  async getPodWithLeader(id: number): Promise<(Pod & { leaderName: string | null; leaderPhone: string | null; leaderEmail: string | null }) | undefined> {
     const result = await db
       .select({
         pod: pods,
         leaderFirstName: users.firstName,
         leaderLastName: users.lastName,
         leaderPhone: users.phone,
+        leaderEmail: users.email,
       })
       .from(pods)
       .leftJoin(users, eq(pods.leadId, users.id))
@@ -329,13 +330,14 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
     
-    const { pod, leaderFirstName, leaderLastName, leaderPhone } = result[0];
+    const { pod, leaderFirstName, leaderLastName, leaderPhone, leaderEmail } = result[0];
     const leaderName = [leaderFirstName, leaderLastName].filter(Boolean).join(' ') || null;
     
     return {
       ...pod,
       leaderName,
       leaderPhone,
+      leaderEmail,
     };
   }
 

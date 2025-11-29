@@ -9,11 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/Navigation";
-import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send, User, Phone } from "lucide-react";
+import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send, User, Phone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Pod, JoinRequest } from "@shared/schema";
+import type { Pod, JoinRequest, User as UserType } from "@shared/schema";
 
-type PodWithLeader = Pod & { leaderName: string | null; leaderPhone: string | null };
+type PodWithLeader = Pod & { leaderName: string | null; leaderPhone: string | null; leaderEmail: string | null };
 
 export default function PodDetail() {
   const { id } = useParams<{ id: string }>();
@@ -28,38 +28,27 @@ export default function PodDetail() {
     phone: "",
   });
 
-  // Get user data from localStorage
-  const getUserData = () => {
-    try {
-      const userData = localStorage.getItem('userData');
-      if (userData) {
-        const parsed = JSON.parse(userData);
-        return {
-          firstName: parsed.firstName || '',
-          lastName: parsed.lastName || '',
-          email: parsed.email || '',
-          phone: parsed.phone || '',
-        };
-      }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-    }
-    return null;
-  };
+  // Fetch current authenticated user
+  const { data: currentUser } = useQuery<UserType>({
+    queryKey: ['/api/auth/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/user', { credentials: 'include' });
+      if (!response.ok) throw new Error('Not authenticated');
+      return response.json();
+    },
+  });
 
-  // Prepopulate form when dialog opens
+  // Prepopulate form when dialog opens with authenticated user data
   useEffect(() => {
-    if (isJoinDialogOpen) {
-      const userData = getUserData();
-      if (userData) {
-        setUserInfo({
-          name: `${userData.firstName} ${userData.lastName}`.trim(),
-          email: userData.email,
-          phone: userData.phone,
-        });
-      }
+    if (isJoinDialogOpen && currentUser) {
+      const fullName = [currentUser.firstName, currentUser.lastName].filter(Boolean).join(' ');
+      setUserInfo({
+        name: fullName || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+      });
     }
-  }, [isJoinDialogOpen]);
+  }, [isJoinDialogOpen, currentUser]);
 
   // Fetch pod details (includes leader info)
   const { data: pod, isLoading: podLoading } = useQuery<PodWithLeader>({
@@ -274,6 +263,12 @@ export default function PodDetail() {
                       <p className="font-semibold" data-testid="text-leader-name">
                         {pod.leaderName || "Pod Leader"}
                       </p>
+                      {pod.leaderEmail && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1" data-testid="text-leader-email">
+                          <Mail className="w-3 h-3" />
+                          {pod.leaderEmail}
+                        </p>
+                      )}
                       {pod.leaderPhone && (
                         <p className="text-sm text-muted-foreground flex items-center gap-1" data-testid="text-leader-phone">
                           <Phone className="w-3 h-3" />
