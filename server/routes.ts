@@ -117,6 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Store the 2FA verification code
           await storage.createEmail2FAVerification({
             userId: user.id,
+            email: user.email,
             code: verificationCode,
             expiresAt,
           });
@@ -247,6 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store the new verification code (this deletes any existing code)
       await storage.createEmail2FAVerification({
         userId: user.id,
+        email: user.email,
         code: verificationCode,
         expiresAt,
       });
