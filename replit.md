@@ -18,7 +18,8 @@ Preferred communication style: Simple, everyday language.
 - **Backend**: Node.js with Express server, RESTful API.
 - **Database**: PostgreSQL with Drizzle ORM, hosted on Neon serverless PostgreSQL.
 - **Authentication**: Multi-method authentication including email/password, Google OAuth, Apple OAuth, and phone number authentication (SMS OTP) using Passport.js strategies. Session management and password reset functionality included.
-  - **Security Measures**: Rate limiting (3 OTP requests/15min, 5 verify attempts/15min), one-time OTP use with deletion after verification, phone number validation (E.164 format), OTP cleanup before new creation.
+  - **Two-Factor Authentication (2FA)**: Email-based 2FA for email/password login. After valid credentials, a 6-digit verification code is sent to the user's email with 10-minute expiration. User must enter code on /verify-2fa page to complete login.
+  - **Security Measures**: Rate limiting (3 OTP requests/15min, 5 verify attempts/15min, 3 2FA resend requests/15min), one-time OTP and 2FA code use with deletion after verification, phone number validation (E.164 format), OTP and 2FA code cleanup before new creation.
 - **Core Features**:
     - **Pod Discovery**: Region-based filtering (e.g., Bay Club campuses), membership type categorization, advanced filtering, search functionality.
     - **Membership Management**: Pod creation/management for leaders, comprehensive pod editing with 10+ editable fields (title, description, club details, amenities, pricing, capacity), join request workflow with approval, member tracking, rich pod profiles.
