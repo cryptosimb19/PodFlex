@@ -545,3 +545,83 @@ export async function sendPodCreatedEmail(
     text
   });
 }
+
+// Send email notification when a member is removed from a pod
+export async function sendMemberRemovedNotification(
+  memberEmail: string,
+  memberName: string,
+  podTitle: string,
+  clubName: string,
+  fromEmail: string
+): Promise<boolean> {
+  const subject = `Update: You've been removed from ${podTitle} - FlexPod`;
+  const baseUrl = 'https://podmembership.com';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Membership Update</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${memberName},</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+          <p style="color: #4b5563; margin: 0;">We wanted to let you know that you've been removed from the pod <strong>"${podTitle}"</strong> at <strong>${clubName}</strong> by the pod leader.</p>
+        </div>
+        
+        <div style="background: #fffbeb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <h4 style="color: #d97706; margin: 0 0 10px 0;">What's Next?</h4>
+          <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+            <li>Browse other available pods in your area</li>
+            <li>Join a different pod that matches your preferences</li>
+            <li>Consider becoming a pod leader yourself!</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${baseUrl}/pods" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Find a New Pod
+          </a>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          If you believe this was a mistake, please contact the pod leader directly or reach out to FlexPod support.
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>We hope you find the perfect pod match soon!</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Membership Update - FlexPod
+    
+    Hi ${memberName},
+    
+    We wanted to let you know that you've been removed from the pod "${podTitle}" at ${clubName} by the pod leader.
+    
+    What's Next?
+    - Browse other available pods in your area
+    - Join a different pod that matches your preferences
+    - Consider becoming a pod leader yourself!
+    
+    Visit ${baseUrl}/pods to find a new pod.
+    
+    If you believe this was a mistake, please contact the pod leader directly or reach out to FlexPod support.
+    
+    We hope you find the perfect pod match soon!
+  `;
+
+  return await sendEmail({
+    to: memberEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text
+  });
+}

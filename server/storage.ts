@@ -64,6 +64,7 @@ export interface IStorage {
   // Pod member operations
   getPodMembers(podId: number): Promise<PodMember[]>;
   addPodMember(podId: number, userId: string): Promise<PodMember>;
+  removePodMember(podId: number, userId: string, removedBy: string): Promise<PodMember | undefined>;
   
   // Initialization
   initializeSamplePods(): Promise<void>;
@@ -433,6 +434,26 @@ export class DatabaseStorage implements IStorage {
     const [member] = await db
       .insert(podMembers)
       .values({ podId, userId })
+      .returning();
+    return member;
+  }
+
+  async removePodMember(podId: number, userId: string, removedBy: string): Promise<PodMember | undefined> {
+    const [member] = await db
+      .update(podMembers)
+      .set({ 
+        isActive: false,
+        deletedAt: new Date(),
+        deletedBy: removedBy
+      })
+      .where(
+        and(
+          eq(podMembers.podId, podId),
+          eq(podMembers.userId, userId),
+          eq(podMembers.isActive, true),
+          sql`${podMembers.deletedAt} IS NULL`
+        )
+      )
       .returning();
     return member;
   }

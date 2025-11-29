@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, FROM_EMAIL } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, FROM_EMAIL } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -807,6 +807,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(membersWithUserInfo);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch pod members" });
+    }
+  });
+
+  // Remove a pod member (pod leader only)
+  app.delete("/api/pods/:podId/members/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.podId);
+      const memberUserId = req.params.userId;
+      
+      // Get the pod to verify the requester is the leader
+      const pod = await storage.getPod(podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+      
+      // Check if the requester is the pod leader
+      if (pod.leadId !== req.user.id) {
+        return res.status(403).json({ message: "Only the pod leader can remove members" });
+      }
+      
+      // Cannot remove yourself (the leader) from the pod
+      if (memberUserId === req.user.id) {
+        return res.status(400).json({ message: "Pod leaders cannot remove themselves from their own pod" });
+      }
+      
+      // Get the member user info before removal (for email notification)
+      const memberUser = await storage.getUser(memberUserId);
+      if (!memberUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove the member from the pod
+      const removedMember = await storage.removePodMember(podId, memberUserId, req.user.id);
+      if (!removedMember) {
+        return res.status(404).json({ message: "Member not found in this pod" });
+      }
+      
+      // Update pod availability (add back the spot)
+      const currentMembers = await storage.getPodMembers(podId);
+      const newAvailableSpots = pod.totalSpots - currentMembers.length;
+      await storage.updatePodAvailability(podId, newAvailableSpots);
+      
+      // Send email notification to the removed member
+      try {
+        if (memberUser.email) {
+          console.log(`Sending member removal notification to ${memberUser.email}`);
+          await sendMemberRemovedNotification(
+            memberUser.email,
+            `${memberUser.firstName || ''} ${memberUser.lastName || ''}`.trim() || 'Member',
+            pod.title,
+            pod.clubName,
+            FROM_EMAIL
+          );
+        }
+      } catch (emailError) {
+        console.error("Failed to send member removal email:", emailError);
+        // Don't fail the request if email fails
+      }
+      
+      res.json({ 
+        message: "Member removed successfully",
+        removedMember: {
+          ...removedMember,
+          user: sanitizeUser(memberUser)
+        }
+      });
+    } catch (error) {
+      console.error("Error removing pod member:", error);
+      res.status(500).json({ message: "Failed to remove pod member" });
     }
   });
 
