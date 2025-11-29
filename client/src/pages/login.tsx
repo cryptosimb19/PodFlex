@@ -117,7 +117,23 @@ export default function LoginPage() {
       
       return response.json();
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      // Check if 2FA is required
+      if (data.requires2FA) {
+        // Store the user info in sessionStorage for 2FA page
+        sessionStorage.setItem("2fa_userId", data.userId);
+        sessionStorage.setItem("2fa_email", data.email);
+        
+        toast({
+          title: "Verification required",
+          description: "Please check your email for a verification code.",
+        });
+        
+        navigate('/verify-2fa');
+        return;
+      }
+      
+      // Normal login success (shouldn't happen with 2FA enabled, but kept for safety)
       toast({
         title: "Login successful",
         description: "Welcome back!",

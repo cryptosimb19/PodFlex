@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/welcome";
 import LoginPage from "@/pages/login";
+import Verify2FAPage from "@/pages/verify-2fa";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
 import OnboardingWizard from "@/pages/onboarding";
@@ -205,6 +206,7 @@ function Router() {
       <Route path="/" component={isAuthenticated ? RootRouter : Welcome} />
       <Route path="/signin" component={Welcome} />
       <Route path="/login" component={isAuthenticated ? LoginRedirect : LoginPage} />
+      <Route path="/verify-2fa" component={Verify2FAPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
       
