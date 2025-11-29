@@ -625,3 +625,78 @@ export async function sendMemberRemovedNotification(
     text
   });
 }
+
+// Send 2FA verification code email
+export async function send2FAVerificationEmail(
+  userEmail: string,
+  userName: string,
+  verificationCode: string,
+  fromEmail: string
+): Promise<boolean> {
+  const subject = `Your FlexPod Verification Code: ${verificationCode}`;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Security Verification</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${userName},</h2>
+        
+        <p style="color: #4b5563; margin-bottom: 20px;">
+          You're attempting to sign in to your FlexPod account. Use the verification code below to complete your login:
+        </p>
+        
+        <div style="background: white; padding: 30px; border-radius: 12px; margin: 20px 0; text-align: center; border: 2px solid #8B5CF6;">
+          <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px;">Your verification code is:</p>
+          <div style="font-size: 36px; font-weight: bold; color: #8B5CF6; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+            ${verificationCode}
+          </div>
+          <p style="color: #9ca3af; margin: 15px 0 0 0; font-size: 13px;">
+            This code expires in 10 minutes
+          </p>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <p style="color: #92400e; margin: 0; font-size: 14px;">
+            <strong>Security Notice:</strong> If you didn't request this code, someone may be trying to access your account. Please ignore this email and consider changing your password.
+          </p>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          For your security, never share this code with anyone. FlexPod staff will never ask for your verification code.
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>This is an automated security email from FlexPod.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    FlexPod Security Verification
+    
+    Hi ${userName},
+    
+    You're attempting to sign in to your FlexPod account. Use the verification code below to complete your login:
+    
+    Your verification code: ${verificationCode}
+    
+    This code expires in 10 minutes.
+    
+    Security Notice: If you didn't request this code, someone may be trying to access your account. Please ignore this email and consider changing your password.
+    
+    For your security, never share this code with anyone. FlexPod staff will never ask for your verification code.
+  `;
+
+  return await sendEmail({
+    to: userEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text
+  });
+}
