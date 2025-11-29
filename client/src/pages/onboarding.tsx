@@ -51,6 +51,7 @@ export default function OnboardingWizard() {
     country: "United States",
     dateOfBirth: "",
   });
+  const [dateInputValue, setDateInputValue] = useState("");
   const [, navigate] = useLocation();
   
   // Get user type from URL parameters
@@ -556,18 +557,32 @@ export default function OnboardingWizard() {
                   <label className="text-sm font-medium">Date of Birth</label>
                   <div className="relative flex">
                     <Input
-                      value={userData.dateOfBirth ? format(parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy') : ''}
+                      value={dateInputValue}
                       onChange={(e) => {
-                        const val = e.target.value;
+                        let val = e.target.value;
+                        // Only allow digits and slashes
+                        val = val.replace(/[^\d/]/g, '');
+                        // Limit length
+                        if (val.length > 10) val = val.slice(0, 10);
+                        setDateInputValue(val);
+                        
                         if (val === '') {
                           handleInputChange('dateOfBirth', '');
                           return;
                         }
+                        // Parse complete date
                         const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
                         const match = val.match(dateRegex);
                         if (match) {
                           const [, month, day, year] = match;
-                          handleInputChange('dateOfBirth', `${year}-${month}-${day}`);
+                          const yearNum = parseInt(year);
+                          const monthNum = parseInt(month);
+                          const dayNum = parseInt(day);
+                          // Validate date ranges
+                          if (yearNum >= 1920 && yearNum <= new Date().getFullYear() - 18 && 
+                              monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31) {
+                            handleInputChange('dateOfBirth', `${year}-${month}-${day}`);
+                          }
                         }
                       }}
                       placeholder="mm/dd/yyyy"
@@ -590,7 +605,16 @@ export default function OnboardingWizard() {
                         <Calendar
                           mode="single"
                           selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
-                          onSelect={(date) => handleInputChange('dateOfBirth', date ? format(date, 'yyyy-MM-dd') : '')}
+                          onSelect={(date) => {
+                            if (date) {
+                              const formatted = format(date, 'MM/dd/yyyy');
+                              setDateInputValue(formatted);
+                              handleInputChange('dateOfBirth', format(date, 'yyyy-MM-dd'));
+                            } else {
+                              setDateInputValue('');
+                              handleInputChange('dateOfBirth', '');
+                            }
+                          }}
                           initialFocus
                           captionLayout="dropdown-buttons"
                           fromYear={1920}
