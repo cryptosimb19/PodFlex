@@ -4,6 +4,7 @@ import {
   joinRequests,
   podMembers,
   otpVerifications,
+  email2FAVerifications,
   type User,
   type Pod,
   type InsertUser,
@@ -14,6 +15,8 @@ import {
   type UpsertUser,
   type OtpVerification,
   type InsertOtpVerification,
+  type Email2FAVerification,
+  type InsertEmail2FAVerification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, inArray, or, sql } from "drizzle-orm";
@@ -39,6 +42,13 @@ export interface IStorage {
   getOtpVerification(phoneNumber: string): Promise<OtpVerification | undefined>;
   markOtpAsVerified(phoneNumber: string): Promise<void>;
   cleanupExpiredOtps(): Promise<void>;
+  
+  // Email 2FA verification operations
+  createEmail2FAVerification(verification: InsertEmail2FAVerification): Promise<Email2FAVerification>;
+  getEmail2FAVerification(userId: string): Promise<Email2FAVerification | undefined>;
+  verifyEmail2FACode(userId: string, code: string): Promise<boolean>;
+  deleteEmail2FAVerification(userId: string): Promise<void>;
+  cleanupExpiredEmail2FACodes(): Promise<void>;
   
   // Pod operations
   getPods(): Promise<Pod[]>;
@@ -213,6 +223,68 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(otpVerifications)
       .where(sql`${otpVerifications.expiresAt} < NOW()`);
+  }
+
+  // Email 2FA verification operations
+  async createEmail2FAVerification(verification: InsertEmail2FAVerification): Promise<Email2FAVerification> {
+    // Delete any existing verification codes for this user first
+    await db.delete(email2FAVerifications).where(eq(email2FAVerifications.userId, verification.userId));
+    
+    const [newVerification] = await db
+      .insert(email2FAVerifications)
+      .values(verification)
+      .returning();
+    return newVerification;
+  }
+
+  async getEmail2FAVerification(userId: string): Promise<Email2FAVerification | undefined> {
+    const [verification] = await db
+      .select()
+      .from(email2FAVerifications)
+      .where(
+        and(
+          eq(email2FAVerifications.userId, userId),
+          eq(email2FAVerifications.verified, false),
+          sql`${email2FAVerifications.expiresAt} > NOW()`
+        )
+      );
+    return verification;
+  }
+
+  async verifyEmail2FACode(userId: string, code: string): Promise<boolean> {
+    const [verification] = await db
+      .select()
+      .from(email2FAVerifications)
+      .where(
+        and(
+          eq(email2FAVerifications.userId, userId),
+          eq(email2FAVerifications.code, code),
+          eq(email2FAVerifications.verified, false),
+          sql`${email2FAVerifications.expiresAt} > NOW()`
+        )
+      );
+    
+    if (!verification) {
+      return false;
+    }
+    
+    // Mark as verified
+    await db
+      .update(email2FAVerifications)
+      .set({ verified: true })
+      .where(eq(email2FAVerifications.id, verification.id));
+    
+    return true;
+  }
+
+  async deleteEmail2FAVerification(userId: string): Promise<void> {
+    await db.delete(email2FAVerifications).where(eq(email2FAVerifications.userId, userId));
+  }
+
+  async cleanupExpiredEmail2FACodes(): Promise<void> {
+    await db
+      .delete(email2FAVerifications)
+      .where(sql`${email2FAVerifications.expiresAt} < NOW()`);
   }
 
   // Pod operations
