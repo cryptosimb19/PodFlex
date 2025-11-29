@@ -112,6 +112,17 @@ export const otpVerifications = pgTable("otp_verifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Email 2FA verification codes table
+export const email2FAVerifications = pgTable("email_2fa_verifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+  email: varchar("email").notNull(),
+  code: varchar("code", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   firstName: true,
@@ -172,6 +183,11 @@ export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).
   createdAt: true,
 });
 
+export const insertEmail2FAVerificationSchema = createInsertSchema(email2FAVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -182,3 +198,5 @@ export type JoinRequest = typeof joinRequests.$inferSelect;
 export type PodMember = typeof podMembers.$inferSelect;
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;
+export type Email2FAVerification = typeof email2FAVerifications.$inferSelect;
+export type InsertEmail2FAVerification = z.infer<typeof insertEmail2FAVerificationSchema>;
