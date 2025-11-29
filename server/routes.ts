@@ -609,11 +609,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get pod by ID
+  // Get pod by ID (includes leader info)
   app.get("/api/pods/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const pod = await storage.getPod(id);
+      const pod = await storage.getPodWithLeader(id);
       if (!pod) {
         return res.status(404).json({ message: "Pod not found" });
       }

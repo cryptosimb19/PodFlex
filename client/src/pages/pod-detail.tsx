@@ -9,9 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/Navigation";
-import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send } from "lucide-react";
+import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send, User, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Pod, JoinRequest } from "@shared/schema";
+
+type PodWithLeader = Pod & { leaderName: string | null; leaderPhone: string | null };
 
 export default function PodDetail() {
   const { id } = useParams<{ id: string }>();
@@ -59,8 +61,8 @@ export default function PodDetail() {
     }
   }, [isJoinDialogOpen]);
 
-  // Fetch pod details
-  const { data: pod, isLoading: podLoading } = useQuery<Pod>({
+  // Fetch pod details (includes leader info)
+  const { data: pod, isLoading: podLoading } = useQuery<PodWithLeader>({
     queryKey: ['/api/pods', id],
     queryFn: async () => {
       const response = await fetch(`/api/pods/${id}`);
@@ -252,6 +254,33 @@ export default function PodDetail() {
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Address</span>
                     <span className="font-semibold">{pod.clubAddress}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Pod Leader */}
+            <div>
+              <h3 className="font-semibold mb-3">Pod Leader</h3>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold" data-testid="text-leader-name">
+                        {pod.leaderName || "Pod Leader"}
+                      </p>
+                      {pod.leaderPhone && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1" data-testid="text-leader-phone">
+                          <Phone className="w-3 h-3" />
+                          {pod.leaderPhone}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
