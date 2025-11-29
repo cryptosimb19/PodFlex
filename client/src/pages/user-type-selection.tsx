@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +7,30 @@ import { Zap, Users, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function UserTypeSelection() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // Use the shared auth hook for consistent query settings
+  const { user, isLoading: authLoading, isSuccess } = useAuth();
+
+  // Redirect users who have already completed onboarding
+  useEffect(() => {
+    // Wait for query to complete successfully
+    if (authLoading || !isSuccess) return;
+    
+    const userData = user as any;
+    if (userData?.hasCompletedOnboarding && userData?.userType) {
+      if (userData.userType === 'pod_leader') {
+        navigate('/pod-leader-dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, authLoading, isSuccess, navigate]);
 
   const saveUserTypeMutation = useMutation({
     mutationFn: async (userType: string) => {

@@ -40,9 +40,20 @@ interface UserData {
   membershipId: string;
 }
 
+interface PodMember {
+  id: number;
+  podId: number;
+  userId: number;
+  isActive: boolean;
+  userName?: string;
+  userEmail?: string;
+  joinedAt?: string;
+}
+
 export default function Dashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
 
   // Fetch authenticated user with all profile data
   const { data: authUser, isLoading: authLoading } = useQuery({
@@ -97,6 +108,17 @@ export default function Dashboard() {
       request.podId === pod.id && request.status === 'accepted'
     )
   ) || [];
+
+  // Fetch pod members for selected pod
+  const { data: podMembers, isLoading: membersLoading } = useQuery<PodMember[]>({
+    queryKey: ['/api/pods', selectedPodForMembers, 'members'],
+    queryFn: async () => {
+      const response = await fetch(`/api/pods/${selectedPodForMembers}/members`);
+      if (!response.ok) throw new Error('Failed to fetch pod members');
+      return response.json();
+    },
+    enabled: !!selectedPodForMembers,
+  });
 
   // Resend email mutation
   const resendEmailMutation = useMutation({
@@ -255,10 +277,11 @@ export default function Dashboard() {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <Tabs defaultValue="pods" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 h-10 sm:h-11">
-                <TabsTrigger value="pods" className="text-sm sm:text-base">My Pods</TabsTrigger>
-                <TabsTrigger value="requests" className="text-sm sm:text-base">Join Requests</TabsTrigger>
+            <Tabs defaultValue="requests" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 h-10 sm:h-11">
+                <TabsTrigger value="requests" className="text-sm sm:text-base" data-testid="tab-join-requests">Join Requests</TabsTrigger>
+                <TabsTrigger value="members" className="text-sm sm:text-base" data-testid="tab-pod-members">Pod Members</TabsTrigger>
+                <TabsTrigger value="pods" className="text-sm sm:text-base" data-testid="tab-my-pods">My Pods</TabsTrigger>
               </TabsList>
 
               <TabsContent value="pods" className="mt-4 sm:mt-6">
@@ -426,6 +449,124 @@ export default function Dashboard() {
                             </div>
                           );
                         })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="members" className="mt-4 sm:mt-6">
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span>Pod Members</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {activePods.length === 0 ? (
+                      <div className="text-center py-6 sm:py-8">
+                        <Users className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No Active Pods</h3>
+                        <p className="text-sm sm:text-base text-gray-600 mb-4">Join a pod first to see members</p>
+                        <Button 
+                          onClick={() => navigate('/pods')} 
+                          size="sm" 
+                          className="w-full sm:w-auto"
+                          data-testid="button-browse-pods-for-members"
+                        >
+                          Browse Available Pods
+                        </Button>
+                      </div>
+                    ) : !selectedPodForMembers ? (
+                      <div className="space-y-4">
+                        <p className="text-sm sm:text-base text-gray-600 mb-4">Select a pod to view its members:</p>
+                        <div className="grid grid-cols-1 gap-3">
+                          {activePods.map((pod) => (
+                            <div
+                              key={pod.id}
+                              className="border rounded-lg p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                              onClick={() => setSelectedPodForMembers(pod.id)}
+                              data-testid={`select-pod-for-members-${pod.id}`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-semibold truncate">{pod.clubName}</h4>
+                                  <p className="text-sm text-gray-600 truncate">{pod.clubRegion}</p>
+                                </div>
+                                <div className="text-right flex-shrink-0 ml-2">
+                                  <div className="flex items-center space-x-1 text-sm text-gray-600">
+                                    <Users className="w-4 h-4" />
+                                    <span>{pod.totalSpots - (pod.availableSpots || 0)} members</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                          <div className="min-w-0">
+                            <h4 className="font-semibold truncate">
+                              {activePods.find(p => p.id === selectedPodForMembers)?.clubName}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {activePods.find(p => p.id === selectedPodForMembers)?.clubRegion}
+                            </p>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedPodForMembers(null)}
+                            className="w-full sm:w-auto"
+                            data-testid="button-back-to-pod-list"
+                          >
+                            ← Back to Pods
+                          </Button>
+                        </div>
+                        <Separator />
+                        {membersLoading ? (
+                          <div className="text-center py-6 sm:py-8">
+                            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-600 mx-auto"></div>
+                            <p className="text-sm sm:text-base text-gray-600 mt-2">Loading members...</p>
+                          </div>
+                        ) : !podMembers || podMembers.length === 0 ? (
+                          <div className="text-center py-6 sm:py-8">
+                            <Users className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No Members Yet</h3>
+                            <p className="text-sm sm:text-base text-gray-600">This pod doesn't have any other members yet</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {podMembers.map((member) => (
+                              <div key={member.id} className="border rounded-lg p-3 sm:p-4" data-testid={`member-${member.id}`}>
+                                <div className="flex items-center space-x-3">
+                                  <Avatar className="w-10 h-10 flex-shrink-0">
+                                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-sm">
+                                      {member.userName ? member.userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '??'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="font-medium truncate">{member.userName || 'Unknown Member'}</h4>
+                                    {member.userEmail && (
+                                      <p className="text-sm text-gray-600 truncate">{member.userEmail}</p>
+                                    )}
+                                    {member.joinedAt && (
+                                      <p className="text-xs text-gray-500">
+                                        Joined {formatDate(member.joinedAt)}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <Badge variant="outline" className="flex-shrink-0">
+                                    {member.isActive ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>

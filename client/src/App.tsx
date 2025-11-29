@@ -42,74 +42,87 @@ function LoginRedirect() {
 }
 
 function ProtectedDashboard() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isSuccess } = useAuth();
   const [, navigate] = useLocation();
   
   useEffect(() => {
-    // Don't redirect while loading to avoid race conditions
-    if (isLoading) return;
+    // Wait for the query to complete successfully
+    if (isLoading || !isSuccess) return;
     
     const userData = user as any;
-    if (!userData?.hasCompletedOnboarding || !userData?.userType) {
-      // User hasn't completed onboarding, redirect to appropriate flow
-      navigate('/', { replace: true });
-    } else if (userData.userType === 'pod_leader') {
-      // Pod leader accessing pod seeker dashboard, redirect to their dashboard
-      navigate('/pod-leader-dashboard', { replace: true });
+    
+    // Only redirect if we have user data but wrong conditions
+    if (userData) {
+      if (!userData.hasCompletedOnboarding || !userData.userType) {
+        // User hasn't completed onboarding, redirect to appropriate flow
+        navigate('/', { replace: true });
+      } else if (userData.userType === 'pod_leader') {
+        // Pod leader accessing pod seeker dashboard, redirect to their dashboard
+        navigate('/pod-leader-dashboard', { replace: true });
+      }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, isSuccess, navigate]);
   
   // Show loading state while fetching auth
-  if (isLoading) {
+  if (isLoading || !isSuccess) {
     return null;
   }
   
   const userData = user as any;
-  if (!userData?.hasCompletedOnboarding || userData?.userType === 'pod_leader') {
-    return null;
+  // Render dashboard if user is a pod_seeker with completed onboarding
+  if (userData?.hasCompletedOnboarding && userData?.userType === 'pod_seeker') {
+    return <Dashboard />;
   }
   
-  return <Dashboard />;
+  return null;
 }
 
 function ProtectedPodLeaderDashboard() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isSuccess } = useAuth();
   const [, navigate] = useLocation();
   
   useEffect(() => {
-    // Don't redirect while loading to avoid race conditions
-    if (isLoading) return;
+    // Wait for the query to complete successfully
+    if (isLoading || !isSuccess) return;
     
     const userData = user as any;
-    if (!userData?.hasCompletedOnboarding || !userData?.userType) {
-      // User hasn't completed onboarding, redirect to appropriate flow
-      navigate('/', { replace: true });
-    } else if (userData.userType === 'pod_seeker') {
-      // Pod seeker accessing pod leader dashboard, redirect to their dashboard
-      navigate('/dashboard', { replace: true });
+    
+    // Only redirect if we have user data but wrong conditions
+    if (userData) {
+      if (!userData.hasCompletedOnboarding || !userData.userType) {
+        // User hasn't completed onboarding, redirect to appropriate flow
+        navigate('/', { replace: true });
+      } else if (userData.userType === 'pod_seeker') {
+        // Pod seeker accessing pod leader dashboard, redirect to their dashboard
+        navigate('/dashboard', { replace: true });
+      }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, isSuccess, navigate]);
   
   // Show loading state while fetching auth
-  if (isLoading) {
+  if (isLoading || !isSuccess) {
     return null;
   }
   
   const userData = user as any;
-  if (!userData?.hasCompletedOnboarding || userData?.userType === 'pod_seeker') {
-    return null;
+  // Render dashboard if user is a pod_leader with completed onboarding
+  if (userData?.hasCompletedOnboarding && userData?.userType === 'pod_leader') {
+    return <PodLeaderDashboard />;
   }
   
-  return <PodLeaderDashboard />;
+  return null;
 }
 
 function RootRouter() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isSuccess } = useAuth();
   const [, navigate] = useLocation();
   
   useEffect(() => {
-    // Don't redirect while loading to avoid race conditions with logout
-    if (isLoading) return;
+    // Wait for the query to complete successfully
+    if (isLoading || !isSuccess) return;
+    
+    // Only process redirects if we have user data
+    if (!user) return;
     
     const userData = user as any;
     const userType = userData?.userType;
@@ -132,7 +145,7 @@ function RootRouter() {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, isSuccess, navigate]);
   
   // Show loading indicator during redirect
   return (

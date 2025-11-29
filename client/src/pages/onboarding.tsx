@@ -58,13 +58,24 @@ export default function OnboardingWizard() {
   const searchParams = new URLSearchParams(window.location.search);
   const userType = searchParams.get('type') || 'seeker'; // 'seeker' or 'lead'
   
-  // Fetch authenticated user data on mount
+  // Fetch authenticated user data on mount and check if already onboarded
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await fetch('/api/auth/user', { credentials: 'include' });
         if (response.ok) {
           const user = await response.json();
+          
+          // If user has already completed onboarding, redirect to dashboard
+          if (user.hasCompletedOnboarding && user.userType) {
+            if (user.userType === 'pod_leader') {
+              navigate('/pod-leader-dashboard', { replace: true });
+            } else {
+              navigate('/dashboard', { replace: true });
+            }
+            return;
+          }
+          
           setUserData(prev => ({
             ...prev,
             firstName: user.firstName || "",
@@ -77,7 +88,7 @@ export default function OnboardingWizard() {
       }
     };
     fetchUserData();
-  }, []);
+  }, [navigate]);
   
   // Helper functions for dynamic form options
   const getAvailableClubsForCampus = (campus: string) => {
@@ -329,13 +340,16 @@ export default function OnboardingWizard() {
       localStorage.setItem('flexpod_onboarding_complete', 'true');
       localStorage.setItem('flexpod_user_type', 'pod_seeker');
       
-      // Add small delay to ensure session is fully persisted to PostgreSQL
+      // Wait for session to be fully persisted to PostgreSQL
       console.log("⏳ Waiting for session persistence...");
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Force reload to ensure all auth state is fresh
-      console.log("🚀 Reloading page to refresh auth state");
-      window.location.href = '/dashboard';
+      // Invalidate auth cache to ensure fresh data on next page
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      
+      // Navigate using full page reload to ensure clean state
+      console.log("🚀 Navigating to dashboard...");
+      window.location.replace('/dashboard');
     } catch (error) {
       console.error("❌ Error during onboarding completion:", error);
       toast({

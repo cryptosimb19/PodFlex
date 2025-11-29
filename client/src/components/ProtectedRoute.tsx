@@ -9,26 +9,30 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireOnboarding = false }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading, isSuccess } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (isLoading) return;
+    // Wait for the query to complete successfully
+    if (isLoading || !isSuccess) return;
 
-    if (!isAuthenticated) {
+    // If no user after successful fetch, redirect to login
+    if (!user) {
       navigate('/login', { replace: true });
       return;
     }
 
+    // Check onboarding requirement
     if (requireOnboarding) {
       const userData = user as any;
       if (!userData?.hasCompletedOnboarding) {
         navigate('/', { replace: true });
       }
     }
-  }, [isAuthenticated, isLoading, user, navigate, requireOnboarding]);
+  }, [isLoading, isSuccess, user, navigate, requireOnboarding]);
 
-  if (isLoading) {
+  // Show loading while fetching
+  if (isLoading || !isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
@@ -41,10 +45,12 @@ export function ProtectedRoute({ children, requireOnboarding = false }: Protecte
     );
   }
 
-  if (!isAuthenticated) {
+  // No user after successful fetch = not authenticated
+  if (!user) {
     return null;
   }
 
+  // Check onboarding requirement
   if (requireOnboarding) {
     const userData = user as any;
     if (!userData?.hasCompletedOnboarding) {
