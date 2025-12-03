@@ -5,8 +5,8 @@
 | **Attribute** | **Details** |
 |--------------|-------------|
 | **Product Name** | FlexPod |
-| **Version** | 1.0 |
-| **Document Date** | November 12, 2025 |
+| **Version** | 1.1 |
+| **Document Date** | December 3, 2025 |
 | **Product Type** | Mobile-First Progressive Web Application (PWA) |
 | **Target Market** | Bay Club gym membership sharing |
 | **Primary Users** | Pod Seekers & Pod Leaders |
@@ -42,12 +42,16 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 | **Feature** | **Status** | **Implementation Details** |
 |------------|------------|---------------------------|
 | Email/Password Auth | ✅ Implemented | Bcrypt password hashing, secure session management |
+| Email Verification | ✅ Implemented | Required before first login, 24-hour token expiry, resend capability |
+| Two-Factor Authentication (2FA) | ✅ Implemented | Email-based 6-digit code, 10-minute expiration, rate-limited |
 | Google OAuth | ✅ Implemented | Social login with Passport.js |
-| Magic Link Email Auth | ✅ Implemented | Passwordless authentication option |
+| Apple OAuth | ✅ Implemented | Sign in with Apple authentication |
+| Phone Number Auth (SMS OTP) | ✅ Implemented | Twilio SMS verification, E.164 format validation |
 | Session Management | ✅ Implemented | PostgreSQL-backed sessions with connect-pg-simple |
 | Password Reset | ✅ Implemented | Email-based token system, 1-hour expiration |
 | Protected Routes | ✅ Implemented | Authentication middleware on all sensitive endpoints |
 | Role-Based Access | ✅ Implemented | Pod Leader vs Pod Seeker permissions |
+| Rate Limiting | ✅ Implemented | OTP: 3 requests/15min, Verify: 5 attempts/15min, 2FA: 3 resends/15min |
 
 ### 2. User Management
 
@@ -64,10 +68,15 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 
 | **Notification Type** | **Status** | **Trigger** | **Template** |
 |---------------------|------------|------------|--------------|
+| Email Verification | ✅ Implemented | New user registration | Branded HTML with verification link, 24-hour expiry |
+| 2FA Verification Code | ✅ Implemented | Email/password login | 6-digit code email, 10-minute expiry |
+| Welcome Email | ✅ Implemented | New user signup (all auth methods) | Branded welcome message with getting started info |
 | Join Request to Leader | ✅ Implemented | New join request submitted | Branded HTML with requester details, pod info |
 | Request Accepted | ✅ Implemented | Leader approves request | Congratulations email with next steps |
 | Request Rejected | ✅ Implemented | Leader rejects request | Polite decline with encouragement to explore other pods |
+| Member Removed | ✅ Implemented | Leader removes member from pod | Notification with pod details and support info |
 | Password Reset | ✅ Implemented | User requests password reset | Secure token link, 1-hour expiration notice |
+| Pod Created | ✅ Implemented | Leader creates a new pod | Confirmation with pod management instructions |
 
 **Email Service:** SendGrid with verified sender (podmembership.com)
 
@@ -97,11 +106,13 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 
 | **Feature** | **Status** | **Implementation Details** |
 |------------|------------|---------------------------|
-| Create Pod | ✅ Implemented | Comprehensive setup: club, location, pricing, amenities |
-| Edit Pod | ✅ Implemented | Update pod images with URL-based storage, preview |
+| Create Pod | ✅ Implemented | Comprehensive setup: club, location, pricing, amenities (max 8 members) |
+| Edit Pod | ✅ Implemented | Update 10+ fields including images, pricing, amenities |
 | Delete Pod | ✅ Implemented | Leader-only, confirmation dialog, transactional cascade cleanup |
-| View Pod Details | ✅ Implemented | Full pod page with all information |
+| View Pod Details | ✅ Implemented | Full pod page with leader contact info (name, email, phone) |
 | Member Tracking | ✅ Implemented | Current members, capacity, availability |
+| Remove Members | ✅ Implemented | Soft-delete with audit trail, email notification to removed member |
+| One Pod Per Leader | ✅ Implemented | Business rule enforced on backend |
 | Authorization | ✅ Implemented | 403 error if not leader, 404 if pod not found |
 
 ### 7. Dashboard Features
@@ -167,10 +178,18 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 
 | **Method** | **Endpoint** | **Auth Required** | **Description** |
 |-----------|-------------|-------------------|-----------------|
-| POST | `/api/auth/register` | No | Create new user account |
-| POST | `/api/auth/login` | No | Email/password login |
+| POST | `/api/auth/register` | No | Create new user account (sends verification email) |
+| POST | `/api/auth/login` | No | Email/password login (triggers 2FA if enabled) |
+| GET | `/api/auth/verify-email` | No | Verify email with token |
+| POST | `/api/auth/resend-verification` | No | Resend verification email (rate-limited) |
+| POST | `/api/auth/verify-2fa` | No | Verify 2FA code |
+| POST | `/api/auth/resend-2fa` | No | Resend 2FA code (rate-limited) |
 | GET | `/api/auth/google` | No | Initiate Google OAuth |
 | GET | `/api/auth/google/callback` | No | OAuth callback handler |
+| GET | `/api/auth/apple` | No | Initiate Apple OAuth |
+| GET | `/api/auth/apple/callback` | No | Apple OAuth callback handler |
+| POST | `/api/auth/phone/send-otp` | No | Send SMS OTP to phone number |
+| POST | `/api/auth/phone/verify-otp` | No | Verify phone OTP and login |
 | POST | `/api/auth/logout` | Yes | End user session |
 | GET | `/api/auth/user` | Yes | Get current user profile |
 | POST | `/api/auth/forgot-password` | No | Request password reset email |
@@ -269,12 +288,15 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 | **Category** | **Implementation** | **Status** |
 |-------------|-------------------|------------|
 | **Password Security** | Bcrypt hashing with salt | ✅ Implemented |
+| **Email Verification** | Required before first login, 24-hour token expiry | ✅ Implemented |
+| **Two-Factor Authentication** | Email-based 2FA with 6-digit codes, 10-minute expiry | ✅ Implemented |
+| **Rate Limiting** | Express-rate-limit on OTP, 2FA, and verification endpoints | ✅ Implemented |
 | **Session Security** | HttpOnly cookies, secure flag in production | ✅ Implemented |
 | **API Authorization** | Middleware checks on protected routes | ✅ Implemented |
 | **Input Validation** | Zod schemas on all endpoints | ✅ Implemented |
 | **SQL Injection Prevention** | Parameterized queries via Drizzle ORM | ✅ Implemented |
 | **Token Security** | Crypto-random tokens, expiration enforcement | ✅ Implemented |
-| **Email Verification** | SendGrid sender authentication | ✅ Implemented |
+| **Phone Validation** | E.164 format validation for SMS OTP | ✅ Implemented |
 | **Data Access Control** | User can only modify own resources | ✅ Implemented |
 
 ### Privacy & Data Handling
@@ -415,14 +437,20 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 
 | **Attribute** | **Value** |
 |--------------|-----------|
-| **Document Version** | 1.0 |
-| **Last Updated** | November 12, 2025 |
-| **Status** | Production Ready - All Features Implemented |
+| **Document Version** | 1.1 |
+| **Last Updated** | December 3, 2025 |
+| **Status** | Production Ready - Enhanced Security Features |
 | **Next Review Date** | Payment Integration Planning (Q1 2026) |
 | **Document Owner** | Product Management Team |
 | **Technical Owner** | Development Team |
 | **Stakeholders** | Product, Engineering, Bay Club Partnership |
-| **Change Log** | All core features documented as implemented |
+
+### Change Log
+
+| **Version** | **Date** | **Changes** |
+|------------|----------|-------------|
+| 1.1 | December 3, 2025 | Added email verification for new signups, Two-Factor Authentication (2FA), Apple OAuth, Phone/SMS authentication, member removal with notifications, pod leader contact display, enhanced rate limiting |
+| 1.0 | November 12, 2025 | Initial release with core pod sharing features |
 
 ---
 
