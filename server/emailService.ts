@@ -1,19 +1,21 @@
-import sgMail from '@sendgrid/mail';
+import sgMail from "@sendgrid/mail";
 
 let sendGridInitialized = false;
 
-
 // Get the from email from environment - check both variable names for compatibility
-export const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || '';
-
+export const FROM_EMAIL =
+  process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || "";
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   sendGridInitialized = true;
-  console.log('SendGrid email service initialized');
-  console.log('FROM_EMAIL configured:', FROM_EMAIL ? 'Yes' : 'No - emails may fail');
+  console.log("SendGrid email service initialized");
+  console.log(
+    "FROM_EMAIL configured:",
+    FROM_EMAIL ? "Yes" : "No - emails may fail",
+  );
 } else {
-  console.log('SendGrid API key not found - email notifications disabled');
+  console.log("SendGrid API key not found - email notifications disabled");
 }
 
 interface EmailParams {
@@ -26,33 +28,41 @@ interface EmailParams {
 
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   if (!sendGridInitialized) {
-    console.log('Email service not available - skipping email to', params.to);
+    console.log("Email service not available - skipping email to", params.to);
     return false;
   }
-  
+
   if (!params.from) {
-    console.error('Email send failed: No from email address configured');
+    console.error("Email send failed: No from email address configured");
     return false;
   }
-  
-  console.log(`Attempting to send email to ${params.to} from ${params.from} - Subject: ${params.subject}`);
-  
+
+  console.log(
+    `Attempting to send email to ${params.to} from ${params.from} - Subject: ${params.subject}`,
+  );
+
   try {
     const msg = {
       to: params.to,
       from: params.from,
       subject: params.subject,
-      text: params.text || '',
-      html: params.html || '',
+      text: params.text || "",
+      html: params.html || "",
+      trackingSettings: {
+        clickTracking: { enable: false, enableText: false },
+      },
     };
-    
+
     await sgMail.send(msg);
     console.log(`Email sent successfully to ${params.to}`);
     return true;
   } catch (error: any) {
-    console.error('SendGrid email error:', error);
+    console.error("SendGrid email error:", error);
     if (error.response) {
-      console.error('SendGrid error response:', JSON.stringify(error.response.body, null, 2));
+      console.error(
+        "SendGrid error response:",
+        JSON.stringify(error.response.body, null, 2),
+      );
     }
     return false;
   }
@@ -64,12 +74,13 @@ export async function sendJoinRequestNotification(
   podTitle: string,
   applicantName: string,
   applicantEmail: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
   const subject = `New Join Request for ${podTitle} - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
-  
-  const html = `
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
         <h1 style="color: white; margin: 0;">FlexPod</h1>
@@ -86,7 +97,9 @@ export async function sendJoinRequestNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="`+ baseUrl +`/pod-leader-dashboard" 
+          <a href="` +
+    baseUrl +
+    `/pod-leader-dashboard" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Review Request
           </a>
@@ -119,7 +132,7 @@ export async function sendJoinRequestNotification(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -129,12 +142,13 @@ export async function sendJoinRequestAcceptedNotification(
   applicantName: string,
   podTitle: string,
   podLeaderName: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
   const subject = `🎉 Welcome to ${podTitle} - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
-  
-  const html = `
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 20px; text-align: center;">
         <h1 style="color: white; margin: 0;">FlexPod</h1>
@@ -160,7 +174,9 @@ export async function sendJoinRequestAcceptedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="`+ baseUrl + `/dashboard" 
+          <a href="` +
+    baseUrl +
+    `/dashboard" 
              style="background: #10B981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             View My Dashboard
           </a>
@@ -194,7 +210,7 @@ export async function sendJoinRequestAcceptedNotification(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -203,12 +219,13 @@ export async function sendJoinRequestRejectedNotification(
   applicantEmail: string,
   applicantName: string,
   podTitle: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
   const subject = `Update on ${podTitle} Request - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
-  
-  const html = `
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
         <h1 style="color: white; margin: 0;">FlexPod</h1>
@@ -232,7 +249,9 @@ export async function sendJoinRequestRejectedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="` + baseUrl + `/pods" 
+          <a href="` +
+    baseUrl +
+    `/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Browse Other Pods
           </a>
@@ -265,7 +284,7 @@ export async function sendJoinRequestRejectedNotification(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -274,13 +293,14 @@ export async function sendPasswordResetEmail(
   userEmail: string,
   userName: string,
   resetToken: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
-  const subject = 'Reset Your Password - FlexPod';
-  const baseUrl = 'https://podmembership.com';
+  const subject = "Reset Your Password - FlexPod";
+  const baseUrl = "https://podmembership.com";
   const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
-  
-  const html = `
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
         <h1 style="color: white; margin: 0;">FlexPod</h1>
@@ -295,7 +315,9 @@ export async function sendPasswordResetEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="`+ resetUrl + `" 
+          <a href="` +
+    resetUrl +
+    `" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Reset Password
           </a>
@@ -341,7 +363,7 @@ export async function sendPasswordResetEmail(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -350,13 +372,14 @@ export async function sendEmailVerification(
   userEmail: string,
   userName: string,
   verificationToken: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
-  const subject = 'Verify Your Email - FlexPod';
-  const baseUrl = 'https://podmembership.com';
+  const subject = "Verify Your Email - FlexPod";
+  const baseUrl = "https://podmembership.com";
   const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
-  
-  const html = `
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 30px; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 32px;">FlexPod</h1>
@@ -373,7 +396,9 @@ export async function sendEmailVerification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="`+ verificationUrl + ` " 
+          <a href="` +
+    verificationUrl +
+    ` " 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Verify Email Address
           </a>
@@ -417,7 +442,7 @@ export async function sendEmailVerification(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -425,12 +450,13 @@ export async function sendEmailVerification(
 export async function sendWelcomeEmail(
   userEmail: string,
   userName: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
-  const subject = '🎉 Welcome to FlexPod!';
-  const baseUrl = 'https://podmembership.com';
-  
-  const html = `
+  const subject = "🎉 Welcome to FlexPod!";
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 30px; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 32px;">FlexPod</h1>
@@ -456,11 +482,15 @@ export async function sendWelcomeEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="`+ baseUrl + `/pods" 
+          <a href="` +
+    baseUrl +
+    `/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin-right: 10px;">
             Browse Pods
           </a>
-          <a href="`+ baseUrl + `/user-type-selection" 
+          <a href="` +
+    baseUrl +
+    `/user-type-selection" 
              style="background: #EC4899; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Get Started
           </a>
@@ -513,7 +543,7 @@ export async function sendWelcomeEmail(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -524,12 +554,13 @@ export async function sendPodCreatedEmail(
   podTitle: string,
   clubName: string,
   totalSpots: number,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
-  const subject = '🎉 Congratulations! Your Pod is Live - FlexPod';
-  const baseUrl = 'https://podmembership.com';
-  
-  const html = `
+  const subject = "🎉 Congratulations! Your Pod is Live - FlexPod";
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 30px; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 32px;">FlexPod</h1>
@@ -557,7 +588,9 @@ export async function sendPodCreatedEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="`+ baseUrl + `/pod-leader-dashboard" 
+          <a href="` +
+    baseUrl +
+    `/pod-leader-dashboard" 
              style="background: #10B981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             View My Dashboard
           </a>
@@ -620,7 +653,7 @@ export async function sendPodCreatedEmail(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -630,12 +663,13 @@ export async function sendMemberRemovedNotification(
   memberName: string,
   podTitle: string,
   clubName: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
   const subject = `Update: You've been removed from ${podTitle} - FlexPod`;
-  const baseUrl = 'https://podmembership.com';
-  
-  const html = `
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
         <h1 style="color: white; margin: 0;">FlexPod</h1>
@@ -659,7 +693,9 @@ export async function sendMemberRemovedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="`+ baseUrl +`/pods" 
+          <a href="` +
+    baseUrl +
+    `/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Find a New Pod
           </a>
@@ -700,7 +736,7 @@ export async function sendMemberRemovedNotification(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
 
@@ -709,10 +745,10 @@ export async function send2FAVerificationEmail(
   userEmail: string,
   userName: string,
   verificationCode: string,
-  fromEmail: string
+  fromEmail: string,
 ): Promise<boolean> {
   const subject = `Your FlexPod Verification Code: ${verificationCode}`;
-  
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
@@ -775,6 +811,6 @@ export async function send2FAVerificationEmail(
     from: fromEmail,
     subject,
     html,
-    text
+    text,
   });
 }
