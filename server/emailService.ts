@@ -2,6 +2,9 @@ import sgMail from '@sendgrid/mail';
 
 let sendGridInitialized = false;
 
+// Get the app URL for email links - use environment variable or fallback to default
+const APP_URL = process.env.APP_URL || 'https://flexpod.replit.app';
+
 // Get the from email from environment - check both variable names for compatibility
 export const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || '';
 
