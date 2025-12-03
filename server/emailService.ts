@@ -5,8 +5,6 @@ let sendGridInitialized = false;
 // Get the from email from environment - check both variable names for compatibility
 export const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || '';
 
-// Get the app URL for email links - defaults to production URL
-export const APP_URL = process.env.APP_URL || 'https://podmembership.com';
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -68,7 +66,7 @@ export async function sendJoinRequestNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `New Join Request for ${podTitle} - FlexPod`;
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -87,7 +85,7 @@ export async function sendJoinRequestNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${baseUrl}/pod-leader-dashboard" 
+          <a href="`+ baseUrl +`/pod-leader-dashboard" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Review Request
           </a>
@@ -133,7 +131,7 @@ export async function sendJoinRequestAcceptedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `🎉 Welcome to ${podTitle} - FlexPod`;
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -161,7 +159,7 @@ export async function sendJoinRequestAcceptedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${baseUrl}/dashboard" 
+          <a href="`+ baseUrl + `/dashboard" 
              style="background: #10B981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             View My Dashboard
           </a>
@@ -207,7 +205,7 @@ export async function sendJoinRequestRejectedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `Update on ${podTitle} Request - FlexPod`;
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -233,7 +231,7 @@ export async function sendJoinRequestRejectedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${baseUrl}/pods" 
+          <a href="` + baseUrl + `/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Browse Other Pods
           </a>
@@ -278,7 +276,7 @@ export async function sendPasswordResetEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = 'Reset Your Password - FlexPod';
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
   
   const html = `
@@ -296,7 +294,7 @@ export async function sendPasswordResetEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" 
+          <a href="`+ resetUrl + `" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Reset Password
           </a>
@@ -353,7 +351,7 @@ export async function sendWelcomeEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Welcome to FlexPod!';
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -381,11 +379,11 @@ export async function sendWelcomeEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${baseUrl}/pods" 
+          <a href="` + baseUrl +`/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin-right: 10px;">
             Browse Pods
           </a>
-          <a href="${baseUrl}/user-type-selection" 
+          <a href="` + baseUrl + `/user-type-selection" 
              style="background: #EC4899; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Get Started
           </a>
@@ -452,7 +450,7 @@ export async function sendPodCreatedEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Congratulations! Your Pod is Live - FlexPod';
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -482,7 +480,7 @@ export async function sendPodCreatedEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${baseUrl}/pod-leader-dashboard" 
+          <a href="`+ baseUrl + `/pod-leader-dashboard" 
              style="background: #10B981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             View My Dashboard
           </a>
@@ -558,7 +556,7 @@ export async function sendMemberRemovedNotification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = `Update: You've been removed from ${podTitle} - FlexPod`;
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -584,7 +582,7 @@ export async function sendMemberRemovedNotification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${baseUrl}/pods" 
+          <a href="`+ baseUrl +`/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Find a New Pod
           </a>
