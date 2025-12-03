@@ -2,8 +2,6 @@ import sgMail from '@sendgrid/mail';
 
 let sendGridInitialized = false;
 
-// Get the app URL for email links - use environment variable or fallback to default
-const APP_URL = process.env.APP_URL || 'https://flexpod.replit.app';
 
 // Get the from email from environment - check both variable names for compatibility
 export const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || '';
@@ -355,7 +353,7 @@ export async function sendEmailVerification(
   fromEmail: string
 ): Promise<boolean> {
   const subject = 'Verify Your Email - FlexPod';
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
   
   const html = `
@@ -375,7 +373,7 @@ export async function sendEmailVerification(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationUrl}" 
+          <a href="`+ verificationUrl + ` " 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Verify Email Address
           </a>
@@ -430,7 +428,7 @@ export async function sendWelcomeEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Welcome to FlexPod!';
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -458,11 +456,11 @@ export async function sendWelcomeEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${baseUrl}/pods" 
+          <a href="`+ baseUrl + `/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin-right: 10px;">
             Browse Pods
           </a>
-          <a href="${baseUrl}/user-type-selection" 
+          <a href="`+ baseUrl + `/user-type-selection" 
              style="background: #EC4899; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Get Started
           </a>
@@ -529,7 +527,7 @@ export async function sendPodCreatedEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Congratulations! Your Pod is Live - FlexPod';
-  const baseUrl = APP_URL;
+  const baseUrl = 'https://podmembership.com';
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
