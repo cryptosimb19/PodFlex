@@ -110,12 +110,18 @@ export default function LoginPage() {
         credentials: 'include',
       });
       
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        // Check if email verification is required
+        if (responseData.requiresEmailVerification) {
+          sessionStorage.setItem("verification_email", responseData.email);
+          throw { requiresEmailVerification: true, email: responseData.email, message: responseData.message };
+        }
+        throw new Error(responseData.message || 'Login failed');
       }
       
-      return response.json();
+      return responseData;
     },
     onSuccess: async (data) => {
       // Check if 2FA is required
@@ -170,10 +176,21 @@ export default function LoginPage() {
         navigate('/');
       }
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      // Check if this is an email verification required error
+      if (error.requiresEmailVerification) {
+        toast({
+          title: "Email verification required",
+          description: "Please verify your email before logging in.",
+          variant: "destructive",
+        });
+        navigate('/check-email');
+        return;
+      }
+      
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
     },
@@ -196,7 +213,22 @@ export default function LoginPage() {
       
       return response.json();
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      // Check if email verification is required
+      if (data.requiresVerification) {
+        // Save email for the check-email page
+        sessionStorage.setItem("verification_email", data.email);
+        
+        toast({
+          title: "Check your email",
+          description: "We've sent you a verification link to confirm your email address.",
+        });
+        
+        navigate('/check-email');
+        return;
+      }
+      
+      // Fallback for if verification is not required (shouldn't happen normally)
       toast({
         title: "Registration successful",
         description: "Welcome to FlexPod!",

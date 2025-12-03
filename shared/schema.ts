@@ -142,6 +142,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   phoneVerified: true,
   isEmailVerified: true,
   emailVerificationToken: true,
+  emailVerificationExpires: true,
 }).partial().extend({
   email: z.string().email(),
 });

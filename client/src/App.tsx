@@ -20,6 +20,8 @@ import PodDetail from "@/pages/pod-detail";
 import Dashboard from "@/pages/dashboard";
 import PodLeaderDashboard from "@/pages/pod-leader-dashboard";
 import EditProfile from "@/pages/edit-profile";
+import CheckEmailPage from "@/pages/check-email";
+import VerifyEmailPage from "@/pages/verify-email";
 import { useEffect } from "react";
 
 function LoginRedirect() {
@@ -209,6 +211,8 @@ function Router() {
       <Route path="/verify-2fa" component={Verify2FAPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
+      <Route path="/check-email" component={CheckEmailPage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       
       <Route path="/user-type-selection">
         <ProtectedRoute>
