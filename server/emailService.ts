@@ -344,14 +344,90 @@ export async function sendPasswordResetEmail(
   });
 }
 
-// Template for welcome email to new users
+// Template for email verification - sent when user signs up
+export async function sendEmailVerification(
+  userEmail: string,
+  userName: string,
+  verificationToken: string,
+  fromEmail: string
+): Promise<boolean> {
+  const subject = 'Verify Your Email - FlexPod';
+  const baseUrl = APP_URL;
+  const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 30px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 32px;">FlexPod</h1>
+        <p style="color: white; margin: 10px 0 0 0; font-size: 18px;">Verify Your Email</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${userName}! 👋</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #8B5CF6;">
+          <p style="color: #4b5563; margin: 0; line-height: 1.6;">
+            Thanks for signing up for FlexPod! Please verify your email address to complete your registration.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationUrl}" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Verify Email Address
+          </a>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <p style="color: #92400e; margin: 0; font-size: 14px;">
+            This link will expire in 24 hours. If you didn't create an account with FlexPod, you can safely ignore this email.
+          </p>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px; line-height: 1.6;">
+          If the button above doesn't work, copy and paste this link into your browser:
+        </p>
+        <p style="color: #8B5CF6; font-size: 12px; word-break: break-all;">
+          ${verificationUrl}
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p style="margin: 5px 0;">FlexPod - Gym Membership Sharing</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Verify Your Email - FlexPod
+    
+    Hi ${userName}!
+    
+    Thanks for signing up for FlexPod! Please verify your email address to complete your registration.
+    
+    Click this link to verify your email:
+    ${verificationUrl}
+    
+    This link will expire in 24 hours. If you didn't create an account with FlexPod, you can safely ignore this email.
+  `;
+
+  return await sendEmail({
+    to: userEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text
+  });
+}
+
+// Template for welcome email to new users (sent after email verification)
 export async function sendWelcomeEmail(
   userEmail: string,
   userName: string,
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Welcome to FlexPod!';
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -379,11 +455,11 @@ export async function sendWelcomeEmail(
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="` + baseUrl +`/pods" 
+          <a href="${baseUrl}/pods" 
              style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin-right: 10px;">
             Browse Pods
           </a>
-          <a href="` + baseUrl + `/user-type-selection" 
+          <a href="${baseUrl}/user-type-selection" 
              style="background: #EC4899; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
             Get Started
           </a>
@@ -450,7 +526,7 @@ export async function sendPodCreatedEmail(
   fromEmail: string
 ): Promise<boolean> {
   const subject = '🎉 Congratulations! Your Pod is Live - FlexPod';
-  const baseUrl = 'https://podmembership.com';
+  const baseUrl = APP_URL;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

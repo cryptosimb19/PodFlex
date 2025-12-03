@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, FROM_EMAIL } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, sendEmailVerification, FROM_EMAIL } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -15,7 +15,7 @@ import rateLimit from "express-rate-limit";
 
 // Sanitize user data to remove sensitive fields
 function sanitizeUser(user: User) {
-  const { passwordHash, emailVerificationToken, passwordResetToken, passwordResetExpires, ...sanitized } = user;
+  const { passwordHash, emailVerificationToken, emailVerificationExpires, passwordResetToken, passwordResetExpires, ...sanitized } = user;
   return sanitized;
 }
 
@@ -57,6 +57,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User already exists" });
       }
 
+      // Generate email verification token
+      const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+      const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
       // Hash password and create user
       const passwordHash = await hashPassword(validatedData.password);
       const user = await storage.createUser({
@@ -65,20 +69,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: validatedData.lastName,
         passwordHash,
         authProvider: "local",
-        isEmailVerified: false, // In a real app, you'd send verification email
+        isEmailVerified: false,
+        emailVerificationToken,
+        emailVerificationExpires,
       });
 
-      req.login(user, (err) => {
-        if (err) {
-          return res.status(500).json({ message: "Failed to log in after registration" });
-        }
-        
-        // Send welcome email to new user
-        console.log(`Sending welcome email to ${user.email}`);
-        sendWelcomeEmail(user.email, user.firstName || 'there', FROM_EMAIL)
-          .catch(error => console.error('Failed to send welcome email:', error));
-        
-        res.status(201).json({ user: sanitizeUser(user), message: "Registration successful" });
+      // Send verification email (don't log the user in yet)
+      console.log(`Sending verification email to ${user.email}`);
+      const emailSent = await sendEmailVerification(
+        user.email,
+        user.firstName || 'there',
+        emailVerificationToken,
+        FROM_EMAIL
+      );
+
+      if (!emailSent) {
+        console.error('Failed to send verification email');
+      }
+
+      // Return success without logging in - user must verify email first
+      res.status(201).json({ 
+        message: "Registration successful. Please check your email to verify your account.",
+        email: user.email,
+        requiresVerification: true
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -89,6 +102,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Registration error:", error);
       res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  // Email verification endpoint
+  app.get('/api/auth/verify-email', async (req, res) => {
+    try {
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+
+      // Find user by verification token
+      const user = await storage.getUserByVerificationToken(token);
+      
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+
+      // Check if token has expired
+      if (user.emailVerificationExpires && new Date() > new Date(user.emailVerificationExpires)) {
+        return res.status(400).json({ message: "Verification token has expired. Please request a new one." });
+      }
+
+      // Mark email as verified and clear the token
+      await storage.verifyUserEmail(user.id);
+
+      // Send welcome email now that email is verified
+      console.log(`Sending welcome email to verified user ${user.email}`);
+      sendWelcomeEmail(user.email, user.firstName || 'there', FROM_EMAIL)
+        .catch(error => console.error('Failed to send welcome email:', error));
+
+      res.json({ message: "Email verified successfully! You can now log in.", success: true });
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "Email verification failed" });
+    }
+  });
+
+  // Resend verification email endpoint
+  app.post('/api/auth/resend-verification', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Don't reveal if user exists
+        return res.json({ message: "If an account exists with this email, a verification email will be sent." });
+      }
+
+      if (user.isEmailVerified) {
+        return res.status(400).json({ message: "Email is already verified. You can log in." });
+      }
+
+      // Generate new verification token
+      const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+      const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Update user with new token
+      await storage.updateUserVerificationToken(user.id, emailVerificationToken, emailVerificationExpires);
+
+      // Send verification email
+      const emailSent = await sendEmailVerification(
+        user.email,
+        user.firstName || 'there',
+        emailVerificationToken,
+        FROM_EMAIL
+      );
+
+      if (!emailSent) {
+        console.error('Failed to send verification email');
+        return res.status(500).json({ message: "Failed to send verification email" });
+      }
+
+      res.json({ message: "Verification email sent. Please check your inbox." });
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      res.status(500).json({ message: "Failed to resend verification email" });
     }
   });
 
@@ -107,6 +203,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         if (!user) {
           return res.status(401).json({ message: info.message || "Invalid credentials" });
+        }
+        
+        // Check if email is verified (only for local auth users)
+        if (user.authProvider === 'local' && !user.isEmailVerified) {
+          return res.status(403).json({ 
+            message: "Please verify your email before logging in.",
+            requiresEmailVerification: true,
+            email: user.email
+          });
         }
         
         // Generate 6-digit 2FA verification code

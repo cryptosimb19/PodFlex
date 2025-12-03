@@ -37,6 +37,11 @@ export interface IStorage {
   getUserByResetToken(token: string): Promise<User | undefined>;
   clearPasswordResetToken(userId: string): Promise<User | undefined>;
   
+  // Email verification operations
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
+  verifyUserEmail(userId: string): Promise<User | undefined>;
+  updateUserVerificationToken(userId: string, token: string, expires: Date): Promise<User | undefined>;
+  
   // OTP verification operations
   createOtpVerification(otp: InsertOtpVerification): Promise<OtpVerification>;
   getOtpVerification(phoneNumber: string): Promise<OtpVerification | undefined>;
@@ -176,6 +181,39 @@ export class DatabaseStorage implements IStorage {
       .set({
         passwordResetToken: null,
         passwordResetExpires: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  // Email verification operations
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
+    return user;
+  }
+
+  async verifyUserEmail(userId: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isEmailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserVerificationToken(userId: string, token: string, expires: Date): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        emailVerificationToken: token,
+        emailVerificationExpires: expires,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
