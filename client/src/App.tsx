@@ -238,7 +238,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/pod/:id">
+      <Route path="/pods/:id">
         <ProtectedRoute requireOnboarding>
           <PodDetail />
         </ProtectedRoute>

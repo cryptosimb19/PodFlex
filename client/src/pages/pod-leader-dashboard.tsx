@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import type { Pod, JoinRequest, PodMember } from "@shared/schema";
+import type { Pod, JoinRequest, PodMember, LeaveRequest } from "@shared/schema";
 
 interface UserData {
   firstName: string;
@@ -53,11 +53,18 @@ interface PodMemberWithUser extends PodMember {
   user: UserData | null;
 }
 
+interface LeaveRequestWithDetails extends LeaveRequest {
+  userName?: string;
+  userEmail?: string;
+  podName?: string;
+}
+
 export default function PodLeaderDashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedRequest, setSelectedRequest] = useState<JoinRequestWithUser | null>(null);
+  const [selectedLeaveRequest, setSelectedLeaveRequest] = useState<LeaveRequestWithDetails | null>(null);
   const [selectedMember, setSelectedMember] = useState<PodMemberWithUser | null>(null);
   const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
@@ -146,6 +153,31 @@ export default function PodLeaderDashboard() {
     enabled: !!selectedPodForMembers
   });
 
+  // Fetch leave requests for leader's pods
+  const { data: allLeaveRequests, isLoading: leaveRequestsLoading } = useQuery<LeaveRequestWithDetails[]>({
+    queryKey: ['/api/leave-requests', 'leader'],
+    queryFn: async () => {
+      if (!leaderPods || leaderPods.length === 0) return [];
+      
+      const requests = await Promise.all(
+        leaderPods.map(async (pod) => {
+          const response = await fetch(`/api/pods/${pod.id}/leave-requests`, { credentials: 'include' });
+          if (!response.ok) return [];
+          const podRequests = await response.json();
+          return podRequests.map((req: LeaveRequest) => ({
+            ...req,
+            podName: pod.clubName,
+            userName: req.userInfo?.name || 'Unknown User',
+            userEmail: req.userInfo?.email || ''
+          }));
+        })
+      );
+      
+      return requests.flat();
+    },
+    enabled: !!leaderPods && leaderPods.length > 0,
+  });
+
   // Mutation to update join request status
   const updateRequestMutation = useMutation({
     mutationFn: async ({ requestId, status }: { requestId: number; status: 'accepted' | 'rejected' }) => {
@@ -174,6 +206,47 @@ export default function PodLeaderDashboard() {
       });
     },
   });
+
+  // Mutation to update leave request status
+  const updateLeaveRequestMutation = useMutation({
+    mutationFn: async ({ requestId, action }: { requestId: number; action: 'approve' | 'reject' }) => {
+      const endpoint = action === 'approve' 
+        ? `/api/leave-requests/${requestId}/approve`
+        : `/api/leave-requests/${requestId}/reject`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update leave request');
+      }
+      return response.json();
+    },
+    onSuccess: (_, { action }) => {
+      toast({
+        title: action === 'approve' ? "Leave request approved" : "Leave request rejected",
+        description: action === 'approve' 
+          ? "The member has been removed from the pod."
+          : "The member will remain in the pod.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests', 'leader'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
+      setSelectedLeaveRequest(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update leave request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLeaveRequestAction = (requestId: number, action: 'approve' | 'reject') => {
+    updateLeaveRequestMutation.mutate({ requestId, action });
+  };
 
   // Mutation to update pod
   const updatePodMutation = useMutation({
@@ -437,6 +510,7 @@ export default function PodLeaderDashboard() {
   };
 
   const pendingRequests = allJoinRequests?.filter(req => req.status === 'pending') || [];
+  const pendingLeaveRequests = allLeaveRequests?.filter(req => req.status === 'pending') || [];
   const totalMembers = leaderPods?.reduce((sum, pod) => sum + (pod.availableSpots || 0), 0) || 0;
 
   // Show loading state while fetching user data from database
@@ -555,12 +629,20 @@ export default function PodLeaderDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="requests" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="requests">
                   Join Requests
                   {pendingRequests.length > 0 && (
                     <Badge variant="secondary" className="ml-2">
                       {pendingRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="leave-requests" data-testid="tab-leave-requests">
+                  Leave Requests
+                  {pendingLeaveRequests.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {pendingLeaveRequests.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -651,6 +733,113 @@ export default function PodLeaderDashboard() {
                                             disabled={updateRequestMutation.isPending}
                                             variant="destructive"
                                             className="flex-1"
+                                          >
+                                            <UserX className="w-4 h-4 mr-2" />
+                                            Reject
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="leave-requests" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <LogOut className="w-5 h-5" />
+                      <span>Leave Requests</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {leaveRequestsLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                        <p className="text-gray-600 mt-2">Loading leave requests...</p>
+                      </div>
+                    ) : !allLeaveRequests || allLeaveRequests.length === 0 ? (
+                      <div className="text-center py-8">
+                        <LogOut className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Leave Requests</h3>
+                        <p className="text-gray-600">No members have requested to leave your pods</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {allLeaveRequests.map((request) => (
+                          <div key={request.id} className="border rounded-lg p-4" data-testid={`leave-request-${request.id}`}>
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <h3 className="font-semibold text-lg">{request.userName}</h3>
+                                  <Badge className={getStatusColor(request.status)}>
+                                    <div className="flex items-center space-x-1">
+                                      {getStatusIcon(request.status)}
+                                      <span className="capitalize">{request.status}</span>
+                                    </div>
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">
+                                  Wants to leave: <strong>{request.podName}</strong>
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Submitted: {request.createdAt ? formatDate(request.createdAt.toString()) : 'Unknown'}
+                                </p>
+                              </div>
+                              <div className="flex space-x-2">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm" onClick={() => setSelectedLeaveRequest(request)} data-testid={`button-view-leave-request-${request.id}`}>
+                                      View Details
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Leave Request Details</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <h4 className="font-semibold mb-2">Member Information</h4>
+                                        <div className="space-y-2 text-sm">
+                                          <p><strong>Name:</strong> {request.userName}</p>
+                                          <p><strong>Email:</strong> {request.userEmail}</p>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <h4 className="font-semibold mb-2">Pod</h4>
+                                        <p className="text-sm">{request.podName}</p>
+                                      </div>
+                                      {request.reason && (
+                                        <div>
+                                          <h4 className="font-semibold mb-2">Reason for Leaving</h4>
+                                          <p className="text-sm bg-gray-50 p-3 rounded-md">{request.reason}</p>
+                                        </div>
+                                      )}
+                                      {request.status === 'pending' && (
+                                        <div className="flex space-x-2 pt-4">
+                                          <Button
+                                            onClick={() => handleLeaveRequestAction(request.id, 'approve')}
+                                            disabled={updateLeaveRequestMutation.isPending}
+                                            className="flex-1 bg-green-600 hover:bg-green-700"
+                                            data-testid={`button-approve-leave-${request.id}`}
+                                          >
+                                            <UserCheck className="w-4 h-4 mr-2" />
+                                            Approve
+                                          </Button>
+                                          <Button
+                                            onClick={() => handleLeaveRequestAction(request.id, 'reject')}
+                                            disabled={updateLeaveRequestMutation.isPending}
+                                            variant="destructive"
+                                            className="flex-1"
+                                            data-testid={`button-reject-leave-${request.id}`}
                                           >
                                             <UserX className="w-4 h-4 mr-2" />
                                             Reject

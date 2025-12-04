@@ -814,3 +814,238 @@ export async function send2FAVerificationEmail(
     text,
   });
 }
+
+// Template for leave request notification to pod leader
+export async function sendLeaveRequestNotification(
+  podLeaderEmail: string,
+  podTitle: string,
+  memberName: string,
+  memberEmail: string,
+  reason: string | null,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Leave Request for ${podTitle} - FlexPod`;
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Leave Request</p>
+      </div>
+      
+      <div style="padding: 30px; background: #fffbeb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">A member wants to leave your pod</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+          <h3 style="color: #d97706; margin-top: 0;">Pod: ${podTitle}</h3>
+          <p style="color: #4b5563; margin: 10px 0;"><strong>Member:</strong> ${memberName}</p>
+          <p style="color: #4b5563; margin: 10px 0;"><strong>Email:</strong> ${memberEmail}</p>
+          ${reason ? `<p style="color: #4b5563; margin: 10px 0;"><strong>Reason:</strong> ${reason}</p>` : ''}
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="` +
+    baseUrl +
+    `/pod-leader-dashboard" 
+             style="background: #f59e0b; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Review Request
+          </a>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          Log into your FlexPod dashboard to approve or reject this leave request.
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>This email was sent by FlexPod because you're a pod leader.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Leave Request - FlexPod
+    
+    A member wants to leave your pod: ${podTitle}
+    
+    Member: ${memberName}
+    Email: ${memberEmail}
+    ${reason ? `Reason: ${reason}` : ''}
+    
+    Log into your FlexPod dashboard to approve or reject this request.
+  `;
+
+  return await sendEmail({
+    to: podLeaderEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}
+
+// Template for leave request approved notification
+export async function sendLeaveRequestApprovedNotification(
+  memberEmail: string,
+  memberName: string,
+  podTitle: string,
+  leaderResponse: string | null,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Your Leave Request Approved - ${podTitle} - FlexPod`;
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #10B981, #059669); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Leave Request Approved</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f0fdf4;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${memberName},</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10B981;">
+          <p style="color: #4b5563; margin: 0;">Your request to leave <strong>"${podTitle}"</strong> has been approved by the pod leader.</p>
+          ${leaderResponse ? `<p style="color: #4b5563; margin: 15px 0 0 0;"><strong>Message from leader:</strong> ${leaderResponse}</p>` : ''}
+        </div>
+        
+        <div style="background: #ecfdf5; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <h4 style="color: #059669; margin: 0 0 10px 0;">What's Next?</h4>
+          <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+            <li>You are no longer a member of this pod</li>
+            <li>Browse other available pods if you'd like to join a new one</li>
+            <li>Thank you for being part of the FlexPod community!</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="` +
+    baseUrl +
+    `/pods" 
+             style="background: #10B981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Browse Other Pods
+          </a>
+        </div>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>We hope to see you in another pod soon!</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Leave Request Approved - FlexPod
+    
+    Hi ${memberName},
+    
+    Your request to leave "${podTitle}" has been approved by the pod leader.
+    ${leaderResponse ? `Message from leader: ${leaderResponse}` : ''}
+    
+    What's Next?
+    - You are no longer a member of this pod
+    - Browse other available pods if you'd like to join a new one
+    - Thank you for being part of the FlexPod community!
+    
+    Visit ${baseUrl}/pods to browse other pods.
+    
+    We hope to see you in another pod soon!
+  `;
+
+  return await sendEmail({
+    to: memberEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}
+
+// Template for leave request rejected notification
+export async function sendLeaveRequestRejectedNotification(
+  memberEmail: string,
+  memberName: string,
+  podTitle: string,
+  leaderResponse: string | null,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Update on Leave Request - ${podTitle} - FlexPod`;
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Leave Request Update</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${memberName},</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+          <p style="color: #4b5563; margin: 0;">Your request to leave <strong>"${podTitle}"</strong> was not approved at this time.</p>
+          ${leaderResponse ? `<p style="color: #4b5563; margin: 15px 0 0 0;"><strong>Message from leader:</strong> ${leaderResponse}</p>` : ''}
+        </div>
+        
+        <div style="background: #fffbeb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <h4 style="color: #d97706; margin: 0 0 10px 0;">What This Means:</h4>
+          <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+            <li>You remain a member of this pod</li>
+            <li>Consider reaching out to the pod leader to discuss</li>
+            <li>You can submit another leave request in the future</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="` +
+    baseUrl +
+    `/dashboard" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            View My Dashboard
+          </a>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          If you have questions, please contact the pod leader directly to discuss your situation.
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>Thank you for being part of the FlexPod community.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Leave Request Update - FlexPod
+    
+    Hi ${memberName},
+    
+    Your request to leave "${podTitle}" was not approved at this time.
+    ${leaderResponse ? `Message from leader: ${leaderResponse}` : ''}
+    
+    What This Means:
+    - You remain a member of this pod
+    - Consider reaching out to the pod leader to discuss
+    - You can submit another leave request in the future
+    
+    Visit ${baseUrl}/dashboard to view your dashboard.
+    
+    If you have questions, please contact the pod leader directly.
+    
+    Thank you for being part of the FlexPod community.
+  `;
+
+  return await sendEmail({
+    to: memberEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}

@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, sendEmailVerification, FROM_EMAIL } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, sendEmailVerification, sendLeaveRequestNotification, sendLeaveRequestApprovedNotification, sendLeaveRequestRejectedNotification, FROM_EMAIL } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -1136,6 +1136,274 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing pod member:", error);
       res.status(500).json({ message: "Failed to remove pod member" });
+    }
+  });
+
+  // ========== LEAVE REQUEST ROUTES ==========
+
+  // Create a leave request (member requests to leave a pod)
+  app.post("/api/pods/:podId/leave-request", isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.podId);
+      const userId = req.user.id;
+      const { reason } = req.body;
+
+      // Get the pod
+      const pod = await storage.getPod(podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      // Check if user is a member of the pod
+      const members = await storage.getPodMembers(podId);
+      const isMember = members.some(m => m.userId === userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "You are not a member of this pod" });
+      }
+
+      // Check if there's already a pending leave request
+      const existingRequest = await storage.getPendingLeaveRequestForUserInPod(userId, podId);
+      if (existingRequest) {
+        return res.status(400).json({ message: "You already have a pending leave request for this pod" });
+      }
+
+      // Get user info
+      const user = await storage.getUser(userId);
+      const memberName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Member';
+      const memberEmail = user?.email || '';
+
+      // Create the leave request
+      const leaveRequest = await storage.createLeaveRequest({
+        podId,
+        userId,
+        status: "pending",
+        reason: reason || null,
+        userInfo: {
+          name: memberName,
+          email: memberEmail,
+          phone: user?.phone || undefined
+        },
+        emailStatus: "pending"
+      });
+
+      // Send email notification to pod leader
+      let emailStatus = "sent";
+      try {
+        const podLead = await storage.getUser(pod.leadId);
+        if (podLead && podLead.email) {
+          console.log(`Sending leave request notification to pod leader: ${podLead.email}`);
+          const emailSent = await sendLeaveRequestNotification(
+            podLead.email,
+            pod.title,
+            memberName,
+            memberEmail,
+            reason || null,
+            FROM_EMAIL
+          );
+          emailStatus = emailSent ? "sent" : "failed";
+        } else {
+          emailStatus = "failed";
+        }
+      } catch (emailError) {
+        console.error("Failed to send leave request email:", emailError);
+        emailStatus = "failed";
+      }
+
+      // Update email status
+      await storage.updateLeaveRequestEmailStatus(leaveRequest.id, emailStatus);
+
+      res.status(201).json({
+        ...leaveRequest,
+        emailStatus
+      });
+    } catch (error) {
+      console.error("Error creating leave request:", error);
+      res.status(500).json({ message: "Failed to create leave request" });
+    }
+  });
+
+  // Get leave requests for a pod (leader only)
+  app.get("/api/pods/:podId/leave-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.podId);
+      const userId = req.user.id;
+
+      // Get the pod
+      const pod = await storage.getPod(podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      // Check if user is the pod leader
+      if (pod.leadId !== userId) {
+        return res.status(403).json({ message: "Only the pod leader can view leave requests" });
+      }
+
+      const leaveRequests = await storage.getLeaveRequestsForPod(podId);
+      
+      // Enrich with user info
+      const enrichedRequests = await Promise.all(
+        leaveRequests.map(async (request) => {
+          const user = await storage.getUser(request.userId);
+          return {
+            ...request,
+            user: user ? sanitizeUser(user) : null
+          };
+        })
+      );
+
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+      res.status(500).json({ message: "Failed to fetch leave requests" });
+    }
+  });
+
+  // Get leave requests for current user
+  app.get("/api/leave-requests/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const leaveRequests = await storage.getLeaveRequestsForUser(userId);
+      
+      // Enrich with pod info
+      const enrichedRequests = await Promise.all(
+        leaveRequests.map(async (request) => {
+          const pod = await storage.getPod(request.podId);
+          return {
+            ...request,
+            pod: pod || null
+          };
+        })
+      );
+
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Error fetching user leave requests:", error);
+      res.status(500).json({ message: "Failed to fetch leave requests" });
+    }
+  });
+
+  // Approve leave request (leader only)
+  app.post("/api/leave-requests/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const leaveRequestId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const { response } = req.body; // Optional leader response
+
+      // Get the leave request
+      const leaveRequest = await storage.getLeaveRequest(leaveRequestId);
+      if (!leaveRequest) {
+        return res.status(404).json({ message: "Leave request not found" });
+      }
+
+      if (leaveRequest.status !== "pending") {
+        return res.status(400).json({ message: "This leave request has already been processed" });
+      }
+
+      // Get the pod
+      const pod = await storage.getPod(leaveRequest.podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      // Check if user is the pod leader
+      if (pod.leadId !== userId) {
+        return res.status(403).json({ message: "Only the pod leader can approve leave requests" });
+      }
+
+      // Update leave request status
+      const updatedRequest = await storage.updateLeaveRequestStatus(leaveRequestId, "approved", response);
+
+      // Remove the member from the pod
+      await storage.removePodMember(leaveRequest.podId, leaveRequest.userId, userId);
+
+      // Update pod availability
+      await storage.updatePodAvailability(leaveRequest.podId, pod.availableSpots + 1);
+
+      // Send email notification to member
+      try {
+        const member = await storage.getUser(leaveRequest.userId);
+        if (member && member.email) {
+          const memberName = `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'Member';
+          console.log(`Sending leave request approved notification to: ${member.email}`);
+          await sendLeaveRequestApprovedNotification(
+            member.email,
+            memberName,
+            pod.title,
+            response || null,
+            FROM_EMAIL
+          );
+        }
+      } catch (emailError) {
+        console.error("Failed to send leave request approved email:", emailError);
+      }
+
+      res.json({
+        message: "Leave request approved. Member has been removed from the pod.",
+        leaveRequest: updatedRequest
+      });
+    } catch (error) {
+      console.error("Error approving leave request:", error);
+      res.status(500).json({ message: "Failed to approve leave request" });
+    }
+  });
+
+  // Reject leave request (leader only)
+  app.post("/api/leave-requests/:id/reject", isAuthenticated, async (req: any, res) => {
+    try {
+      const leaveRequestId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const { response } = req.body; // Optional leader response
+
+      // Get the leave request
+      const leaveRequest = await storage.getLeaveRequest(leaveRequestId);
+      if (!leaveRequest) {
+        return res.status(404).json({ message: "Leave request not found" });
+      }
+
+      if (leaveRequest.status !== "pending") {
+        return res.status(400).json({ message: "This leave request has already been processed" });
+      }
+
+      // Get the pod
+      const pod = await storage.getPod(leaveRequest.podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      // Check if user is the pod leader
+      if (pod.leadId !== userId) {
+        return res.status(403).json({ message: "Only the pod leader can reject leave requests" });
+      }
+
+      // Update leave request status
+      const updatedRequest = await storage.updateLeaveRequestStatus(leaveRequestId, "rejected", response);
+
+      // Send email notification to member
+      try {
+        const member = await storage.getUser(leaveRequest.userId);
+        if (member && member.email) {
+          const memberName = `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'Member';
+          console.log(`Sending leave request rejected notification to: ${member.email}`);
+          await sendLeaveRequestRejectedNotification(
+            member.email,
+            memberName,
+            pod.title,
+            response || null,
+            FROM_EMAIL
+          );
+        }
+      } catch (emailError) {
+        console.error("Failed to send leave request rejected email:", emailError);
+      }
+
+      res.json({
+        message: "Leave request rejected. Member remains in the pod.",
+        leaveRequest: updatedRequest
+      });
+    } catch (error) {
+      console.error("Error rejecting leave request:", error);
+      res.status(500).json({ message: "Failed to reject leave request" });
     }
   });
 

@@ -124,6 +124,23 @@ export const email2FAVerifications = pgTable("email_2fa_verifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const leaveRequests = pgTable("leave_requests", {
+  id: serial("id").primaryKey(),
+  podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+  status: text("status").notNull().default("pending"), // "pending", "approved", "rejected"
+  reason: text("reason"), // Optional reason for leaving
+  userInfo: json("user_info").$type<{
+    name: string;
+    email: string;
+    phone?: string;
+  }>(),
+  leaderResponse: text("leader_response"), // Optional response from leader
+  emailStatus: text("email_status").notNull().default("sent"), // "sent", "failed", "pending"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   firstName: true,
@@ -190,6 +207,12 @@ export const insertEmail2FAVerificationSchema = createInsertSchema(email2FAVerif
   createdAt: true,
 });
 
+export const insertLeaveRequestSchema = createInsertSchema(leaveRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -202,3 +225,5 @@ export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;
 export type Email2FAVerification = typeof email2FAVerifications.$inferSelect;
 export type InsertEmail2FAVerification = z.infer<typeof insertEmail2FAVerificationSchema>;
+export type LeaveRequest = typeof leaveRequests.$inferSelect;
+export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;

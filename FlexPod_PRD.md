@@ -5,8 +5,8 @@
 | **Attribute** | **Details** |
 |--------------|-------------|
 | **Product Name** | FlexPod |
-| **Version** | 1.1 |
-| **Document Date** | December 3, 2025 |
+| **Version** | 1.2 |
+| **Document Date** | December 4, 2025 |
 | **Product Type** | Mobile-First Progressive Web Application (PWA) |
 | **Target Market** | Bay Club gym membership sharing |
 | **Primary Users** | Pod Seekers & Pod Leaders |
@@ -77,6 +77,9 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 | Member Removed | ✅ Implemented | Leader removes member from pod | Notification with pod details and support info |
 | Password Reset | ✅ Implemented | User requests password reset | Secure token link, 1-hour expiration notice |
 | Pod Created | ✅ Implemented | Leader creates a new pod | Confirmation with pod management instructions |
+| Leave Request to Leader | ✅ Implemented | Member requests to leave pod | Branded HTML with member details, reason, pod info |
+| Leave Request Approved | ✅ Implemented | Leader approves leave request | Confirmation with pod details and next steps |
+| Leave Request Rejected | ✅ Implemented | Leader rejects leave request | Notification that member will remain in pod |
 
 **Email Service:** SendGrid with verified sender (podmembership.com)
 
@@ -102,6 +105,25 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 | Email Integration | ✅ Implemented | Automated notifications on all status changes |
 | Applicant Details | ✅ Implemented | Full contact info and membership details for leaders |
 
+### 5.1 Leave Request Management
+
+| **Feature** | **Status** | **Implementation Details** |
+|------------|------------|---------------------------|
+| Submit Leave Request | ✅ Implemented | Members can request to leave pods with optional reason |
+| Request Status Tracking | ✅ Implemented | Pending, Approved, Rejected with visual indicators |
+| Leader Approval Workflow | ✅ Implemented | One-click approve/reject with email notifications |
+| Pod Detail Integration | ✅ Implemented | "Request to Leave" button for accepted members |
+| Dashboard Tab | ✅ Implemented | Pod leader dashboard shows Leave Requests tab with count |
+| Pending Request Display | ✅ Implemented | Shows "Leave Request Pending" when request exists |
+| Email Integration | ✅ Implemented | Automated notifications on all status changes |
+| Member Info Storage | ✅ Implemented | Stores user info at request time for audit trail |
+
+**Business Rules:**
+- Only accepted members can request to leave a pod
+- One pending leave request per member per pod
+- Approved requests: Member removed from pod, available spots incremented
+- Rejected requests: Member remains in pod, can resubmit later
+
 ### 6. Pod Management System
 
 | **Feature** | **Status** | **Implementation Details** |
@@ -122,6 +144,7 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 | **Tab** | **Features** | **Status** |
 |---------|--------------|------------|
 | **Join Requests** | View pending requests, approve/reject, see applicant details | ✅ Implemented |
+| **Leave Requests** | View leave requests, approve/reject, see member details and reasons | ✅ Implemented |
 | **Pod Members** | View all members by pod, contact info, join dates, member profiles | ✅ Implemented |
 | **My Pods** | List of created pods, analytics, edit/delete actions | ✅ Implemented |
 
@@ -170,6 +193,7 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 | `pods` | Gym membership pods | id, leadId, clubName, clubRegion, costPerPerson, totalSpots, availableSpots, amenities |
 | `pod_members` | User-pod relationships | id, podId, userId, joinedAt, status |
 | `join_requests` | Membership requests | id, podId, userId, status, emailSent, requestedAt |
+| `leave_requests` | Leave membership requests | id, podId, userId, status, reason, userInfo, createdAt |
 | `sessions` | User sessions | sid, sess, expire |
 
 ### API Endpoints
@@ -223,6 +247,16 @@ FlexPod is a comprehensive gym membership pod sharing platform that transforms h
 | GET | `/api/join-requests/leader/:leaderId` | Yes (self) | Get leader's received requests |
 | POST | `/api/join-requests` | Yes | Submit join request |
 | PATCH | `/api/join-requests/:id` | Yes (leader) | Update request status (triggers email) |
+
+#### Leave Request Endpoints
+
+| **Method** | **Endpoint** | **Auth Required** | **Description** |
+|-----------|-------------|-------------------|-----------------|
+| POST | `/api/pods/:id/leave-request` | Yes (member) | Submit leave request for a pod |
+| GET | `/api/leave-requests/user` | Yes | Get current user's leave requests |
+| GET | `/api/pods/:id/leave-requests` | Yes (leader) | Get leave requests for a pod |
+| POST | `/api/leave-requests/:id/approve` | Yes (leader) | Approve leave request (removes member) |
+| POST | `/api/leave-requests/:id/reject` | Yes (leader) | Reject leave request (member stays) |
 
 #### Pod Member Endpoints
 

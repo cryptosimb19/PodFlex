@@ -5,6 +5,7 @@ import {
   podMembers,
   otpVerifications,
   email2FAVerifications,
+  leaveRequests,
   type User,
   type Pod,
   type InsertUser,
@@ -17,6 +18,8 @@ import {
   type InsertOtpVerification,
   type Email2FAVerification,
   type InsertEmail2FAVerification,
+  type LeaveRequest,
+  type InsertLeaveRequest,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, inArray, or, sql } from "drizzle-orm";
@@ -81,6 +84,15 @@ export interface IStorage {
   getPodMembers(podId: number): Promise<PodMember[]>;
   addPodMember(podId: number, userId: string): Promise<PodMember>;
   removePodMember(podId: number, userId: string, removedBy: string): Promise<PodMember | undefined>;
+  
+  // Leave request operations
+  createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest>;
+  getLeaveRequestsForPod(podId: number): Promise<LeaveRequest[]>;
+  getLeaveRequestsForUser(userId: string): Promise<LeaveRequest[]>;
+  getLeaveRequest(id: number): Promise<LeaveRequest | undefined>;
+  getPendingLeaveRequestForUserInPod(userId: string, podId: number): Promise<LeaveRequest | undefined>;
+  updateLeaveRequestStatus(id: number, status: "approved" | "rejected", leaderResponse?: string): Promise<LeaveRequest | undefined>;
+  updateLeaveRequestEmailStatus(id: number, emailStatus: string): Promise<LeaveRequest | undefined>;
   
   // Initialization
   initializeSamplePods(): Promise<void>;
@@ -600,6 +612,75 @@ export class DatabaseStorage implements IStorage {
       )
       .returning();
     return member;
+  }
+
+  // Leave request operations
+  async createLeaveRequest(requestData: InsertLeaveRequest): Promise<LeaveRequest> {
+    const [request] = await db
+      .insert(leaveRequests)
+      .values(requestData)
+      .returning();
+    return request;
+  }
+
+  async getLeaveRequestsForPod(podId: number): Promise<LeaveRequest[]> {
+    return await db
+      .select()
+      .from(leaveRequests)
+      .where(eq(leaveRequests.podId, podId))
+      .orderBy(sql`${leaveRequests.createdAt} DESC`);
+  }
+
+  async getLeaveRequestsForUser(userId: string): Promise<LeaveRequest[]> {
+    return await db
+      .select()
+      .from(leaveRequests)
+      .where(eq(leaveRequests.userId, userId))
+      .orderBy(sql`${leaveRequests.createdAt} DESC`);
+  }
+
+  async getLeaveRequest(id: number): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(leaveRequests)
+      .where(eq(leaveRequests.id, id));
+    return request;
+  }
+
+  async getPendingLeaveRequestForUserInPod(userId: string, podId: number): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(leaveRequests)
+      .where(
+        and(
+          eq(leaveRequests.userId, userId),
+          eq(leaveRequests.podId, podId),
+          eq(leaveRequests.status, "pending")
+        )
+      );
+    return request;
+  }
+
+  async updateLeaveRequestStatus(id: number, status: "approved" | "rejected", leaderResponse?: string): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .update(leaveRequests)
+      .set({ 
+        status, 
+        leaderResponse: leaderResponse || null,
+        updatedAt: new Date() 
+      })
+      .where(eq(leaveRequests.id, id))
+      .returning();
+    return request;
+  }
+
+  async updateLeaveRequestEmailStatus(id: number, emailStatus: string): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .update(leaveRequests)
+      .set({ emailStatus, updatedAt: new Date() })
+      .where(eq(leaveRequests.id, id))
+      .returning();
+    return request;
   }
 
   // Initialize sample data
