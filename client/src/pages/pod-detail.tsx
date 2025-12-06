@@ -130,6 +130,25 @@ export default function PodDetail() {
     leaveRequestMutation.mutate(leaveReason);
   };
 
+  // Fetch user's join requests to check for active membership
+  const { data: userJoinRequests } = useQuery<JoinRequest[]>({
+    queryKey: ['/api/join-requests/user', currentUser?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/join-requests/user/${currentUser?.id}`, { credentials: 'include' });
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!currentUser?.id,
+  });
+
+  // Check if user already has an active membership in any pod
+  const hasActiveMembership = userJoinRequests?.some(r => r.status === 'accepted');
+  
+  // Check if user already has a pending request for this pod
+  const hasPendingRequest = userJoinRequests?.some(
+    r => r.podId === parseInt(id || '0') && r.status === 'pending'
+  );
+
   // Create join request mutation
   const joinMutation = useMutation({
     mutationFn: async (requestData: { message: string; userInfo: typeof userInfo }) => {
@@ -148,7 +167,10 @@ export default function PodDetail() {
           userInfo: requestData.userInfo,
         }),
       });
-      if (!response.ok) throw new Error('Failed to create join request');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create join request');
+      }
       return response.json();
     },
     onSuccess: async (data) => {
@@ -171,10 +193,10 @@ export default function PodDetail() {
       await queryClient.invalidateQueries({ queryKey: ['/api/join-requests'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: "Failed to send join request. Please try again.",
+        title: "Cannot Join Pod",
+        description: error.message || "Failed to send join request. Please try again.",
         variant: "destructive",
       });
     },
@@ -447,13 +469,41 @@ export default function PodDetail() {
               <div className="bg-blue-50 p-6 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-2">Ready to Join?</h3>
-                    <p className="text-muted-foreground">
-                      Send a request to join this pod. The pod leader will review and respond to your request.
-                    </p>
+                    {hasActiveMembership ? (
+                      <>
+                        <h3 className="font-semibold mb-2">Already a Pod Member</h3>
+                        <p className="text-muted-foreground">
+                          You can only be a member of one pod at a time. Leave your current pod first if you want to join this one.
+                        </p>
+                      </>
+                    ) : hasPendingRequest ? (
+                      <>
+                        <h3 className="font-semibold mb-2">Request Pending</h3>
+                        <p className="text-muted-foreground">
+                          You already have a pending request for this pod. The pod leader will review and respond to your request.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="font-semibold mb-2">Ready to Join?</h3>
+                        <p className="text-muted-foreground">
+                          Send a request to join this pod. The pod leader will review and respond to your request.
+                        </p>
+                      </>
+                    )}
                   </div>
                   <div className="ml-6">
-                    {pod.availableSpots > 0 ? (
+                    {hasActiveMembership ? (
+                      <Button disabled variant="secondary" data-testid="button-already-member">
+                        <Users className="w-4 h-4 mr-2" />
+                        Already in a Pod
+                      </Button>
+                    ) : hasPendingRequest ? (
+                      <Button disabled variant="secondary" data-testid="button-pending-request">
+                        <Clock className="w-4 h-4 mr-2" />
+                        Request Pending
+                      </Button>
+                    ) : pod.availableSpots > 0 ? (
                       <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
                         <DialogTrigger asChild>
                           <Button className="bg-primary hover:bg-primary/90" data-testid="button-request-to-join">
