@@ -6,11 +6,28 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import Navigation from "@/components/Navigation";
 import { Loader2, ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
@@ -41,59 +58,64 @@ export default function EditProfile() {
   const [dateInputValue, setDateInputValue] = useState("");
 
   const { data: authUser, isLoading: authLoading } = useQuery<any>({
-    queryKey: ['/api/auth/user'],
+    queryKey: ["/api/auth/user"],
   });
 
   // Sync date input value when user data loads
   useEffect(() => {
     if (authUser?.dateOfBirth) {
       try {
-        const formatted = format(parse(authUser.dateOfBirth, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy');
+        const formatted = format(
+          parse(authUser.dateOfBirth, "yyyy-MM-dd", new Date()),
+          "MM/dd/yyyy",
+        );
         setDateInputValue(formatted);
       } catch {
-        setDateInputValue('');
+        setDateInputValue("");
       }
     }
   }, [authUser?.dateOfBirth]);
 
   const form = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
-    values: authUser ? {
-      firstName: authUser.firstName || '',
-      lastName: authUser.lastName || '',
-      phone: authUser.phone || '',
-      membershipId: authUser.membershipId || '',
-      primaryClub: authUser.primaryClub || '',
-      street: authUser.street || '',
-      aptUnit: authUser.aptUnit || '',
-      city: authUser.city || '',
-      state: authUser.state || '',
-      zipCode: authUser.zipCode || '',
-      country: authUser.country || 'USA',
-      dateOfBirth: authUser.dateOfBirth || '',
-    } : undefined,
+    values: authUser
+      ? {
+          firstName: authUser.firstName || "",
+          lastName: authUser.lastName || "",
+          phone: authUser.phone || "",
+          membershipId: authUser.membershipId || "",
+          primaryClub: authUser.primaryClub || "",
+          street: authUser.street || "",
+          aptUnit: authUser.aptUnit || "",
+          city: authUser.city || "",
+          state: authUser.state || "",
+          zipCode: authUser.zipCode || "",
+          country: authUser.country || "USA",
+          dateOfBirth: authUser.dateOfBirth || "",
+        }
+      : undefined,
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: EditProfileFormData) => {
-      const response = await fetch('/api/users/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const response = await fetch("/api/users/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error("Failed to update profile");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Success",
         description: "Your profile has been updated successfully.",
       });
-      navigate('/dashboard');
+      navigate("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -118,11 +140,11 @@ export default function EditProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation userType={authUser?.userType || 'pod_seeker'} />
+      <Navigation userType={authUser?.userType || "pod_seeker"} />
       <div className="max-w-3xl mx-auto p-4 pt-20">
         <Button
           variant="ghost"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate("/dashboard")}
           className="mb-4"
           data-testid="button-back-to-dashboard"
         >
@@ -136,7 +158,10 @@ export default function EditProfile() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -173,7 +198,11 @@ export default function EditProfile() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="(123) 456-7890" data-testid="input-phone" />
+                          <Input
+                            {...field}
+                            placeholder="(123) 456-7890"
+                            data-testid="input-phone"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -193,13 +222,13 @@ export default function EditProfile() {
                               onChange={(e) => {
                                 let val = e.target.value;
                                 // Only allow digits and slashes
-                                val = val.replace(/[^\d/]/g, '');
+                                val = val.replace(/[^\d/]/g, "");
                                 // Limit length
                                 if (val.length > 10) val = val.slice(0, 10);
                                 setDateInputValue(val);
-                                
-                                if (val === '') {
-                                  field.onChange('');
+
+                                if (val === "") {
+                                  field.onChange("");
                                   return;
                                 }
                                 // Parse complete date
@@ -211,8 +240,14 @@ export default function EditProfile() {
                                   const monthNum = parseInt(month);
                                   const dayNum = parseInt(day);
                                   // Validate date ranges
-                                  if (yearNum >= 1920 && yearNum <= new Date().getFullYear() - 18 && 
-                                      monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31) {
+                                  if (
+                                    yearNum >= 1920 &&
+                                    yearNum <= new Date().getFullYear() - 18 &&
+                                    monthNum >= 1 &&
+                                    monthNum <= 12 &&
+                                    dayNum >= 1 &&
+                                    dayNum <= 31
+                                  ) {
                                     field.onChange(`${year}-${month}-${day}`);
                                   }
                                 }
@@ -237,22 +272,39 @@ export default function EditProfile() {
                             <PopoverContent className="w-auto p-0" align="end">
                               <Calendar
                                 mode="single"
-                                selected={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : undefined}
+                                selected={
+                                  field.value
+                                    ? parse(
+                                        field.value,
+                                        "yyyy-MM-dd",
+                                        new Date(),
+                                      )
+                                    : undefined
+                                }
                                 onSelect={(date) => {
                                   if (date) {
-                                    const formatted = format(date, 'MM/dd/yyyy');
+                                    const formatted = format(
+                                      date,
+                                      "MM/dd/yyyy",
+                                    );
                                     setDateInputValue(formatted);
-                                    field.onChange(format(date, 'yyyy-MM-dd'));
+                                    field.onChange(format(date, "yyyy-MM-dd"));
                                   } else {
-                                    setDateInputValue('');
-                                    field.onChange('');
+                                    setDateInputValue("");
+                                    field.onChange("");
                                   }
                                 }}
                                 initialFocus
-                                captionLayout="dropdown-buttons"
-                                fromYear={1900}
-                                toYear={2100}
-                                defaultMonth={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : undefined}
+                                captionLayout="dropdown"
+                                defaultMonth={
+                                  field.value
+                                    ? parse(
+                                        field.value,
+                                        "yyyy-MM-dd",
+                                        new Date(),
+                                      )
+                                    : undefined
+                                }
                               />
                             </PopoverContent>
                           </Popover>
@@ -269,7 +321,11 @@ export default function EditProfile() {
                       <FormItem>
                         <FormLabel>Bay Club Membership ID</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="BC-123456" data-testid="input-membership-id" />
+                          <Input
+                            {...field}
+                            placeholder="BC-123456"
+                            data-testid="input-membership-id"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -282,56 +338,119 @@ export default function EditProfile() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Primary Club</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger data-testid="select-primary-club">
                               <SelectValue placeholder="Select your primary club" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[300px]">
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">San Francisco</div>
-                            <SelectItem value="Financial District">Financial District</SelectItem>
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              San Francisco
+                            </div>
+                            <SelectItem value="Financial District">
+                              Financial District
+                            </SelectItem>
                             <SelectItem value="Gateway">Gateway</SelectItem>
-                            <SelectItem value="San Francisco">San Francisco</SelectItem>
-                            <SelectItem value="South San Francisco">South San Francisco</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Marin</div>
+                            <SelectItem value="San Francisco">
+                              San Francisco
+                            </SelectItem>
+                            <SelectItem value="South San Francisco">
+                              South San Francisco
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              Marin
+                            </div>
                             <SelectItem value="Marin">Marin</SelectItem>
-                            <SelectItem value="StoneTree Golf Club">StoneTree Golf Club</SelectItem>
-                            <SelectItem value="Rolling Hills">Rolling Hills</SelectItem>
-                            <SelectItem value="Ross Valley">Ross Valley</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">East Bay</div>
-                            <SelectItem value="Pleasanton">Pleasanton</SelectItem>
+                            <SelectItem value="StoneTree Golf Club">
+                              StoneTree Golf Club
+                            </SelectItem>
+                            <SelectItem value="Rolling Hills">
+                              Rolling Hills
+                            </SelectItem>
+                            <SelectItem value="Ross Valley">
+                              Ross Valley
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              East Bay
+                            </div>
+                            <SelectItem value="Pleasanton">
+                              Pleasanton
+                            </SelectItem>
                             <SelectItem value="Fremont">Fremont</SelectItem>
-                            <SelectItem value="Crow Canyon Country Club">Crow Canyon Country Club</SelectItem>
-                            <SelectItem value="Walnut Creek">Walnut Creek</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Peninsula</div>
-                            <SelectItem value="Broadway Tennis">Broadway Tennis</SelectItem>
-                            <SelectItem value="Redwood Shores">Redwood Shores</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Santa Clara</div>
-                            <SelectItem value="Santa Clara">Santa Clara</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">San Jose</div>
-                            <SelectItem value="Boulder Ridge Golf Club">Boulder Ridge Golf Club</SelectItem>
+                            <SelectItem value="Crow Canyon Country Club">
+                              Crow Canyon Country Club
+                            </SelectItem>
+                            <SelectItem value="Walnut Creek">
+                              Walnut Creek
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              Peninsula
+                            </div>
+                            <SelectItem value="Broadway Tennis">
+                              Broadway Tennis
+                            </SelectItem>
+                            <SelectItem value="Redwood Shores">
+                              Redwood Shores
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              Santa Clara
+                            </div>
+                            <SelectItem value="Santa Clara">
+                              Santa Clara
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              San Jose
+                            </div>
+                            <SelectItem value="Boulder Ridge Golf Club">
+                              Boulder Ridge Golf Club
+                            </SelectItem>
                             <SelectItem value="Courtside">Courtside</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Washington</div>
-                            <SelectItem value="PRO Club Seattle">PRO Club Seattle</SelectItem>
-                            <SelectItem value="PRO Club Bellevue">PRO Club Bellevue</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">San Diego</div>
-                            <SelectItem value="Carmel Valley">Carmel Valley</SelectItem>
-                            <SelectItem value="Fairbanks Ranch Country Club">Fairbanks Ranch Country Club</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Los Angeles</div>
-                            <SelectItem value="El Segundo">El Segundo</SelectItem>
-                            <SelectItem value="Redondo Beach">Redondo Beach</SelectItem>
-                            <SelectItem value="Santa Monica">Santa Monica</SelectItem>
-                            
-                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Oregon</div>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              Washington
+                            </div>
+                            <SelectItem value="PRO Club Seattle">
+                              PRO Club Seattle
+                            </SelectItem>
+                            <SelectItem value="PRO Club Bellevue">
+                              PRO Club Bellevue
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              San Diego
+                            </div>
+                            <SelectItem value="Carmel Valley">
+                              Carmel Valley
+                            </SelectItem>
+                            <SelectItem value="Fairbanks Ranch Country Club">
+                              Fairbanks Ranch Country Club
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              Los Angeles
+                            </div>
+                            <SelectItem value="El Segundo">
+                              El Segundo
+                            </SelectItem>
+                            <SelectItem value="Redondo Beach">
+                              Redondo Beach
+                            </SelectItem>
+                            <SelectItem value="Santa Monica">
+                              Santa Monica
+                            </SelectItem>
+
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              Oregon
+                            </div>
                             <SelectItem value="Portland">Portland</SelectItem>
                           </SelectContent>
                         </Select>
@@ -339,12 +458,11 @@ export default function EditProfile() {
                       </FormItem>
                     )}
                   />
-
                 </div>
 
                 <div className="space-y-4 border-t pt-4 mt-4">
                   <h3 className="text-lg font-semibold">Address</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -353,7 +471,11 @@ export default function EditProfile() {
                         <FormItem>
                           <FormLabel>Street Address</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="123 Main St" data-testid="input-street" />
+                            <Input
+                              {...field}
+                              placeholder="123 Main St"
+                              data-testid="input-street"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -367,7 +489,11 @@ export default function EditProfile() {
                         <FormItem>
                           <FormLabel>Apt/Unit (Optional)</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Apt 4B" data-testid="input-apt-unit" />
+                            <Input
+                              {...field}
+                              placeholder="Apt 4B"
+                              data-testid="input-apt-unit"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -381,7 +507,11 @@ export default function EditProfile() {
                         <FormItem>
                           <FormLabel>City</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="San Francisco" data-testid="input-city" />
+                            <Input
+                              {...field}
+                              placeholder="San Francisco"
+                              data-testid="input-city"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -395,7 +525,11 @@ export default function EditProfile() {
                         <FormItem>
                           <FormLabel>State</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="CA" data-testid="input-state" />
+                            <Input
+                              {...field}
+                              placeholder="CA"
+                              data-testid="input-state"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -409,7 +543,11 @@ export default function EditProfile() {
                         <FormItem>
                           <FormLabel>ZIP Code</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="94102" data-testid="input-zip-code" />
+                            <Input
+                              {...field}
+                              placeholder="94102"
+                              data-testid="input-zip-code"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -436,7 +574,7 @@ export default function EditProfile() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate("/dashboard")}
                     className="flex-1"
                     data-testid="button-cancel"
                   >
@@ -454,7 +592,7 @@ export default function EditProfile() {
                         Saving...
                       </>
                     ) : (
-                      'Save Changes'
+                      "Save Changes"
                     )}
                   </Button>
                 </div>

@@ -1239,18 +1239,7 @@ export default function PodLeaderRegistration() {
                           }
                         }}
                         initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1900}
-                        toYear={2100}
-                        defaultMonth={
-                          formData.dateOfBirth
-                            ? parse(
-                                formData.dateOfBirth,
-                                "yyyy-MM-dd",
-                                new Date(),
-                              )
-                            : undefined
-                        }
+                        captionLayout="dropdown"
                       />
                     </PopoverContent>
                   </Popover>
