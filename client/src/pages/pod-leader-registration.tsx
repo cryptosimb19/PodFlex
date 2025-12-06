@@ -38,17 +38,17 @@ import { cn } from "@/lib/utils";
 // Phone number formatting utilities
 const formatPhoneNumber = (value: string): string => {
   // Remove all non-digit characters
-  const digits = value.replace(/\D/g, '');
-  
+  const digits = value.replace(/\D/g, "");
+
   // Format based on length
-  if (digits.length === 0) return '';
+  if (digits.length === 0) return "";
   if (digits.length <= 3) return `(${digits}`;
   if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
 };
 
 const stripPhoneFormatting = (value: string): string => {
-  return value.replace(/\D/g, '');
+  return value.replace(/\D/g, "");
 };
 
 interface PodLeaderData {
@@ -123,7 +123,7 @@ export default function PodLeaderRegistration() {
         });
         if (response.ok) {
           const user = await response.json();
-          
+
           // Check if user already has personal info from pod member onboarding
           // Use trim() to ensure fields contain actual data, not just whitespace
           const hasPersonalInfo = !!(
@@ -137,22 +137,27 @@ export default function PodLeaderRegistration() {
             user.primaryClub?.trim() &&
             user.membershipLevel?.trim()
           );
-          
+
           setHasExistingPersonalInfo(hasPersonalInfo);
-          
+
           // Format phone number for display if it exists
-          const formattedPhone = user.phone ? formatPhoneNumber(user.phone) : "";
-          
+          const formattedPhone = user.phone
+            ? formatPhoneNumber(user.phone)
+            : "";
+
           // Format date for display if it exists
           if (user.dateOfBirth) {
             try {
-              const formatted = format(parse(user.dateOfBirth, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy');
+              const formatted = format(
+                parse(user.dateOfBirth, "yyyy-MM-dd", new Date()),
+                "MM/dd/yyyy",
+              );
               setDateInputValue(formatted);
             } catch {
-              setDateInputValue('');
+              setDateInputValue("");
             }
           }
-          
+
           // Populate form with existing user data
           setFormData((prev) => ({
             ...prev,
@@ -172,7 +177,7 @@ export default function PodLeaderRegistration() {
             membershipLevel: user.membershipLevel || "",
             membershipId: user.membershipId || "",
           }));
-          
+
           // If user already has personal info, skip to pod details step
           if (hasPersonalInfo) {
             setCurrentStep(2);
@@ -777,7 +782,9 @@ export default function PodLeaderRegistration() {
           preferredRegion: formData.primaryCampus || undefined,
           primaryClub: formData.primaryClub || undefined,
           membershipLevel: formData.membershipLevel || undefined,
-          phone: formData.phone ? stripPhoneFormatting(formData.phone) : undefined,
+          phone: formData.phone
+            ? stripPhoneFormatting(formData.phone)
+            : undefined,
           street: formData.street || undefined,
           aptUnit: formData.aptUnit || undefined,
           city: formData.city || undefined,
@@ -1240,6 +1247,7 @@ export default function PodLeaderRegistration() {
                         }}
                         initialFocus
                         captionLayout="dropdown"
+                        defaultMonth={new Date()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -1434,11 +1442,15 @@ export default function PodLeaderRegistration() {
               <div className="flex space-x-3 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => hasExistingPersonalInfo ? navigate('/dashboard') : setCurrentStep(1)}
+                  onClick={() =>
+                    hasExistingPersonalInfo
+                      ? navigate("/dashboard")
+                      : setCurrentStep(1)
+                  }
                   className="flex-1"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  {hasExistingPersonalInfo ? 'Cancel' : 'Back'}
+                  {hasExistingPersonalInfo ? "Cancel" : "Back"}
                 </Button>
                 <Button
                   onClick={() => setCurrentStep(3)}
