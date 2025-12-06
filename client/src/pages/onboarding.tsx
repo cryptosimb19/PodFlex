@@ -619,9 +619,9 @@ export default function OnboardingWizard() {
                       }}
                       initialFocus
                       captionLayout="dropdown-buttons"
-                      fromYear={1920}
-                      toYear={new Date().getFullYear() - 18}
-                      defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                      fromYear={1900}
+                      toYear={2100}
+                      defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
                       className="p-3"
                     />
                   </PopoverContent>

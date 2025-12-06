@@ -250,9 +250,9 @@ export default function EditProfile() {
                                 }}
                                 initialFocus
                                 captionLayout="dropdown-buttons"
-                                fromYear={1920}
-                                toYear={new Date().getFullYear() - 18}
-                                defaultMonth={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
+                                fromYear={1900}
+                                toYear={2100}
+                                defaultMonth={field.value ? parse(field.value, 'yyyy-MM-dd', new Date()) : undefined}
                               />
                             </PopoverContent>
                           </Popover>
