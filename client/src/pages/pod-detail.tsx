@@ -191,6 +191,7 @@ export default function PodDetail() {
       setUserInfo({ name: "", email: "", phone: "" });
       // Invalidate all join request queries to ensure dashboard refreshes
       await queryClient.invalidateQueries({ queryKey: ['/api/join-requests'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/join-requests/user'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
     },
     onError: (error: Error) => {
