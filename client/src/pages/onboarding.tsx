@@ -589,7 +589,6 @@ export default function OnboardingWizard() {
                     </div>
                     <Calendar
                       mode="single"
-                      selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
                       onSelect={(date) => {
                         if (date) {
                           handleInputChange('dateOfBirth', format(date, 'yyyy-MM-dd'));
@@ -599,9 +598,6 @@ export default function OnboardingWizard() {
                       }}
                       initialFocus
                       captionLayout="dropdown-buttons"
-                      fromYear={1920}
-                      toYear={new Date().getFullYear() - 18}
-                      defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
                       className="p-3"
                     />
                   </PopoverContent>
@@ -617,22 +613,6 @@ export default function OnboardingWizard() {
                 Complete Registration
               </Button>
               
-              {/* Debug validation status */}
-              {!canFinish && (
-                <div className="text-xs text-red-500 mt-2">
-                  Missing fields: 
-                  {!userData.primaryCampus && " Primary Campus,"}
-                  {!userData.primaryClub && " Primary Club,"}
-                  {!userData.membershipLevel && " Membership Level,"}
-                  {!userData.phone && " Phone,"}
-                  {!userData.street && " Street,"}
-                  {!userData.city && " City,"}
-                  {!userData.state && " State,"}
-                  {!userData.zipCode && " ZIP,"}
-                  {!userData.country && " Country,"}
-                  {!userData.dateOfBirth && " Date of Birth"}
-                </div>
-              )}
             </CardContent>
           </Card>
         );
