@@ -925,6 +925,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requestData = insertJoinRequestSchema.parse(req.body);
       let emailStatus = "sent";
       
+      // Check if user already has an active pod membership (accepted join request)
+      const existingRequests = await storage.getJoinRequestsForUser(requestData.userId);
+      const hasActiveMembership = existingRequests.some(r => r.status === 'accepted');
+      
+      if (hasActiveMembership) {
+        return res.status(400).json({ 
+          message: "You can only be a member of one pod at a time. Please leave your current pod before joining another." 
+        });
+      }
+      
+      // Check if user already has a pending request for this pod
+      const hasPendingRequest = existingRequests.some(
+        r => r.podId === requestData.podId && r.status === 'pending'
+      );
+      
+      if (hasPendingRequest) {
+        return res.status(400).json({ 
+          message: "You already have a pending request for this pod." 
+        });
+      }
+      
       // Create the join request first
       const joinRequest = await storage.createJoinRequest({
         ...requestData,
