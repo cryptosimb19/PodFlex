@@ -295,12 +295,12 @@ export default function PodDetail() {
       <div className="max-w-4xl mx-auto px-4 py-4">
         <Button
           variant="ghost"
-          onClick={() => navigate("/pods")}
+          onClick={() => navigate(currentUser ? "/pods" : "/")}
           className="mb-4"
-          data-testid="button-back-to-pods"
+          data-testid="button-back"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Pods
+          {currentUser ? "Back to Pods" : "Back to home"}
         </Button>
       </div>
 

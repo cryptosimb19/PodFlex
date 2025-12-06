@@ -7,10 +7,13 @@ import {
   LogOut,
   Menu,
   X,
-  Zap
+  Zap,
+  LogIn
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import type { User as UserType } from "@shared/schema";
 
 interface NavigationProps {
   userType?: 'pod_seeker' | 'pod_leader';
@@ -19,6 +22,18 @@ interface NavigationProps {
 export default function Navigation({ userType }: NavigationProps) {
   const [location, navigate] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Check if user is authenticated
+  const { data: currentUser } = useQuery<UserType>({
+    queryKey: ['/api/auth/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/user', { credentials: 'include' });
+      if (!response.ok) throw new Error('Not authenticated');
+      return response.json();
+    },
+  });
+  
+  const isAuthenticated = !!currentUser;
 
   const handleLogout = async () => {
     try {
@@ -59,13 +74,15 @@ export default function Navigation({ userType }: NavigationProps) {
     }
   };
 
+  // Build nav items based on authentication status
   const navItems = [
-    {
+    // Only show Dashboard for authenticated users
+    ...(isAuthenticated ? [{
       label: 'Dashboard',
       path: userType === 'pod_leader' ? '/pod-leader-dashboard' : '/dashboard',
       icon: <Home className="w-4 h-4" />,
       testId: 'nav-dashboard'
-    },
+    }] : []),
     {
       label: 'Browse Pods',
       path: '/pods',
@@ -123,15 +140,27 @@ export default function Navigation({ userType }: NavigationProps) {
               </Button>
             ))}
             
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400"
-              data-testid="button-logout"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400"
+                data-testid="button-logout"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/login')}
+                className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary"
+                data-testid="button-login"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -172,18 +201,33 @@ export default function Navigation({ userType }: NavigationProps) {
               </Button>
             ))}
             
-            <Button
-              variant="ghost"
-              onClick={() => {
-                handleLogout();
-                setIsMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center space-x-2 justify-start text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400"
-              data-testid="button-logout-mobile"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  handleLogout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 justify-start text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400"
+                data-testid="button-logout-mobile"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  navigate('/login');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 justify-start text-gray-700 dark:text-gray-300 hover:text-primary"
+                data-testid="button-login-mobile"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
+              </Button>
+            )}
           </div>
         )}
       </div>
