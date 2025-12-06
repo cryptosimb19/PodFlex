@@ -609,6 +609,7 @@ export default function OnboardingWizard() {
                     </div>
                     <Calendar
                       mode="single"
+                      selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
                       onSelect={(date) => {
                         if (date) {
                           handleInputChange('dateOfBirth', format(date, 'yyyy-MM-dd'));
@@ -618,6 +619,9 @@ export default function OnboardingWizard() {
                       }}
                       initialFocus
                       captionLayout="dropdown-buttons"
+                      fromYear={1920}
+                      toYear={new Date().getFullYear() - 18}
+                      defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : new Date(1990, 0, 1)}
                       className="p-3"
                     />
                   </PopoverContent>

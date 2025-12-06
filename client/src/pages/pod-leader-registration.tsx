@@ -85,7 +85,7 @@ interface PodLeaderData {
 
 export default function PodLeaderRegistration() {
   const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState(1); // Will start at Bay Club form (3 steps total now)
+  const [currentStep, setCurrentStep] = useState(1); // Will be updated based on user's existing data
   const [formData, setFormData] = useState<PodLeaderData>({
     firstName: "",
     lastName: "",
@@ -111,9 +111,10 @@ export default function PodLeaderRegistration() {
     agreesToTerms: false,
   });
   const [dateInputValue, setDateInputValue] = useState("");
+  const [hasExistingPersonalInfo, setHasExistingPersonalInfo] = useState(false);
   const [, navigate] = useLocation();
 
-  // Fetch authenticated user data on mount
+  // Fetch authenticated user data on mount and check if user already has personal info
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -122,12 +123,60 @@ export default function PodLeaderRegistration() {
         });
         if (response.ok) {
           const user = await response.json();
+          
+          // Check if user already has personal info from pod member onboarding
+          // Use trim() to ensure fields contain actual data, not just whitespace
+          const hasPersonalInfo = !!(
+            user.phone?.trim() &&
+            user.street?.trim() &&
+            user.city?.trim() &&
+            user.state?.trim() &&
+            user.zipCode?.trim() &&
+            user.dateOfBirth?.trim() &&
+            user.preferredRegion?.trim() &&
+            user.primaryClub?.trim() &&
+            user.membershipLevel?.trim()
+          );
+          
+          setHasExistingPersonalInfo(hasPersonalInfo);
+          
+          // Format phone number for display if it exists
+          const formattedPhone = user.phone ? formatPhoneNumber(user.phone) : "";
+          
+          // Format date for display if it exists
+          if (user.dateOfBirth) {
+            try {
+              const formatted = format(parse(user.dateOfBirth, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy');
+              setDateInputValue(formatted);
+            } catch {
+              setDateInputValue('');
+            }
+          }
+          
+          // Populate form with existing user data
           setFormData((prev) => ({
             ...prev,
             firstName: user.firstName || "",
             lastName: user.lastName || "",
             email: user.email || "",
+            phone: formattedPhone,
+            street: user.street || "",
+            aptUnit: user.aptUnit || "",
+            city: user.city || "",
+            state: user.state || "",
+            zipCode: user.zipCode || "",
+            country: user.country || "United States",
+            dateOfBirth: user.dateOfBirth || "",
+            primaryCampus: user.preferredRegion || "",
+            primaryClub: user.primaryClub || "",
+            membershipLevel: user.membershipLevel || "",
+            membershipId: user.membershipId || "",
           }));
+          
+          // If user already has personal info, skip to pod details step
+          if (hasPersonalInfo) {
+            setCurrentStep(2);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -1396,11 +1445,11 @@ export default function PodLeaderRegistration() {
               <div className="flex space-x-3 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => hasExistingPersonalInfo ? navigate('/dashboard') : setCurrentStep(1)}
                   className="flex-1"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
+                  {hasExistingPersonalInfo ? 'Cancel' : 'Back'}
                 </Button>
                 <Button
                   onClick={() => setCurrentStep(3)}
