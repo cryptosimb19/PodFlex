@@ -470,7 +470,14 @@ export default function PodDetail() {
               <div className="bg-blue-50 p-6 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    {hasActiveMembership ? (
+                    {!currentUser ? (
+                      <>
+                        <h3 className="font-semibold mb-2">Interested in this Pod?</h3>
+                        <p className="text-muted-foreground">
+                          Sign in to request to join this pod. The pod leader will review and respond to your request.
+                        </p>
+                      </>
+                    ) : hasActiveMembership ? (
                       <>
                         <h3 className="font-semibold mb-2">Already a Pod Member</h3>
                         <p className="text-muted-foreground">
@@ -494,7 +501,16 @@ export default function PodDetail() {
                     )}
                   </div>
                   <div className="ml-6">
-                    {hasActiveMembership ? (
+                    {!currentUser ? (
+                      <Button 
+                        className="bg-primary hover:bg-primary/90" 
+                        onClick={() => navigate('/login')}
+                        data-testid="button-sign-in-to-join"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Sign in to Join
+                      </Button>
+                    ) : hasActiveMembership ? (
                       <Button disabled variant="secondary" data-testid="button-already-member">
                         <Users className="w-4 h-4 mr-2" />
                         Already in a Pod

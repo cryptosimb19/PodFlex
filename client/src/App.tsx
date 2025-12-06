@@ -238,11 +238,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/pods/:id">
-        <ProtectedRoute requireOnboarding>
-          <PodDetail />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/pods/:id" component={PodDetail} />
       
       <Route path="/dashboard">
         <ProtectedRoute requireOnboarding>
