@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import Navigation from "@/components/Navigation";
-import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send, User, Phone, Mail, LogOut, Clock } from "lucide-react";
+import { ArrowLeft, MapPin, Users, DollarSign, Calendar, CheckCircle, Send, User, Phone, Mail, LogOut, Clock, Share2, Copy, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Pod, JoinRequest, User as UserType, PodMember, LeaveRequest } from "@shared/schema";
 
@@ -225,6 +225,46 @@ export default function PodDetail() {
     return dateObj.toLocaleDateString();
   };
 
+  // Share functionality
+  const getPodShareUrl = () => {
+    return `${window.location.origin}/pods/${id}`;
+  };
+
+  const getShareText = () => {
+    if (!pod) return '';
+    return `Check out this gym membership pod: ${pod.title} at ${pod.clubName} - $${pod.costPerPerson}/month`;
+  };
+
+  const handleShareEmail = () => {
+    const url = getPodShareUrl();
+    const subject = encodeURIComponent(`FlexPod: ${pod?.title || 'Gym Membership Pod'}`);
+    const body = encodeURIComponent(`${getShareText()}\n\nView details: ${url}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+  };
+
+  const handleShareSMS = () => {
+    const url = getPodShareUrl();
+    const text = encodeURIComponent(`${getShareText()} ${url}`);
+    window.open(`sms:?body=${text}`, '_blank');
+  };
+
+  const handleCopyLink = async () => {
+    const url = getPodShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied!",
+        description: "Pod link has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the link manually from the address bar.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (podLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -283,6 +323,41 @@ export default function PodDetail() {
                 </div>
                 <Badge variant="secondary">{pod.membershipType}</Badge>
               </div>
+            </div>
+            
+            {/* Share Buttons */}
+            <div className="flex items-center gap-2 pt-4 border-t mt-4">
+              <span className="text-sm text-muted-foreground mr-2">
+                <Share2 className="w-4 h-4 inline mr-1" />
+                Share this pod:
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShareEmail}
+                data-testid="button-share-email"
+              >
+                <Mail className="w-4 h-4 mr-1" />
+                Email
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShareSMS}
+                data-testid="button-share-sms"
+              >
+                <MessageSquare className="w-4 h-4 mr-1" />
+                Text
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLink}
+                data-testid="button-copy-link"
+              >
+                <Copy className="w-4 h-4 mr-1" />
+                Copy Link
+              </Button>
             </div>
           </CardHeader>
           
