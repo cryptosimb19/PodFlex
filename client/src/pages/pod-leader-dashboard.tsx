@@ -31,6 +31,19 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import type { Pod, JoinRequest, PodMember, LeaveRequest } from "@shared/schema";
 
+// Phone number formatting utility
+const formatPhoneNumber = (value: string): string => {
+  if (!value) return '';
+  // Remove all non-digit characters
+  const digits = value.replace(/\D/g, '');
+  
+  // Format based on length
+  if (digits.length === 0) return '';
+  if (digits.length <= 3) return `(${digits})`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+};
+
 interface UserData {
   firstName: string;
   lastName: string;
@@ -605,7 +618,7 @@ export default function PodLeaderDashboard() {
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Phone className="w-4 h-4" />
-                  <span>{userData.phone}</span>
+                  <span>{formatPhoneNumber(userData.phone)}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <MapPin className="w-4 h-4" />

@@ -29,6 +29,19 @@ import {
 import { useLocation } from "wouter";
 import type { Pod, JoinRequest } from "@shared/schema";
 
+// Phone number formatting utility
+const formatPhoneNumber = (value: string): string => {
+  if (!value) return '';
+  // Remove all non-digit characters
+  const digits = value.replace(/\D/g, '');
+  
+  // Format based on length
+  if (digits.length === 0) return '';
+  if (digits.length <= 3) return `(${digits})`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+};
+
 interface UserData {
   firstName: string;
   lastName: string;
@@ -231,7 +244,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Phone className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">{userData.phone}</span>
+                  <span className="truncate">{formatPhoneNumber(userData.phone)}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <MapPin className="w-4 h-4 flex-shrink-0" />

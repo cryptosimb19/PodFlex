@@ -13,6 +13,22 @@ import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 
+// Phone number formatting utilities
+const formatPhoneNumber = (value: string): string => {
+  // Remove all non-digit characters
+  const digits = value.replace(/\D/g, '');
+  
+  // Format based on length
+  if (digits.length === 0) return '';
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+};
+
+const stripPhoneFormatting = (value: string): string => {
+  return value.replace(/\D/g, '');
+};
+
 interface UserData {
   firstName: string;
   lastName: string;
@@ -288,6 +304,10 @@ export default function OnboardingWizard() {
       if (key === 'primaryClub') {
         return { ...prev, [key]: value, membershipLevel: "" };
       }
+      // Auto-format phone number for display
+      if (key === 'phone') {
+        return { ...prev, [key]: formatPhoneNumber(value) };
+      }
       return { ...prev, [key]: value };
     });
   };
@@ -308,7 +328,7 @@ export default function OnboardingWizard() {
           preferredRegion: userData.primaryCampus || undefined,
           primaryClub: userData.primaryClub || undefined,
           membershipLevel: userData.membershipLevel || undefined,
-          phone: userData.phone || undefined,
+          phone: userData.phone ? stripPhoneFormatting(userData.phone) : undefined,
           street: userData.street || undefined,
           aptUnit: userData.aptUnit || undefined,
           city: userData.city || undefined,
