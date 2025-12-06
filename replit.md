@@ -41,6 +41,10 @@ Preferred communication style: Simple, everyday language.
   - **One Pod Per Leader**: Pod leaders can only create one active pod. Backend validates via `getPodsByLeaderId()` which filters out deleted pods (`deletedAt IS NULL`). If a leader already has a pod, creation returns 400 with descriptive error message.
   - **Maximum 8 Members Per Pod**: Enforced on both pod creation (POST /api/pods) and editing (PATCH /api/pods/:id). Backend validates `totalSpots <= 8` and returns 400 if exceeded. Frontend forms include `max="8"` attribute for immediate user feedback.
   - **Pod Leader Assignment**: When creating a pod, `leadId` is automatically set from the authenticated user's ID (`req.user.id`), ensuring pods are correctly associated with their leaders and appear on the leader dashboard.
+- **Dual-Role Support**: Users can simultaneously be a pod member (in one pod) AND a pod leader (of their own pod).
+  - **Member Dashboard**: Shows a "Pod Leader" card with either "Create Your Own Pod" button (if no pod exists) or "Switch to Leader Dashboard" button (if user has a pod).
+  - **Leader Dashboard**: Shows a "Pod Member" card with "Switch to Member Dashboard" button if the user is also a member of another pod.
+  - **API Endpoint**: GET /api/pods/leader/:leaderId returns pods where the specified user is the leader, enabling dual-role detection.
 
 ## External Dependencies
 

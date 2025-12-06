@@ -24,7 +24,10 @@ import {
   Edit3,
   Zap,
   MailWarning,
-  RefreshCw
+  RefreshCw,
+  Crown,
+  ArrowRight,
+  Plus
 } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Pod, JoinRequest } from "@shared/schema";
@@ -121,6 +124,20 @@ export default function Dashboard() {
       request.podId === pod.id && request.status === 'accepted'
     )
   ) || [];
+
+  // Check if user also has a pod as a leader (dual-role support)
+  const { data: userLeaderPods } = useQuery<Pod[]>({
+    queryKey: ['/api/pods/leader', authUser?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/pods/leader/${authUser?.id}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!authUser?.id,
+  });
+
+  const hasLeaderPod = userLeaderPods && userLeaderPods.length > 0;
+  const leaderPod = hasLeaderPod ? userLeaderPods[0] : null;
 
   // Fetch pod members for selected pod
   const { data: podMembers, isLoading: membersLoading } = useQuery<PodMember[]>({
@@ -284,6 +301,48 @@ export default function Dashboard() {
                     <div className="text-xs sm:text-sm text-gray-600">Pending Requests</div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Pod Leader Section - Create or Switch to Leader Dashboard */}
+            <Card className="mt-4 sm:mt-6 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                  <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                  <span>Pod Leader</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {hasLeaderPod ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      You're leading: <span className="font-semibold text-purple-700">{leaderPod?.title || leaderPod?.clubName}</span>
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/pod-leader-dashboard')}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      data-testid="button-switch-to-leader-dashboard"
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Switch to Leader Dashboard
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      Have a Bay Club membership to share? Create your own pod and help others save on membership fees.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/pod-leader-registration')}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      data-testid="button-create-your-pod"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Your Own Pod
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

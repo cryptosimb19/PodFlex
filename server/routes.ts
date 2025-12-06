@@ -728,6 +728,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pods by leader ID (for dual-role support)
+  app.get("/api/pods/leader/:leaderId", async (req, res) => {
+    try {
+      const leaderId = req.params.leaderId;
+      const pods = await storage.getPodsByLeaderId(leaderId);
+      res.json(pods);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch leader pods" });
+    }
+  });
+
   // Search pods
   app.get("/api/pods/search/:query", async (req, res) => {
     try {

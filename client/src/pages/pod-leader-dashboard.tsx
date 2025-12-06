@@ -25,7 +25,9 @@ import {
   Mail,
   Phone,
   LogOut,
-  Trash2
+  Trash2,
+  User,
+  ArrowRight
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -190,6 +192,21 @@ export default function PodLeaderDashboard() {
     },
     enabled: !!leaderPods && leaderPods.length > 0,
   });
+
+  // Check if user is also a member of another pod (dual-role support)
+  const { data: userJoinRequests } = useQuery({
+    queryKey: ['/api/join-requests', 'user', authUser?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/join-requests/user/${authUser?.id}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!authUser?.id,
+  });
+
+  // Check if user has any accepted memberships in other pods
+  const acceptedMemberships = userJoinRequests?.filter((req: any) => req.status === 'accepted') || [];
+  const isMemberOfPod = acceptedMemberships.length > 0;
 
   // Mutation to update join request status
   const updateRequestMutation = useMutation({
@@ -637,6 +654,35 @@ export default function PodLeaderDashboard() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Member Dashboard Card - Show if user is also a pod member */}
+            {isMemberOfPod && (
+              <Card className="mt-4 sm:mt-6 bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    <span>Pod Member</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      You're also a member of {acceptedMemberships.length} pod{acceptedMemberships.length > 1 ? 's' : ''}.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/dashboard')}
+                      variant="outline"
+                      className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                      data-testid="button-switch-to-member-dashboard"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Switch to Member Dashboard
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Main Content */}
