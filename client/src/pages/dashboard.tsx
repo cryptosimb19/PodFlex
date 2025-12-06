@@ -267,8 +267,8 @@ export default function Dashboard() {
                     <div className="text-xs sm:text-sm text-gray-600">Active Pods</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-pink-600">{joinRequests?.length || 0}</div>
-                    <div className="text-xs sm:text-sm text-gray-600">Total Requests</div>
+                    <div className="text-xl sm:text-2xl font-bold text-pink-600">{joinRequests?.filter(r => r.status === 'pending').length || 0}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Pending Requests</div>
                   </div>
                 </div>
               </CardContent>
