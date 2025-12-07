@@ -77,7 +77,7 @@ export default function SearchScreen() {
   };
 
   const handlePodClick = (podId: number) => {
-    navigate(`/pod/${podId}`);
+    navigate(`/pods/${podId}`);
   };
 
   const userType = (localStorage.getItem('flexpod_user_type') === 'pod_leader' ? 'pod_leader' : 'pod_seeker') as 'pod_seeker' | 'pod_leader';

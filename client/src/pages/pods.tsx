@@ -154,7 +154,7 @@ export default function PodsPage() {
               <div key={pod.id} className="fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
                 <Card 
                   className="cursor-pointer hover:shadow-lg transition-all duration-300 hover-lift card-transition"
-                  onClick={() => navigate(`/pod/${pod.id}`)}
+                  onClick={() => navigate(`/pods/${pod.id}`)}
                 >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">

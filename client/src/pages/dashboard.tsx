@@ -404,7 +404,7 @@ export default function Dashboard() {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => navigate(`/pod/${pod.id}`)}
+                                onClick={() => navigate(`/pods/${pod.id}`)}
                                 className="w-full sm:w-auto sm:ml-4 flex-shrink-0"
                                 data-testid={`button-view-pod-${pod.id}`}
                               >
@@ -495,7 +495,7 @@ export default function Dashboard() {
                                     <Button 
                                       variant="ghost" 
                                       size="sm"
-                                      onClick={() => navigate(`/pod/${pod.id}`)}
+                                      onClick={() => navigate(`/pods/${pod.id}`)}
                                       className="w-full sm:w-auto flex-shrink-0"
                                       data-testid={`button-view-request-pod-${pod.id}`}
                                     >

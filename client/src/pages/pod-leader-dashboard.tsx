@@ -1170,7 +1170,7 @@ export default function PodLeaderDashboard() {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => navigate(`/pod/${pod.id}`)}
+                                  onClick={() => navigate(`/pods/${pod.id}`)}
                                   data-testid={`button-view-pod-${pod.id}`}
                                 >
                                   View Details
