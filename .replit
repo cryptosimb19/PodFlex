@@ -36,66 +36,6 @@ waitForPort = 5000
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 33809
-externalPort = 4200
-
-[[ports]]
-localPort = 35887
-externalPort = 8081
-
-[[ports]]
-localPort = 36437
-externalPort = 8000
-
-[[ports]]
-localPort = 37117
-externalPort = 9000
-
-[[ports]]
-localPort = 37523
-externalPort = 5000
-
-[[ports]]
-localPort = 38263
-externalPort = 3001
-
-[[ports]]
-localPort = 39727
-externalPort = 3003
-
-[[ports]]
-localPort = 39825
-externalPort = 8099
-
-[[ports]]
-localPort = 42653
-externalPort = 8008
-
-[[ports]]
-localPort = 42919
-externalPort = 6000
-
-[[ports]]
-localPort = 43625
-externalPort = 3000
-
-[[ports]]
-localPort = 43745
-externalPort = 6800
-
-[[ports]]
-localPort = 44773
-externalPort = 8080
-
-[[ports]]
-localPort = 45361
-externalPort = 5173
-
-[[ports]]
-localPort = 46437
-externalPort = 3002
-
 [agent]
 integrations = ["javascript_sendgrid:1.0.0", "javascript_log_in_with_replit:1.0.0"]
 
