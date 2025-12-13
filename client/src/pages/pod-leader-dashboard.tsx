@@ -688,36 +688,30 @@ export default function PodLeaderDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="requests" className="w-full">
-              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
-                <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-4 h-10 sm:h-11 gap-1 sm:gap-0">
-                  <TabsTrigger value="requests" className="flex-shrink-0 px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap">
-                    <span className="hidden sm:inline">Join Requests</span>
-                    <span className="sm:hidden">Join</span>
-                    {pendingRequests.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs px-1.5">
-                        {pendingRequests.length}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="leave-requests" className="flex-shrink-0 px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap" data-testid="tab-leave-requests">
-                    <span className="hidden sm:inline">Leave Requests</span>
-                    <span className="sm:hidden">Leave</span>
-                    {pendingLeaveRequests.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs px-1.5">
-                        {pendingLeaveRequests.length}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="members" className="flex-shrink-0 px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap">
-                    <span className="hidden sm:inline">Pod Members</span>
-                    <span className="sm:hidden">Members</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="pods" className="flex-shrink-0 px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap">
-                    <span className="hidden sm:inline">My Pods</span>
-                    <span className="sm:hidden">Pods</span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+              <TabsList className="grid w-full grid-cols-4 h-9 sm:h-11">
+                <TabsTrigger value="requests" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-join-requests">
+                  Join
+                  {pendingRequests.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 text-[9px] px-1 h-4">
+                      {pendingRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="leave-requests" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-leave-requests">
+                  Leave
+                  {pendingLeaveRequests.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 text-[9px] px-1 h-4">
+                      {pendingLeaveRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="members" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-pod-members">
+                  Members
+                </TabsTrigger>
+                <TabsTrigger value="pods" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-my-pods">
+                  Pods
+                </TabsTrigger>
+              </TabsList>
 
               <TabsContent value="requests" className="mt-6">
                 <Card>
