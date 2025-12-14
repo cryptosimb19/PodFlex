@@ -703,30 +703,12 @@ export default function PodDetail() {
                                   <Badge variant="outline" className="text-xs">You</Badge>
                                 )}
                               </p>
-                              <div className="mt-1 space-y-1">
-                                {(member.userEmail || member.user?.email) && (
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                                    <a href={`mailto:${member.userEmail || member.user?.email}`} className="hover:text-primary truncate">
-                                      {member.userEmail || member.user?.email}
-                                    </a>
-                                  </div>
-                                )}
-                                {(member.userPhone || member.user?.phone) && (
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-                                    <a href={`tel:${member.userPhone || member.user?.phone}`} className="hover:text-primary">
-                                      {member.userPhone || member.user?.phone}
-                                    </a>
-                                  </div>
-                                )}
-                                {member.joinedAt && (
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Calendar className="w-3 h-3 flex-shrink-0" />
-                                    <span>Joined {new Date(member.joinedAt).toLocaleDateString()}</span>
-                                  </div>
-                                )}
-                              </div>
+                              {member.joinedAt && (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                  <Calendar className="w-3 h-3 flex-shrink-0" />
+                                  <span>Joined {new Date(member.joinedAt).toLocaleDateString()}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
