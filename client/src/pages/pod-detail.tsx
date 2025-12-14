@@ -584,97 +584,146 @@ export default function PodDetail() {
 
             {/* Member Status / Join/Leave Action */}
             {isMember ? (
-              // Member view - show leave request option
-              <div className="bg-amber-50 p-6 rounded-lg border border-amber-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <h3 className="font-semibold text-green-800">
-                        You're a Member
-                      </h3>
+              // Member view - show leave request option and fellow members
+              <>
+                <div className="bg-amber-50 p-6 rounded-lg border border-amber-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <h3 className="font-semibold text-green-800">
+                          You're a Member
+                        </h3>
+                      </div>
+                      <p className="text-muted-foreground">
+                        You are currently a member of this pod. If you need to
+                        leave, you can submit a leave request.
+                      </p>
                     </div>
-                    <p className="text-muted-foreground">
-                      You are currently a member of this pod. If you need to
-                      leave, you can submit a leave request.
-                    </p>
-                  </div>
-                  <div className="ml-6">
-                    {pendingLeaveRequest ? (
-                      <Button
-                        variant="outline"
-                        disabled
-                        data-testid="button-leave-pending"
-                      >
-                        <Clock className="w-4 h-4 mr-2" />
-                        Leave Request Pending
-                      </Button>
-                    ) : (
-                      <Dialog
-                        open={isLeaveDialogOpen}
-                        onOpenChange={setIsLeaveDialogOpen}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="border-amber-500 text-amber-700 hover:bg-amber-100"
-                            data-testid="button-request-to-leave"
-                          >
-                            <LogOut className="w-4 h-4 mr-2" />
-                            Request to Leave
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                            <DialogTitle>Leave {pod.title}</DialogTitle>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                              <p className="text-sm text-amber-800">
-                                Your leave request will be sent to the pod
-                                leader for approval. Once approved, you will be
-                                removed from this pod.
-                              </p>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">
-                                Reason for Leaving (optional)
-                              </label>
-                              <Textarea
-                                value={leaveReason}
-                                onChange={(e) => setLeaveReason(e.target.value)}
-                                placeholder="Let the pod leader know why you'd like to leave..."
-                                rows={3}
-                                data-testid="input-leave-reason"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex justify-end space-x-2">
+                    <div className="ml-6">
+                      {pendingLeaveRequest ? (
+                        <Button
+                          variant="outline"
+                          disabled
+                          data-testid="button-leave-pending"
+                        >
+                          <Clock className="w-4 h-4 mr-2" />
+                          Leave Request Pending
+                        </Button>
+                      ) : (
+                        <Dialog
+                          open={isLeaveDialogOpen}
+                          onOpenChange={setIsLeaveDialogOpen}
+                        >
+                          <DialogTrigger asChild>
                             <Button
                               variant="outline"
-                              onClick={() => setIsLeaveDialogOpen(false)}
-                              disabled={leaveRequestMutation.isPending}
-                              data-testid="button-cancel-leave"
+                              className="border-amber-500 text-amber-700 hover:bg-amber-100"
+                              data-testid="button-request-to-leave"
                             >
-                              Cancel
+                              <LogOut className="w-4 h-4 mr-2" />
+                              Request to Leave
                             </Button>
-                            <Button
-                              onClick={handleLeaveRequest}
-                              disabled={leaveRequestMutation.isPending}
-                              className="bg-amber-600 hover:bg-amber-700"
-                              data-testid="button-submit-leave"
-                            >
-                              {leaveRequestMutation.isPending
-                                ? "Sending..."
-                                : "Submit Request"}
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>Leave {pod.title}</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                                <p className="text-sm text-amber-800">
+                                  Your leave request will be sent to the pod
+                                  leader for approval. Once approved, you will be
+                                  removed from this pod.
+                                </p>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                  Reason for Leaving (optional)
+                                </label>
+                                <Textarea
+                                  value={leaveReason}
+                                  onChange={(e) => setLeaveReason(e.target.value)}
+                                  placeholder="Let the pod leader know why you'd like to leave..."
+                                  rows={3}
+                                  data-testid="input-leave-reason"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => setIsLeaveDialogOpen(false)}
+                                disabled={leaveRequestMutation.isPending}
+                                data-testid="button-cancel-leave"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleLeaveRequest}
+                                disabled={leaveRequestMutation.isPending}
+                                className="bg-amber-600 hover:bg-amber-700"
+                                data-testid="button-submit-leave"
+                              >
+                                {leaveRequestMutation.isPending
+                                  ? "Sending..."
+                                  : "Submit Request"}
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Fellow Pod Members Section */}
+                <Separator />
+                <div>
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Pod Members ({podMembers?.length || 0})
+                  </h3>
+                  {podMembers && podMembers.length > 0 ? (
+                    <div className="space-y-3">
+                      {podMembers.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
+                          data-testid={`member-card-${member.id}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+                              {member.userName?.charAt(0)?.toUpperCase() || "?"}
+                            </div>
+                            <div>
+                              <p className="font-medium flex items-center gap-2">
+                                {member.userName || "Unknown Member"}
+                                {member.userId === currentUser?.id && (
+                                  <Badge variant="outline" className="text-xs">You</Badge>
+                                )}
+                              </p>
+                              {member.userEmail && (
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Mail className="w-3 h-3" />
+                                  <span>{member.userEmail}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {member.joinedAt && (
+                            <div className="text-xs text-muted-foreground">
+                              Joined {new Date(member.joinedAt).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No other members yet.</p>
+                  )}
+                </div>
+              </>
             ) : (
               // Non-member view - show join request option
               <div className="bg-blue-50 p-6 rounded-lg">
