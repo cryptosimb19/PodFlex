@@ -1089,8 +1089,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const membersWithUserInfo = await Promise.all(
         members.map(async (member) => {
           const user = await storage.getUser(member.userId);
+          const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : null;
           return {
             ...member,
+            userName: userName || 'Unknown Member',
+            userEmail: user?.email || null,
+            userPhone: user?.phone || null,
             user: user ? sanitizeUser(user) : null
           };
         })
