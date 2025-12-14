@@ -183,11 +183,41 @@ export default function Dashboard() {
     },
   });
 
+  // Cancel join request mutation
+  const cancelRequestMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      const response = await fetch(`/api/join-requests/${requestId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to cancel request');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request cancelled",
+        description: "Your join request has been cancelled.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'user', authUser?.id] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'accepted': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -503,6 +533,19 @@ export default function Dashboard() {
                                     >
                                       <RefreshCw className={`w-4 h-4 ${resendEmailMutation.isPending ? 'animate-spin' : ''}`} />
                                       <span>{resendEmailMutation.isPending ? 'Sending...' : 'Resend Email'}</span>
+                                    </Button>
+                                  )}
+                                  {request.status === 'pending' && (
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => cancelRequestMutation.mutate(request.id)}
+                                      disabled={cancelRequestMutation.isPending}
+                                      className="w-full sm:w-auto flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      data-testid={`button-cancel-request-${request.id}`}
+                                    >
+                                      <XCircle className="w-4 h-4" />
+                                      <span>{cancelRequestMutation.isPending ? 'Cancelling...' : 'Cancel'}</span>
                                     </Button>
                                   )}
                                   {pod && (

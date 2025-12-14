@@ -1079,6 +1079,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel a pending join request (by the user who created it)
+  app.delete("/api/join-requests/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Get the join request
+      const joinRequest = await storage.getJoinRequest(id);
+      if (!joinRequest) {
+        return res.status(404).json({ message: "Join request not found" });
+      }
+      
+      // Check if the user owns this request
+      if (joinRequest.userId !== userId) {
+        return res.status(403).json({ message: "You can only cancel your own requests" });
+      }
+      
+      // Check if the request is still pending
+      if (joinRequest.status !== 'pending') {
+        return res.status(400).json({ message: "Only pending requests can be cancelled" });
+      }
+      
+      // Update status to cancelled
+      const cancelledRequest = await storage.updateJoinRequestStatus(id, 'cancelled' as any);
+      
+      res.json({ message: "Join request cancelled successfully", request: cancelledRequest });
+    } catch (error) {
+      console.error("Error cancelling join request:", error);
+      res.status(500).json({ message: "Failed to cancel join request" });
+    }
+  });
+
   // Get pod members with user details
   app.get("/api/pods/:id/members", async (req, res) => {
     try {
