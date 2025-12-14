@@ -57,6 +57,20 @@ interface UserData {
   dateOfBirth: string;
 }
 
+const formatDate = (date: Date | undefined) => {
+  if(!date) return "";
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "2-digit",
+  })
+}
+
+const isValidDate = (date: Date | undefined) => {
+  if(!date) return false;
+  return !isNaN(date.getTime());
+}
+
 export default function OnboardingWizard() {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1); // Will only have 1 step now
@@ -77,6 +91,10 @@ export default function OnboardingWizard() {
     country: "United States",
     dateOfBirth: "",
   });
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState<Date | undefined>(new Date())
+  const [month, setMonth] = useState<Date | undefined>(date)
+  const [dateOfBirth, setDateOfBirth] = useState(formatDate(date))
   const [, navigate] = useLocation();
 
   // Get user type from URL parameters
@@ -961,55 +979,31 @@ export default function OnboardingWizard() {
                 <label className="text-sm font-medium">Date of Birth</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <div
-                      className={cn(
-                        "flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm cursor-pointer hover:border-primary/50 transition-colors",
-                        !userData.dateOfBirth && "text-muted-foreground",
-                      )}
-                      data-testid="input-date-of-birth"
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                      data-testid="button-date-picker"
                     >
-                      <CalendarIcon className="mr-3 h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      {userData.dateOfBirth ? (
-                        format(
-                          parse(userData.dateOfBirth, "yyyy-MM-dd", new Date()),
-                          "MM/dd/yyyy",
-                        )
-                      ) : (
-                        <span>MM/DD/YYYY</span>
-                      )}
-                    </div>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {userData.dateOfBirth ? format(parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()), 'PPP') : <span className="text-muted-foreground">Pick a date</span>}
+                    </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <div className="p-3 border-b">
-                      <p className="text-sm font-medium text-center">
-                        Select your date of birth
-                      </p>
-                    </div>
                     <Calendar
                       mode="single"
-                      selected={
-                        userData.dateOfBirth
-                          ? parse(
-                              userData.dateOfBirth,
-                              "yyyy-MM-dd",
-                              new Date(),
-                            )
-                          : undefined
-                      }
+                      selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
                       onSelect={(date) => {
                         if (date) {
-                          handleInputChange(
-                            "dateOfBirth",
-                            format(date, "yyyy-MM-dd"),
-                          );
+                          handleInputChange('dateOfBirth', format(date, 'yyyy-MM-dd'));
                         } else {
-                          handleInputChange("dateOfBirth", "");
+                          handleInputChange('dateOfBirth', '');
                         }
                       }}
                       initialFocus
-                      captionLayout="dropdown"
-                      defaultMonth={new Date()}
-                      className="p-3"
+                      captionLayout="dropdown-buttons"
+                      fromYear={1900}
+                      toYear={2100}
+                      defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
                     />
                   </PopoverContent>
                 </Popover>

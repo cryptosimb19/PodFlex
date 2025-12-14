@@ -201,6 +201,22 @@ export default function PodDetail() {
     (r) => r.podId === parseInt(id || "0") && r.status === "pending",
   );
 
+  // Fetch pods where current user is a leader to check if they're a pod leader
+  const { data: userLeaderPods } = useQuery<Pod[]>({
+    queryKey: ["/api/pods/leader", currentUser?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/pods/leader/${currentUser?.id}`, {
+        credentials: "include",
+      });
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!currentUser?.id,
+  });
+
+  // Check if user is a pod leader
+  const isUserPodLeader = userLeaderPods && userLeaderPods.length > 0;
+
   // Create join request mutation
   const joinMutation = useMutation({
     mutationFn: async (requestData: {
@@ -674,6 +690,16 @@ export default function PodDetail() {
                           will review and respond to your request.
                         </p>
                       </>
+                    ) : isUserPodLeader ? (
+                      <>
+                        <h3 className="font-semibold mb-2">
+                          You're a Pod Leader
+                        </h3>
+                        <p className="text-muted-foreground">
+                          Pod leaders cannot join other pods while leading one.
+                          Focus on managing your own pod members.
+                        </p>
+                      </>
                     ) : hasActiveMembership ? (
                       <>
                         <h3 className="font-semibold mb-2">
@@ -711,6 +737,15 @@ export default function PodDetail() {
                       >
                         <User className="w-4 h-4 mr-2" />
                         Sign in to Join
+                      </Button>
+                    ) : isUserPodLeader ? (
+                      <Button
+                        disabled
+                        variant="secondary"
+                        data-testid="button-pod-leader"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Pod Leader
                       </Button>
                     ) : hasActiveMembership ? (
                       <Button
