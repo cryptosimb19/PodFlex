@@ -636,9 +636,6 @@ export default function Dashboard() {
                                   </Avatar>
                                   <div className="min-w-0 flex-1">
                                     <h4 className="font-medium truncate">{member.userName || 'Unknown Member'}</h4>
-                                    {member.userEmail && (
-                                      <p className="text-sm text-gray-600 truncate">{member.userEmail}</p>
-                                    )}
                                     {member.joinedAt && (
                                       <p className="text-xs text-gray-500">
                                         Joined {formatDate(member.joinedAt)}
