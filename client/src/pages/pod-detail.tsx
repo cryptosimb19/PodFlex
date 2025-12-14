@@ -686,36 +686,49 @@ export default function PodDetail() {
                   </h3>
                   {podMembers && podMembers.length > 0 ? (
                     <div className="space-y-3">
-                      {podMembers.map((member) => (
+                      {podMembers.map((member: any) => (
                         <div
                           key={member.id}
-                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
+                          className="p-4 bg-gray-50 rounded-lg border"
                           data-testid={`member-card-${member.id}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
-                              {member.userName?.charAt(0)?.toUpperCase() || "?"}
+                          <div className="flex items-start gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                              {(member.userName || member.user?.firstName || "?").charAt(0).toUpperCase()}
                             </div>
-                            <div>
-                              <p className="font-medium flex items-center gap-2">
-                                {member.userName || "Unknown Member"}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold flex items-center gap-2 flex-wrap">
+                                {member.userName || `${member.user?.firstName || ''} ${member.user?.lastName || ''}`.trim() || "Unknown Member"}
                                 {member.userId === currentUser?.id && (
                                   <Badge variant="outline" className="text-xs">You</Badge>
                                 )}
                               </p>
-                              {member.userEmail && (
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <Mail className="w-3 h-3" />
-                                  <span>{member.userEmail}</span>
-                                </div>
-                              )}
+                              <div className="mt-1 space-y-1">
+                                {(member.userEmail || member.user?.email) && (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <a href={`mailto:${member.userEmail || member.user?.email}`} className="hover:text-primary truncate">
+                                      {member.userEmail || member.user?.email}
+                                    </a>
+                                  </div>
+                                )}
+                                {(member.userPhone || member.user?.phone) && (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <a href={`tel:${member.userPhone || member.user?.phone}`} className="hover:text-primary">
+                                      {member.userPhone || member.user?.phone}
+                                    </a>
+                                  </div>
+                                )}
+                                {member.joinedAt && (
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Calendar className="w-3 h-3 flex-shrink-0" />
+                                    <span>Joined {new Date(member.joinedAt).toLocaleDateString()}</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          {member.joinedAt && (
-                            <div className="text-xs text-muted-foreground">
-                              Joined {new Date(member.joinedAt).toLocaleDateString()}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
