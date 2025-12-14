@@ -1013,9 +1013,6 @@ export default function PodLeaderDashboard() {
                                       <h4 className="font-semibold">
                                         {member.user ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
                                       </h4>
-                                      <p className="text-sm text-gray-600">
-                                        {member.user?.email || 'No email'}
-                                      </p>
                                       <p className="text-sm text-gray-500">
                                         Joined {member.joinedAt ? formatDate(member.joinedAt.toString()) : 'Unknown'}
                                       </p>
