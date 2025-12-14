@@ -1385,6 +1385,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove the member from the pod
       await storage.removePodMember(leaveRequest.podId, leaveRequest.userId, userId);
 
+      // Update the original join request status to 'left' so dashboard doesn't show this pod
+      const joinRequests = await storage.getJoinRequestsForUser(leaveRequest.userId);
+      const originalJoinRequest = joinRequests.find(jr => jr.podId === leaveRequest.podId && jr.status === 'accepted');
+      if (originalJoinRequest) {
+        await storage.updateJoinRequestStatus(originalJoinRequest.id, 'left' as any);
+      }
+
       // Update pod availability
       await storage.updatePodAvailability(leaveRequest.podId, pod.availableSpots + 1);
 
