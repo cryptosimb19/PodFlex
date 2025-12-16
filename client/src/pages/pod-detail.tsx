@@ -529,29 +529,42 @@ export default function PodDetail() {
                       <User className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p
-                        className="font-semibold"
-                        data-testid="text-leader-name"
-                      >
-                        {pod.leaderName || "Pod Leader"}
-                      </p>
-                      {pod.leaderEmail && (
-                        <p
-                          className="text-sm text-muted-foreground flex items-center gap-1"
-                          data-testid="text-leader-email"
-                        >
-                          <Mail className="w-3 h-3" />
-                          {pod.leaderEmail}
-                        </p>
-                      )}
-                      {pod.leaderPhone && (
-                        <p
-                          className="text-sm text-muted-foreground flex items-center gap-1"
-                          data-testid="text-leader-phone"
-                        >
-                          <Phone className="w-3 h-3" />
-                          {pod.leaderPhone}
-                        </p>
+                      {currentUser ? (
+                        <>
+                          <p
+                            className="font-semibold"
+                            data-testid="text-leader-name"
+                          >
+                            {pod.leaderName || "Pod Leader"}
+                          </p>
+                          {pod.leaderEmail && (
+                            <p
+                              className="text-sm text-muted-foreground flex items-center gap-1"
+                              data-testid="text-leader-email"
+                            >
+                              <Mail className="w-3 h-3" />
+                              {pod.leaderEmail}
+                            </p>
+                          )}
+                          {pod.leaderPhone && (
+                            <p
+                              className="text-sm text-muted-foreground flex items-center gap-1"
+                              data-testid="text-leader-phone"
+                            >
+                              <Phone className="w-3 h-3" />
+                              {pod.leaderPhone}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <div>
+                          <p className="font-semibold text-muted-foreground" data-testid="text-leader-hidden">
+                            Sign in to view leader details
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Register or sign in to see the pod leader's contact information
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>

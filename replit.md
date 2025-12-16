@@ -45,6 +45,9 @@ Preferred communication style: Simple, everyday language.
   - **Member Dashboard**: Shows a "Pod Leader" card with either "Create Your Own Pod" button (if no pod exists) or "Switch to Leader Dashboard" button (if user has a pod).
   - **Leader Dashboard**: Shows a "Pod Member" card with "Switch to Member Dashboard" button if the user is also a member of another pod.
   - **API Endpoint**: GET /api/pods/leader/:leaderId returns pods where the specified user is the leader, enabling dual-role detection.
+- **Privacy Controls**:
+  - **Pod Leader Details Hidden for Guests**: When browsing pods from the welcome page, pod leader details (name, email, phone) are hidden until users register or sign in. Guest visitors see a "Sign in to view leader details" message instead.
+  - **Fellow Pod Members Privacy**: Pod members can only see other members' names and join dates - emails and phone numbers are hidden for privacy.
 
 ## External Dependencies
 
