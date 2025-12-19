@@ -1102,7 +1102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Update status to cancelled
-      const cancelledRequest = await storage.updateJoinRequestStatus(id, 'cancelled' as any);
+      const cancelledRequest = await storage.updateJoinRequestStatus(id, 'cancelled');
       
       res.json({ message: "Join request cancelled successfully", request: cancelledRequest });
     } catch (error) {
@@ -1389,7 +1389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const joinRequests = await storage.getJoinRequestsForUser(leaveRequest.userId);
       const originalJoinRequest = joinRequests.find(jr => jr.podId === leaveRequest.podId && jr.status === 'accepted');
       if (originalJoinRequest) {
-        await storage.updateJoinRequestStatus(originalJoinRequest.id, 'left' as any);
+        await storage.updateJoinRequestStatus(originalJoinRequest.id, 'left');
       }
 
       // Update pod availability

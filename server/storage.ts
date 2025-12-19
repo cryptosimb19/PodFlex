@@ -77,7 +77,7 @@ export interface IStorage {
   createJoinRequest(request: InsertJoinRequest): Promise<JoinRequest>;
   getJoinRequestsForPod(podId: number): Promise<JoinRequest[]>;
   getJoinRequestsForUser(userId: string): Promise<JoinRequest[]>;
-  updateJoinRequestStatus(id: number, status: "accepted" | "rejected"): Promise<JoinRequest | undefined>;
+  updateJoinRequestStatus(id: number, status: "accepted" | "rejected" | "cancelled" | "left"): Promise<JoinRequest | undefined>;
   updateJoinRequestEmailStatus(id: number, emailStatus: string): Promise<JoinRequest | undefined>;
   
   // Pod member operations
@@ -554,7 +554,7 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async updateJoinRequestStatus(id: number, status: "accepted" | "rejected"): Promise<JoinRequest | undefined> {
+  async updateJoinRequestStatus(id: number, status: "accepted" | "rejected" | "cancelled" | "left"): Promise<JoinRequest | undefined> {
     const [request] = await db
       .update(joinRequests)
       .set({ status, updatedAt: new Date() })
