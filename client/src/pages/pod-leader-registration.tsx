@@ -113,7 +113,8 @@ export default function PodLeaderRegistration() {
   const [dateInputValue, setDateInputValue] = useState("");
   const [hasExistingPersonalInfo, setHasExistingPersonalInfo] = useState(false);
   const [, navigate] = useLocation();
-
+  const [date,setDate] = useState<Date | undefined>(undefined); // Add this line
+  const [open, setOpen] = useState(false); // Add this line
   // Fetch authenticated user data on mount and check if user already has personal info
   useEffect(() => {
     const fetchUserData = async () => {
@@ -1161,6 +1162,48 @@ export default function PodLeaderRegistration() {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <label htmlFor="dob" className="text-sm font-medium">
+                  Date of Birth
+                </label>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      id="dob"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date
+                        ? date.toLocaleDateString()
+                        : "Select date of birth"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-48 overflow-hidden p-0"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      className="w-full"
+                      onSelect={(date) => {
+                        if (date) {
+                          setDate(date);
+                          setOpen(false);
+                          handleInputChange(
+                            "dateOfBirth",
+                            format(date, "yyyy-MM-dd"),
+                          );
+                        } else {
+                          handleInputChange("dateOfBirth", "");
+                        }
+                      }}
+                      captionLayout="dropdown"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">

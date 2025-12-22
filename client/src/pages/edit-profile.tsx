@@ -56,6 +56,7 @@ export default function EditProfile() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [dateInputValue, setDateInputValue] = useState("");
+  const [open, setOpen] = useState(false);
 
   const { data: authUser, isLoading: authLoading } = useQuery<any>({
     queryKey: ["/api/auth/user"],
@@ -257,6 +258,50 @@ export default function EditProfile() {
                               data-testid="input-date-of-birth"
                             />
                           </FormControl>
+                          <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                id="dob"
+                                className="w-full justify-start text-left font-normal"
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-48 overflow-hidden p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                className="w-full"
+                                onSelect={(date) => {
+                                  if (date) {
+                                    setOpen(false);
+                                    const formatted = format(
+                                      date,
+                                      "MM/dd/yyyy",
+                                    );
+                                    setDateInputValue(formatted);
+                                    field.onChange(format(date, "yyyy-MM-dd"));
+                                  } else {
+                                    setDateInputValue("");
+                                    field.onChange("");
+                                  }
+                                }}
+                                captionLayout="dropdown"
+                                defaultMonth={
+                                  field.value
+                                    ? parse(
+                                        field.value,
+                                        "yyyy-MM-dd",
+                                        new Date(),
+                                      )
+                                    : undefined
+                                }
+                              />
+                            </PopoverContent>
+                          </Popover>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
@@ -294,7 +339,6 @@ export default function EditProfile() {
                                     field.onChange("");
                                   }
                                 }}
-                                initialFocus
                                 captionLayout="dropdown"
                                 defaultMonth={
                                   field.value

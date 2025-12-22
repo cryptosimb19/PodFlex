@@ -1002,6 +1002,7 @@ export default function OnboardingWizard() {
                       onSelect={(date) => {
                         if (date) {
                           setDate(date);
+                          setOpen(false);
                           handleInputChange(
                             "dateOfBirth",
                             format(date, "yyyy-MM-dd"),
