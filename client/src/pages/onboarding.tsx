@@ -975,7 +975,7 @@ export default function OnboardingWizard() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-3 space-y-2">
                 <label htmlFor="dob" className="text-sm font-medium">
                   Date of Birth
                 </label>
@@ -1000,6 +1000,7 @@ export default function OnboardingWizard() {
                       mode="single"
                       onSelect={(date) => {
                         if (date) {
+                          setDate(date);
                           handleInputChange(
                             "dateOfBirth",
                             format(date, "yyyy-MM-dd"),
