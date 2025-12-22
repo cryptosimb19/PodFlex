@@ -977,7 +977,7 @@ export default function OnboardingWizard() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Date of Birth</label>
-                <Popover>
+                <Popover open={open} onOpenChange={setOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -1000,10 +1000,10 @@ export default function OnboardingWizard() {
                         }
                       }}
                       initialFocus
-                      captionLayout="dropdown-buttons"
+                      captionLayout="dropdown"
                       fromYear={1900}
                       toYear={2100}
-                      defaultMonth={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
+                      defaultMonth={new Date()}
                     />
                   </PopoverContent>
                 </Popover>
