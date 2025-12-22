@@ -985,19 +985,11 @@ export default function OnboardingWizard() {
                       variant="outline"
                       id="dob"
                       className="w-full justify-start text-left font-normal"
-                      data-testid="button-date-picker"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {userData.dateOfBirth ? (
-                        format(
-                          parse(userData.dateOfBirth, "yyyy-MM-dd", new Date()),
-                          "PPP",
-                        )
-                      ) : (
-                        <span className="text-muted-foreground">
-                          Pick a date
-                        </span>
-                      )}
+                      {date
+                        ? date.toLocaleDateString()
+                        : "Select date of birth"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
@@ -1017,9 +1009,6 @@ export default function OnboardingWizard() {
                         }
                       }}
                       captionLayout="dropdown"
-                      fromYear={1900}
-                      toYear={2100}
-                      defaultMonth={new Date()}
                     />
                   </PopoverContent>
                 </Popover>
