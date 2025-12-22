@@ -58,18 +58,18 @@ interface UserData {
 }
 
 const formatDate = (date: Date | undefined) => {
-  if(!date) return "";
+  if (!date) return "";
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "2-digit",
-  })
-}
+  });
+};
 
 const isValidDate = (date: Date | undefined) => {
-  if(!date) return false;
+  if (!date) return false;
   return !isNaN(date.getTime());
-}
+};
 
 export default function OnboardingWizard() {
   const { toast } = useToast();
@@ -92,9 +92,9 @@ export default function OnboardingWizard() {
     dateOfBirth: "",
   });
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(new Date())
-  const [month, setMonth] = useState<Date | undefined>(date)
-  const [dateOfBirth, setDateOfBirth] = useState(formatDate(date))
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [month, setMonth] = useState<Date | undefined>(date);
+  const [dateOfBirth, setDateOfBirth] = useState(formatDate(date));
   const [, navigate] = useLocation();
 
   // Get user type from URL parameters
@@ -985,21 +985,31 @@ export default function OnboardingWizard() {
                       data-testid="button-date-picker"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {userData.dateOfBirth ? format(parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()), 'PPP') : <span className="text-muted-foreground">Pick a date</span>}
+                      {userData.dateOfBirth ? (
+                        format(
+                          parse(userData.dateOfBirth, "yyyy-MM-dd", new Date()),
+                          "PPP",
+                        )
+                      ) : (
+                        <span className="text-muted-foreground">
+                          Pick a date
+                        </span>
+                      )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={userData.dateOfBirth ? parse(userData.dateOfBirth, 'yyyy-MM-dd', new Date()) : undefined}
                       onSelect={(date) => {
                         if (date) {
-                          handleInputChange('dateOfBirth', format(date, 'yyyy-MM-dd'));
+                          handleInputChange(
+                            "dateOfBirth",
+                            format(date, "yyyy-MM-dd"),
+                          );
                         } else {
-                          handleInputChange('dateOfBirth', '');
+                          handleInputChange("dateOfBirth", "");
                         }
                       }}
-                      initialFocus
                       captionLayout="dropdown"
                       fromYear={1900}
                       toYear={2100}
