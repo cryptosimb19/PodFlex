@@ -976,11 +976,14 @@ export default function OnboardingWizard() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Date of Birth</label>
+                <label htmlFor="dob" className="text-sm font-medium">
+                  Date of Birth
+                </label>
                 <Popover open={open} onOpenChange={setOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
+                      id="dob"
                       className="w-full justify-start text-left font-normal"
                       data-testid="button-date-picker"
                     >
@@ -997,7 +1000,10 @@ export default function OnboardingWizard() {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent
+                    className="w-auto overflow-hidden p-0"
+                    align="start"
+                  >
                     <Calendar
                       mode="single"
                       onSelect={(date) => {
