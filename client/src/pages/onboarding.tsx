@@ -975,7 +975,7 @@ export default function OnboardingWizard() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 space-y-2">
+              <div className="flex flex-col gap-3">
                 <label htmlFor="dob" className="text-sm font-medium">
                   Date of Birth
                 </label>
@@ -993,11 +993,12 @@ export default function OnboardingWizard() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="w-auto overflow-hidden p-0"
+                    className="w-48 overflow-hidden p-0"
                     align="start"
                   >
                     <Calendar
                       mode="single"
+                      className="w-full"
                       onSelect={(date) => {
                         if (date) {
                           setDate(date);
