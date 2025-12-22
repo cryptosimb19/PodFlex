@@ -302,56 +302,6 @@ export default function EditProfile() {
                               />
                             </PopoverContent>
                           </Popover>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                                data-testid="button-calendar-picker"
-                              >
-                                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                              <Calendar
-                                mode="single"
-                                selected={
-                                  field.value
-                                    ? parse(
-                                        field.value,
-                                        "yyyy-MM-dd",
-                                        new Date(),
-                                      )
-                                    : undefined
-                                }
-                                onSelect={(date) => {
-                                  if (date) {
-                                    const formatted = format(
-                                      date,
-                                      "MM/dd/yyyy",
-                                    );
-                                    setDateInputValue(formatted);
-                                    field.onChange(format(date, "yyyy-MM-dd"));
-                                  } else {
-                                    setDateInputValue("");
-                                    field.onChange("");
-                                  }
-                                }}
-                                captionLayout="dropdown"
-                                defaultMonth={
-                                  field.value
-                                    ? parse(
-                                        field.value,
-                                        "yyyy-MM-dd",
-                                        new Date(),
-                                      )
-                                    : undefined
-                                }
-                              />
-                            </PopoverContent>
-                          </Popover>
                         </div>
                         <FormMessage />
                       </FormItem>
