@@ -93,8 +93,7 @@ export default function OnboardingWizard() {
   });
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [month, setMonth] = useState<Date | undefined>(date);
-  const [dateOfBirth, setDateOfBirth] = useState(formatDate(date));
+  const [value, setValue] = useState("")
   const [, navigate] = useLocation();
 
   // Get user type from URL parameters
@@ -979,42 +978,63 @@ export default function OnboardingWizard() {
                 <label htmlFor="dob" className="text-sm font-medium">
                   Date of Birth
                 </label>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      id="dob"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date
-                        ? date.toLocaleDateString()
-                        : "Select date of birth"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-48 overflow-hidden p-0"
-                    align="start"
-                  >
-                    <Calendar
-                      mode="single"
-                      className="w-full"
-                      onSelect={(date) => {
-                        if (date) {
-                          setDate(date);
-                          setOpen(false);
-                          handleInputChange(
-                            "dateOfBirth",
-                            format(date, "yyyy-MM-dd"),
-                          );
-                        } else {
-                          handleInputChange("dateOfBirth", "");
-                        }
+                <div className="relative flex gap-2">
+                  <Input
+                      id="date"
+                      value={value}
+                      placeholder="MM/DD/YYYY"
+                      onChange={(e) => {
+                          setValue(e.target.value);
+                          const date = parseDate(e.target.value);
+                          if(date) {
+                            handleInputChange(
+                              "dateOfBirth",
+                              format(date, "yyyy-MM-dd"),
+                            );
+                          }
                       }}
-                      captionLayout="dropdown"
-                    />
-                  </PopoverContent>
-                </Popover>
+                      onKeyDown={(e) => {
+                          if (e.key === "ArrowDown") {
+                              e.preventDefault()
+                              setOpen(true)
+                          }
+                      }}
+                  />
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        id="dob"
+                        className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <span className="sr-only">Select Date Of Birth</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-48 overflow-hidden p-0"
+                      align="start"
+                    >
+                      <Calendar
+                        mode="single"
+                        className="w-full"
+                        onSelect={(date) => {
+                          if (date) {
+                            setDate(date);
+                            setOpen(false);
+                            handleInputChange(
+                              "dateOfBirth",
+                              format(date, "yyyy-MM-dd"),
+                            );
+                          } else {
+                            handleInputChange("dateOfBirth", "");
+                          }
+                        }}
+                        captionLayout="dropdown"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <Button
