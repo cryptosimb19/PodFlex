@@ -21,9 +21,9 @@ interface PodPayment {
 
 export default function PaymentHistory() {
   const { data: payments, isLoading, error } = useQuery<PodPayment[]>({
-    queryKey: ["/api/payments/user"],
+    queryKey: ["/api/payments/my-history"],
     queryFn: async () => {
-      const response = await fetch("/api/payments/user", {
+      const response = await fetch("/api/payments/my-history", {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to load payments");

@@ -27,9 +27,9 @@ export default function PaymentCard({ podId, podTitle, showTitle = true }: Payme
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const { data: breakdown, isLoading: breakdownLoading, error: breakdownError } = useQuery<PaymentBreakdown>({
-    queryKey: ["/api/pods", podId, "payment-breakdown"],
+    queryKey: ["/api/payments/breakdown", podId],
     queryFn: async () => {
-      const response = await fetch(`/api/pods/${podId}/payment-breakdown`, {
+      const response = await fetch(`/api/payments/breakdown/${podId}`, {
         credentials: "include",
       });
       if (!response.ok) {

@@ -29,8 +29,14 @@ import {
   User,
   ArrowRight,
   ImageIcon,
-  X
+  X,
+  Settings,
+  Percent,
+  Save
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/hooks/use-upload";
@@ -97,6 +103,8 @@ export default function PodLeaderDashboard() {
   const [editAvailableSpots, setEditAvailableSpots] = useState<number>(0);
   const [editAmenities, setEditAmenities] = useState<string[]>([]);
   const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
+  const [platformFee, setPlatformFee] = useState<number>(5);
+  const [isEditingFee, setIsEditingFee] = useState(false);
 
   // Image upload hook for editing pods
   const { uploadFile, isUploading } = useUpload({
@@ -255,6 +263,41 @@ export default function PodLeaderDashboard() {
   // Check if user has any accepted memberships in other pods
   const acceptedMemberships = userJoinRequests?.filter((req: any) => req.status === 'accepted') || [];
   const isMemberOfPod = acceptedMemberships.length > 0;
+
+  // Fetch platform settings
+  const { data: platformSettings, isLoading: settingsLoading } = useQuery<{ platformFeePercent: number }>({
+    queryKey: ['/api/platform-settings'],
+  });
+
+  // Update local state when platform settings are loaded
+  useEffect(() => {
+    if (platformSettings) {
+      setPlatformFee(platformSettings.platformFeePercent);
+    }
+  }, [platformSettings]);
+
+  // Mutation to update platform fee
+  const updatePlatformFeeMutation = useMutation({
+    mutationFn: async (feePercent: number) => {
+      const response = await apiRequest('PATCH', '/api/platform-settings', { platformFeePercent: feePercent });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Settings updated",
+        description: "Platform fee has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/platform-settings'] });
+      setIsEditingFee(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update platform fee. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Mutation to update join request status
   const updateRequestMutation = useMutation({
@@ -736,7 +779,7 @@ export default function PodLeaderDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="requests" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-9 sm:h-11">
+              <TabsList className="grid w-full grid-cols-5 h-9 sm:h-11">
                 <TabsTrigger value="requests" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-join-requests">
                   Join
                   {pendingRequests.length > 0 && (
@@ -758,6 +801,9 @@ export default function PodLeaderDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="pods" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-my-pods">
                   Pods
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-settings">
+                  Settings
                 </TabsTrigger>
               </TabsList>
 
@@ -1530,6 +1576,137 @@ export default function PodLeaderDashboard() {
                         ))}
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="settings" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Settings className="w-5 h-5" />
+                      <span>Platform Settings</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {/* Platform Fee Setting */}
+                      <div className="border rounded-lg p-4 sm:p-6">
+                        <div className="flex items-start space-x-3 mb-4">
+                          <div className="p-2 bg-purple-100 rounded-lg">
+                            <Percent className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">Platform Fee</h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Set the percentage fee that FlexPod adds to membership payments. 
+                              This fee helps cover platform costs and is added on top of the pod membership cost.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {settingsLoading ? (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                          </div>
+                        ) : isEditingFee ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex-1">
+                                <Label htmlFor="platformFee" className="text-sm font-medium">
+                                  Fee Percentage
+                                </Label>
+                                <div className="relative mt-1">
+                                  <Input
+                                    id="platformFee"
+                                    type="number"
+                                    min="0"
+                                    max="25"
+                                    step="0.5"
+                                    value={platformFee}
+                                    onChange={(e) => setPlatformFee(parseFloat(e.target.value) || 0)}
+                                    className="pr-8"
+                                    data-testid="input-platform-fee"
+                                  />
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                onClick={() => updatePlatformFeeMutation.mutate(platformFee)}
+                                disabled={updatePlatformFeeMutation.isPending}
+                                size="sm"
+                                data-testid="button-save-fee"
+                              >
+                                <Save className="w-4 h-4 mr-2" />
+                                {updatePlatformFeeMutation.isPending ? "Saving..." : "Save Changes"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setIsEditingFee(false);
+                                  setPlatformFee(platformSettings?.platformFeePercent || 5);
+                                }}
+                                size="sm"
+                                data-testid="button-cancel-fee"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-2xl font-bold text-purple-600">{platformSettings?.platformFeePercent || 5}%</span>
+                              <span className="text-sm text-gray-500">of membership cost</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsEditingFee(true)}
+                              data-testid="button-edit-fee"
+                            >
+                              <Edit3 className="w-4 h-4 mr-2" />
+                              Edit
+                            </Button>
+                          </div>
+                        )}
+                        
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">Example Calculation</h4>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <div className="flex justify-between">
+                              <span>Pod membership cost:</span>
+                              <span>$100.00</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Platform fee ({platformSettings?.platformFeePercent || platformFee}%):</span>
+                              <span>${((100 * (platformSettings?.platformFeePercent || platformFee)) / 100).toFixed(2)}</span>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="flex justify-between font-medium text-gray-900">
+                              <span>Member pays:</span>
+                              <span>${(100 + (100 * (platformSettings?.platformFeePercent || platformFee)) / 100).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Additional Info */}
+                      <div className="border rounded-lg p-4 sm:p-6 bg-blue-50 border-blue-200">
+                        <div className="flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium text-blue-900">About Platform Fees</h4>
+                            <p className="text-sm text-blue-800 mt-1">
+                              Platform fees are added to help maintain FlexPod's services. Members will see a breakdown 
+                              of costs (membership + platform fee) before completing their payment.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

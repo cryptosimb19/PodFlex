@@ -1875,7 +1875,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get payment history for current user
+  // Get payment history for current user (alias for frontend)
+  app.get("/api/payments/my-history", isAuthenticated, async (req: any, res) => {
+    try {
+      const payments = await storage.getPodPaymentsForUser(req.user.id);
+      
+      // Enrich with pod details
+      const paymentsWithDetails = await Promise.all(
+        payments.map(async (payment) => {
+          const pod = await storage.getPod(payment.podId);
+          return {
+            ...payment,
+            pod: pod ? {
+              id: pod.id,
+              title: pod.title,
+              clubName: pod.clubName,
+            } : null,
+          };
+        })
+      );
+
+      res.json(paymentsWithDetails);
+    } catch (error) {
+      console.error("Error fetching user payments:", error);
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+
+  // Get payment history for current user (legacy route)
   app.get("/api/payments/user", isAuthenticated, async (req: any, res) => {
     try {
       const payments = await storage.getPodPaymentsForUser(req.user.id);
