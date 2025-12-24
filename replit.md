@@ -40,7 +40,9 @@ Preferred communication style: Simple, everyday language.
 - **Business Rules Enforcement**:
   - **One Pod Per Leader**: Pod leaders can only create one active pod. Backend validates via `getPodsByLeaderId()` which filters out deleted pods (`deletedAt IS NULL`). If a leader already has a pod, creation returns 400 with descriptive error message.
   - **Maximum 10 Members Per Pod**: Enforced on both pod creation (POST /api/pods) and editing (PATCH /api/pods/:id). Backend validates `totalSpots <= 10` and returns 400 if exceeded. Frontend forms include `max="10"` attribute for immediate user feedback. The 10-member limit includes the pod leader.
+  - **Available Spots Calculation**: When a pod is created, `availableSpots = totalSpots - 1` because the pod leader occupies one spot. For example, if totalSpots is 5, availableSpots will be 4.
   - **Pod Leader Assignment**: When creating a pod, `leadId` is automatically set from the authenticated user's ID (`req.user.id`), ensuring pods are correctly associated with their leaders and appear on the leader dashboard.
+  - **Platform Fee Admin-Only**: Platform fee can only be edited by platform admins. Pod leaders can view the current platform fee in their Settings tab but cannot modify it.
 - **Profile Images**: Users can upload profile images from the edit profile page. Images are stored using Replit object storage. Dashboards display profile images with fallback to initials (first letter of first name + first letter of last name) when no image is uploaded. Maximum file size is 5MB, JPEG or PNG formats supported.
 - **Dual-Role Support**: Users can simultaneously be a pod member (in one pod) AND a pod leader (of their own pod).
   - **Member Dashboard**: Shows a "Pod Leader" card with either "Create Your Own Pod" button (if no pod exists) or "Switch to Leader Dashboard" button (if user has a pod).
