@@ -265,21 +265,21 @@ export default function PodLeaderDashboard() {
   const isMemberOfPod = acceptedMemberships.length > 0;
 
   // Fetch platform settings
-  const { data: platformSettings, isLoading: settingsLoading } = useQuery<{ platformFeePercent: number }>({
-    queryKey: ['/api/platform-settings'],
+  const { data: platformSettings, isLoading: settingsLoading } = useQuery<{ feePercentage: number }>({
+    queryKey: ['/api/settings/platform-fee'],
   });
 
   // Update local state when platform settings are loaded
   useEffect(() => {
     if (platformSettings) {
-      setPlatformFee(platformSettings.platformFeePercent);
+      setPlatformFee(platformSettings.feePercentage);
     }
   }, [platformSettings]);
 
   // Mutation to update platform fee
   const updatePlatformFeeMutation = useMutation({
     mutationFn: async (feePercent: number) => {
-      const response = await apiRequest('PATCH', '/api/platform-settings', { platformFeePercent: feePercent });
+      const response = await apiRequest('PATCH', '/api/settings/platform-fee', { feePercentage: feePercent });
       return response.json();
     },
     onSuccess: () => {
@@ -287,7 +287,7 @@ export default function PodLeaderDashboard() {
         title: "Settings updated",
         description: "Platform fee has been updated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/platform-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/settings/platform-fee'] });
       setIsEditingFee(false);
     },
     onError: () => {
@@ -1646,7 +1646,7 @@ export default function PodLeaderDashboard() {
                                 variant="outline"
                                 onClick={() => {
                                   setIsEditingFee(false);
-                                  setPlatformFee(platformSettings?.platformFeePercent || 5);
+                                  setPlatformFee(platformSettings?.feePercentage || 5);
                                 }}
                                 size="sm"
                                 data-testid="button-cancel-fee"
@@ -1658,7 +1658,7 @@ export default function PodLeaderDashboard() {
                         ) : (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <span className="text-2xl font-bold text-purple-600">{platformSettings?.platformFeePercent || 5}%</span>
+                              <span className="text-2xl font-bold text-purple-600">{platformSettings?.feePercentage || 5}%</span>
                               <span className="text-sm text-gray-500">of membership cost</span>
                             </div>
                             <Button
@@ -1681,13 +1681,13 @@ export default function PodLeaderDashboard() {
                               <span>$100.00</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Platform fee ({platformSettings?.platformFeePercent || platformFee}%):</span>
-                              <span>${((100 * (platformSettings?.platformFeePercent || platformFee)) / 100).toFixed(2)}</span>
+                              <span>Platform fee ({platformSettings?.feePercentage || platformFee}%):</span>
+                              <span>${((100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
                             </div>
                             <Separator className="my-2" />
                             <div className="flex justify-between font-medium text-gray-900">
                               <span>Member pays:</span>
-                              <span>${(100 + (100 * (platformSettings?.platformFeePercent || platformFee)) / 100).toFixed(2)}</span>
+                              <span>${(100 + (100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
                             </div>
                           </div>
                         </div>

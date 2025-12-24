@@ -63,6 +63,27 @@ Preferred communication style: Simple, everyday language.
 - **SendGrid**: Used for email notifications (e.g., join requests, acceptance/rejection, password reset) with branded HTML templates. Configured with API key via `SENDGRID_API_KEY` environment variable. Note: Sender email address must be verified in SendGrid before emails can be sent.
 - **Twilio**: Used for SMS-based phone number authentication with OTP verification. Configured with `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` environment variables.
 - **Apple OAuth**: Sign in with Apple authentication configured with `APPLE_TEAM_ID`, `APPLE_CLIENT_ID`, `APPLE_KEY_ID`, and `APPLE_PRIVATE_KEY` environment variables.
+- **Polar.sh**: Payment processing (Merchant of Record) for pod membership fees. Configured with `POLAR_ACCESS_TOKEN` and `POLAR_WEBHOOK_SECRET` environment variables.
+
+### Payment Integration
+- **Database Tables**: `pod_payments` stores payment records (checkout/order IDs, amounts, status); `platform_settings` stores adjustable platform fee percentage.
+- **Payment Flow**: 
+  1. Member views PaymentCard on pod detail page showing cost breakdown (membership fee + platform fee)
+  2. Member clicks "Pay Now" which creates a Polar.sh checkout session
+  3. User is redirected to Polar.sh hosted checkout page
+  4. After payment, user returns to /payment-success page which polls for completion
+  5. Polar.sh sends webhook events to /api/webhooks/polar to update payment status
+- **Platform Fee**: Adjustable percentage (default 5%) set by managers in pod-leader-dashboard Settings tab
+- **API Endpoints**:
+  - `GET /api/settings/platform-fee` - Get current platform fee percentage
+  - `PATCH /api/settings/platform-fee` - Update platform fee percentage (authenticated users)
+  - `GET /api/pods/:id/payment-breakdown` - Calculate payment amounts for a pod
+  - `POST /api/payments/create-checkout` - Create Polar.sh checkout session
+  - `GET /api/payments/my-history` - Get authenticated user's payment history
+  - `GET /api/payments/status/:checkoutId` - Check payment status
+  - `POST /api/webhooks/polar` - Handle Polar webhook events
+- **Frontend Components**: PaymentCard (cost breakdown + checkout button), PaymentHistory (user's past payments), PaymentSuccess (post-checkout confirmation page)
+- **Dashboards**: Member dashboard has "Payments" tab showing payment history; Leader dashboard has "Settings" tab for platform fee management
 
 ### Development Tools
 - `Vite`: Build tool and development server.
