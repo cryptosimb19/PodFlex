@@ -1210,6 +1210,7 @@ export default function PodLeaderRegistration() {
                     >
                       <Calendar
                         mode="single"
+                        className="w-full"
                         onSelect={(date) => {
                           if (date) {
                             setDate(date);

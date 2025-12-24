@@ -1018,6 +1018,7 @@ export default function OnboardingWizard() {
                     >
                       <Calendar
                         mode="single"
+                        className="w-full"
                         onSelect={(date) => {
                           if (date) {
                             setDate(date);

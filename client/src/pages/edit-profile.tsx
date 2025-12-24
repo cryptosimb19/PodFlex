@@ -300,6 +300,7 @@ export default function EditProfile() {
                               >
                                 <Calendar
                                   mode="single"
+                                  className="w-full"
                                   onSelect={(date) => {
                                     if (date) {
                                       setOpen(false);
@@ -307,7 +308,7 @@ export default function EditProfile() {
                                         date,
                                         "MM/dd/yyyy",
                                       );
-                                      setValue(formatted)
+                                      setValue(formatted);
                                       setDateInputValue(formatted);
                                       field.onChange(
                                         format(date, "yyyy-MM-dd"),
