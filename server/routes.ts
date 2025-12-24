@@ -12,6 +12,7 @@ import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 import type { User, Pod } from "@shared/schema";
 import rateLimit from "express-rate-limit";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 // Sanitize user data to remove sensitive fields
 function sanitizeUser(user: User) {
@@ -22,6 +23,9 @@ function sanitizeUser(user: User) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Register object storage routes for file uploads
+  registerObjectStorageRoutes(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useUpload } from "@/hooks/use-upload";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,9 @@ import {
   Shield,
   ArrowRight,
   ArrowLeft,
+  Upload,
+  ImageIcon,
+  X,
 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -75,6 +79,7 @@ interface PodLeaderData {
   // Pod Details
   podName: string;
   podDescription: string;
+  podImageUrl: string;
   monthlyFee: string;
   availableSpots: string;
   startDate: string;
@@ -105,6 +110,7 @@ export default function PodLeaderRegistration() {
     membershipId: "",
     podName: "",
     podDescription: "",
+    podImageUrl: "",
     monthlyFee: "",
     availableSpots: "",
     startDate: "",
@@ -114,10 +120,55 @@ export default function PodLeaderRegistration() {
   const [dateInputValue, setDateInputValue] = useState("");
   const [hasExistingPersonalInfo, setHasExistingPersonalInfo] = useState(false);
   const [, navigate] = useLocation();
-  const [date, setDate] = useState<Date | undefined>(undefined); // Add this line
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
-  // Add this line
+  
+  // Image upload hook
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      setFormData(prev => ({ ...prev, podImageUrl: response.objectPath }));
+      toast({
+        title: "Image uploaded",
+        description: "Your pod image has been uploaded successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (JPEG, PNG, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Image must be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      await uploadFile(file);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, podImageUrl: "" }));
+  };
+
   // Fetch authenticated user data on mount and check if user already has personal info
   useEffect(() => {
     const fetchUserData = async () => {
@@ -831,6 +882,7 @@ export default function PodLeaderRegistration() {
         availableSpots: parseInt(formData.availableSpots),
         amenities: [],
         rules: formData.requirements.join(", "),
+        imageUrl: formData.podImageUrl || null,
         isActive: true,
       };
 
@@ -1299,6 +1351,55 @@ export default function PodLeaderRegistration() {
                   placeholder="Share your pod's focus, schedule, and what makes it special..."
                   rows={3}
                 />
+              </div>
+
+              {/* Pod Image Upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pod Image (Optional)</label>
+                {formData.podImageUrl ? (
+                  <div className="relative">
+                    <img
+                      src={formData.podImageUrl}
+                      alt="Pod preview"
+                      className="w-full h-40 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={removeImage}
+                      data-testid="button-remove-image"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={isUploading}
+                      data-testid="input-pod-image"
+                    />
+                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 transition-colors">
+                      {isUploading ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600" />
+                          <span className="text-sm text-gray-600">Uploading...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-600">Click to upload an image</span>
+                          <span className="text-xs text-gray-400 mt-1">Max 5MB, JPEG or PNG</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
