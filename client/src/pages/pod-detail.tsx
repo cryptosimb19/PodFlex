@@ -393,6 +393,17 @@ export default function PodDetail() {
       {/* Pod Details */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         <Card>
+          {/* Pod Image */}
+          {pod.imageUrl && (
+            <div className="w-full h-48 md:h-64 overflow-hidden rounded-t-lg">
+              <img
+                src={pod.imageUrl}
+                alt={pod.title}
+                className="w-full h-full object-cover"
+                data-testid="img-pod-image"
+              />
+            </div>
+          )}
           <CardHeader>
             <div className="flex justify-between items-start">
               <div className="flex-1">
