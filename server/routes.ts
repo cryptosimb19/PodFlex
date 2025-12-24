@@ -793,9 +793,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Set the leadId from the authenticated user
+      // Available spots = total spots - 1 (leader takes one spot)
       const pod = await storage.createPod({
         ...podData,
-        leadId: req.user.id
+        leadId: req.user.id,
+        availableSpots: podData.totalSpots - 1
       });
       
       // Send congratulatory email to pod leader

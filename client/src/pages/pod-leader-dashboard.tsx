@@ -103,8 +103,6 @@ export default function PodLeaderDashboard() {
   const [editAvailableSpots, setEditAvailableSpots] = useState<number>(0);
   const [editAmenities, setEditAmenities] = useState<string[]>([]);
   const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
-  const [platformFee, setPlatformFee] = useState<number>(5);
-  const [isEditingFee, setIsEditingFee] = useState(false);
 
   // Image upload hook for editing pods
   const { uploadFile, isUploading } = useUpload({
@@ -267,36 +265,6 @@ export default function PodLeaderDashboard() {
   // Fetch platform settings
   const { data: platformSettings, isLoading: settingsLoading } = useQuery<{ feePercentage: number }>({
     queryKey: ['/api/settings/platform-fee'],
-  });
-
-  // Update local state when platform settings are loaded
-  useEffect(() => {
-    if (platformSettings) {
-      setPlatformFee(platformSettings.feePercentage);
-    }
-  }, [platformSettings]);
-
-  // Mutation to update platform fee
-  const updatePlatformFeeMutation = useMutation({
-    mutationFn: async (feePercent: number) => {
-      const response = await apiRequest('PATCH', '/api/settings/platform-fee', { feePercentage: feePercent });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Settings updated",
-        description: "Platform fee has been updated successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/settings/platform-fee'] });
-      setIsEditingFee(false);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update platform fee. Please try again.",
-        variant: "destructive",
-      });
-    },
   });
 
   // Mutation to update join request status
@@ -1605,67 +1573,13 @@ export default function PodLeaderDashboard() {
                           <div className="flex items-center justify-center py-4">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
                           </div>
-                        ) : isEditingFee ? (
-                          <div className="space-y-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1">
-                                <Label htmlFor="platformFee" className="text-sm font-medium">
-                                  Fee Percentage
-                                </Label>
-                                <div className="relative mt-1">
-                                  <Input
-                                    id="platformFee"
-                                    type="number"
-                                    min="0"
-                                    max="25"
-                                    step="0.5"
-                                    value={platformFee}
-                                    onChange={(e) => setPlatformFee(parseFloat(e.target.value) || 0)}
-                                    className="pr-8"
-                                    data-testid="input-platform-fee"
-                                  />
-                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                onClick={() => updatePlatformFeeMutation.mutate(platformFee)}
-                                disabled={updatePlatformFeeMutation.isPending}
-                                size="sm"
-                                data-testid="button-save-fee"
-                              >
-                                <Save className="w-4 h-4 mr-2" />
-                                {updatePlatformFeeMutation.isPending ? "Saving..." : "Save Changes"}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setIsEditingFee(false);
-                                  setPlatformFee(platformSettings?.feePercentage || 5);
-                                }}
-                                size="sm"
-                                data-testid="button-cancel-fee"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
                         ) : (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <span className="text-2xl font-bold text-purple-600">{platformSettings?.feePercentage || 5}%</span>
                               <span className="text-sm text-gray-500">of membership cost</span>
                             </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setIsEditingFee(true)}
-                              data-testid="button-edit-fee"
-                            >
-                              <Edit3 className="w-4 h-4 mr-2" />
-                              Edit
-                            </Button>
+                            <span className="text-xs text-gray-400">Set by platform admin</span>
                           </div>
                         )}
                         
@@ -1681,13 +1595,13 @@ export default function PodLeaderDashboard() {
                                   <span>${(leaderPods[0].costPerPerson / 100).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Platform fee ({platformSettings?.feePercentage || platformFee}%):</span>
-                                  <span>${((leaderPods[0].costPerPerson / 100) * (platformSettings?.feePercentage || platformFee) / 100).toFixed(2)}</span>
+                                  <span>Platform fee ({platformSettings?.feePercentage || 5}%):</span>
+                                  <span>${((leaderPods[0].costPerPerson / 100) * (platformSettings?.feePercentage || 5) / 100).toFixed(2)}</span>
                                 </div>
                                 <Separator className="my-2" />
                                 <div className="flex justify-between font-medium text-gray-900">
                                   <span>Member pays:</span>
-                                  <span>${((leaderPods[0].costPerPerson / 100) * (1 + (platformSettings?.feePercentage || platformFee) / 100)).toFixed(2)}</span>
+                                  <span>${((leaderPods[0].costPerPerson / 100) * (1 + (platformSettings?.feePercentage || 5) / 100)).toFixed(2)}</span>
                                 </div>
                               </>
                             ) : (
@@ -1697,13 +1611,13 @@ export default function PodLeaderDashboard() {
                                   <span>$100.00</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Platform fee ({platformSettings?.feePercentage || platformFee}%):</span>
-                                  <span>${((100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
+                                  <span>Platform fee ({platformSettings?.feePercentage || 5}%):</span>
+                                  <span>${((100 * (platformSettings?.feePercentage || 5)) / 100).toFixed(2)}</span>
                                 </div>
                                 <Separator className="my-2" />
                                 <div className="flex justify-between font-medium text-gray-900">
                                   <span>Member pays:</span>
-                                  <span>${(100 + (100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
+                                  <span>${(100 + (100 * (platformSettings?.feePercentage || 5)) / 100).toFixed(2)}</span>
                                 </div>
                               </>
                             )}

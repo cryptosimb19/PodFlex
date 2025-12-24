@@ -344,8 +344,8 @@ export default function EditProfile() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date of Birth</FormLabel>
-                        <div className="relative flex gap-2">
-                          <FormControl>
+                        <FormControl>
+                          <div className="relative flex gap-2">
                             <Input
                               value={dateInputValue}
                               onChange={(e) => {
@@ -415,8 +415,8 @@ export default function EditProfile() {
                                 />
                               </PopoverContent>
                             </Popover>
-                          </FormControl>
-                        </div>
+                          </div>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
