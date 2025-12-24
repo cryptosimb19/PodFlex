@@ -34,6 +34,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import { parseDate } from "chrono-node";
 
 const editProfileSchema = z.object({
   firstName: z.string().optional(),
@@ -57,6 +58,7 @@ export default function EditProfile() {
   const { toast } = useToast();
   const [dateInputValue, setDateInputValue] = useState("");
   const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
 
   const { data: authUser, isLoading: authLoading } = useQuery<any>({
     queryKey: ["/api/auth/user"],
@@ -258,6 +260,77 @@ export default function EditProfile() {
                               data-testid="input-date-of-birth"
                             />
                           </FormControl>
+                          <div className="relative flex gap-2">
+                            <Input
+                              id="date"
+                              value={value}
+                              placeholder="MM/DD/YYYY"
+                              onChange={(e) => {
+                                setValue(e.target.value);
+                                const date = parseDate(e.target.value);
+                                if (date) {
+                                  const formatted = format(date, "MM/dd/yyyy");
+                                  setDateInputValue(formatted);
+                                  field.onChange(format(date, "yyyy-MM-dd"));
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "ArrowDown") {
+                                  e.preventDefault();
+                                  setOpen(true);
+                                }
+                              }}
+                            />
+                            <Popover open={open} onOpenChange={setOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  id="dob"
+                                  className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  <span className="sr-only">
+                                    Select Date Of Birth
+                                  </span>
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-auto overflow-hidden p-0"
+                                align="end"
+                              >
+                                <Calendar
+                                  mode="single"
+                                  className="w-full"
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      setOpen(false);
+                                      const formatted = format(
+                                        date,
+                                        "MM/dd/yyyy",
+                                      );
+                                      setDateInputValue(formatted);
+                                      field.onChange(
+                                        format(date, "yyyy-MM-dd"),
+                                      );
+                                    } else {
+                                      setDateInputValue("");
+                                      field.onChange("");
+                                    }
+                                  }}
+                                  captionLayout="dropdown"
+                                  defaultMonth={
+                                    field.value
+                                      ? parse(
+                                          field.value,
+                                          "yyyy-MM-dd",
+                                          new Date(),
+                                        )
+                                      : undefined
+                                  }
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                           <Popover open={open} onOpenChange={setOpen}>
                             <PopoverTrigger asChild>
                               <Button
