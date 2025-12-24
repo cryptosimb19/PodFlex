@@ -295,12 +295,11 @@ export default function EditProfile() {
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent
-                                className="w-auto overflow-hidden p-0"
+                                className="w-64 overflow-hidden p-0"
                                 align="end"
                               >
                                 <Calendar
                                   mode="single"
-                                  className="w-full"
                                   onSelect={(date) => {
                                     if (date) {
                                       setOpen(false);
@@ -308,6 +307,7 @@ export default function EditProfile() {
                                         date,
                                         "MM/dd/yyyy",
                                       );
+                                      setValue(formatted)
                                       setDateInputValue(formatted);
                                       field.onChange(
                                         format(date, "yyyy-MM-dd"),

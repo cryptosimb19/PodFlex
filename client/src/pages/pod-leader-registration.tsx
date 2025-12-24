@@ -1205,15 +1205,15 @@ export default function PodLeaderRegistration() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-auto overflow-hidden p-0"
+                      className="w-64 overflow-hidden p-0"
                       align="end"
                     >
                       <Calendar
                         mode="single"
-                        className="w-full"
                         onSelect={(date) => {
                           if (date) {
                             setDate(date);
+                            setValue(format(date, "MM/dd/yyyy"));
                             setOpen(false);
                             handleInputChange(
                               "dateOfBirth",
