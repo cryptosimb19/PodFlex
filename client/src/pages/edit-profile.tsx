@@ -30,7 +30,14 @@ import {
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navigation from "@/components/Navigation";
-import { Loader2, ArrowLeft, Calendar as CalendarIcon, Camera, X, User } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  Calendar as CalendarIcon,
+  Camera,
+  X,
+  User,
+} from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/hooks/use-upload";
@@ -60,7 +67,6 @@ export default function EditProfile() {
   const { toast } = useToast();
   const [dateInputValue, setDateInputValue] = useState("");
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
 
   // Profile image upload hook
@@ -75,16 +81,19 @@ export default function EditProfile() {
     onError: (error) => {
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload image. Please try again.",
+        description:
+          error.message || "Failed to upload image. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         toast({
           title: "Invalid file type",
           description: "Please upload an image file (JPEG, PNG, etc.)",
@@ -183,12 +192,12 @@ export default function EditProfile() {
   const onSubmit = (data: EditProfileFormData) => {
     updateProfileMutation.mutate(data);
   };
-  
+
   // Helper to get initials for avatar fallback
   const getInitials = () => {
-    const first = authUser?.firstName?.[0] || '';
-    const last = authUser?.lastName?.[0] || '';
-    return (first + last).toUpperCase() || 'U';
+    const first = authUser?.firstName?.[0] || "";
+    const last = authUser?.lastName?.[0] || "";
+    return (first + last).toUpperCase() || "U";
   };
 
   if (authLoading) {
@@ -228,7 +237,11 @@ export default function EditProfile() {
                   <div className="relative">
                     <Avatar className="w-24 h-24 border-4 border-purple-100">
                       {profileImageUrl ? (
-                        <AvatarImage src={profileImageUrl} alt="Profile" data-testid="img-profile-preview" />
+                        <AvatarImage
+                          src={profileImageUrl}
+                          alt="Profile"
+                          data-testid="img-profile-preview"
+                        />
                       ) : null}
                       <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-2xl font-semibold">
                         {getInitials()}
@@ -256,9 +269,9 @@ export default function EditProfile() {
                       disabled={isUploading}
                       data-testid="input-profile-image"
                     />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       className="pointer-events-none"
                     >
@@ -331,55 +344,11 @@ export default function EditProfile() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date of Birth</FormLabel>
-                        <div className="relative flex">
+                        <div className="relative flex gap-2">
                           <FormControl>
                             <Input
                               value={dateInputValue}
                               onChange={(e) => {
-                                let val = e.target.value;
-                                // Only allow digits and slashes
-                                val = val.replace(/[^\d/]/g, "");
-                                // Limit length
-                                if (val.length > 10) val = val.slice(0, 10);
-                                setDateInputValue(val);
-
-                                if (val === "") {
-                                  field.onChange("");
-                                  return;
-                                }
-                                // Parse complete date
-                                const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-                                const match = val.match(dateRegex);
-                                if (match) {
-                                  const [, month, day, year] = match;
-                                  const yearNum = parseInt(year);
-                                  const monthNum = parseInt(month);
-                                  const dayNum = parseInt(day);
-                                  // Validate date ranges
-                                  if (
-                                    yearNum >= 1920 &&
-                                    yearNum <= new Date().getFullYear() - 18 &&
-                                    monthNum >= 1 &&
-                                    monthNum <= 12 &&
-                                    dayNum >= 1 &&
-                                    dayNum <= 31
-                                  ) {
-                                    field.onChange(`${year}-${month}-${day}`);
-                                  }
-                                }
-                              }}
-                              placeholder="mm/dd/yyyy"
-                              className="pr-10"
-                              data-testid="input-date-of-birth"
-                            />
-                          </FormControl>
-                          <div className="relative flex gap-2">
-                            <Input
-                              id="date"
-                              value={value}
-                              placeholder="MM/DD/YYYY"
-                              onChange={(e) => {
-                                setValue(e.target.value);
                                 const date = parseDate(e.target.value);
                                 if (date) {
                                   const formatted = format(date, "MM/dd/yyyy");
@@ -393,12 +362,15 @@ export default function EditProfile() {
                                   setOpen(true);
                                 }
                               }}
+                              placeholder="mm/dd/yyyy"
+                              className="pr-10"
+                              data-testid="input-date-of-birth"
                             />
                             <Popover open={open} onOpenChange={setOpen}>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="ghost"
-                                  id="dob"
+                                  id="dateOfBirth"
                                   className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -421,7 +393,6 @@ export default function EditProfile() {
                                         date,
                                         "MM/dd/yyyy",
                                       );
-                                      setValue(formatted);
                                       setDateInputValue(formatted);
                                       field.onChange(
                                         format(date, "yyyy-MM-dd"),
@@ -444,51 +415,7 @@ export default function EditProfile() {
                                 />
                               </PopoverContent>
                             </Popover>
-                          </div>
-                          <Popover open={open} onOpenChange={setOpen}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                id="dob"
-                                className="w-full justify-start text-left font-normal"
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-48 overflow-hidden p-0"
-                              align="start"
-                            >
-                              <Calendar
-                                mode="single"
-                                className="w-full"
-                                onSelect={(date) => {
-                                  if (date) {
-                                    setOpen(false);
-                                    const formatted = format(
-                                      date,
-                                      "MM/dd/yyyy",
-                                    );
-                                    setDateInputValue(formatted);
-                                    field.onChange(format(date, "yyyy-MM-dd"));
-                                  } else {
-                                    setDateInputValue("");
-                                    field.onChange("");
-                                  }
-                                }}
-                                captionLayout="dropdown"
-                                defaultMonth={
-                                  field.value
-                                    ? parse(
-                                        field.value,
-                                        "yyyy-MM-dd",
-                                        new Date(),
-                                      )
-                                    : undefined
-                                }
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          </FormControl>
                         </div>
                         <FormMessage />
                       </FormItem>
