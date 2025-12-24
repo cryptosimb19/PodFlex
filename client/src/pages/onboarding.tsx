@@ -22,6 +22,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import { parseDate } from "chrono-node";
 
 // Phone number formatting utilities
 const formatPhoneNumber = (value: string): string => {
@@ -93,7 +94,7 @@ export default function OnboardingWizard() {
   });
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [value, setValue] = useState("")
+  const [value, setValue] = useState("");
   const [, navigate] = useLocation();
 
   // Get user type from URL parameters
@@ -980,25 +981,25 @@ export default function OnboardingWizard() {
                 </label>
                 <div className="relative flex gap-2">
                   <Input
-                      id="date"
-                      value={value}
-                      placeholder="MM/DD/YYYY"
-                      onChange={(e) => {
-                          setValue(e.target.value);
-                          const date = parseDate(e.target.value);
-                          if(date) {
-                            handleInputChange(
-                              "dateOfBirth",
-                              format(date, "yyyy-MM-dd"),
-                            );
-                          }
-                      }}
-                      onKeyDown={(e) => {
-                          if (e.key === "ArrowDown") {
-                              e.preventDefault()
-                              setOpen(true)
-                          }
-                      }}
+                    id="date"
+                    value={value}
+                    placeholder="MM/DD/YYYY"
+                    onChange={(e) => {
+                      setValue(e.target.value);
+                      const date = parseDate(e.target.value);
+                      if (date) {
+                        handleInputChange(
+                          "dateOfBirth",
+                          format(date, "yyyy-MM-dd"),
+                        );
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setOpen(true);
+                      }
+                    }}
                   />
                   <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
@@ -1012,8 +1013,8 @@ export default function OnboardingWizard() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-48 overflow-hidden p-0"
-                      align="start"
+                      className="w-auto overflow-hidden p-0"
+                      align="end"
                     >
                       <Calendar
                         mode="single"
