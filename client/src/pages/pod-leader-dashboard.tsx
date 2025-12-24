@@ -27,10 +27,13 @@ import {
   LogOut,
   Trash2,
   User,
-  ArrowRight
+  ArrowRight,
+  ImageIcon,
+  X
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useUpload } from "@/hooks/use-upload";
 import type { Pod, JoinRequest, PodMember, LeaveRequest } from "@shared/schema";
 
 // Phone number formatting utility
@@ -94,6 +97,51 @@ export default function PodLeaderDashboard() {
   const [editAvailableSpots, setEditAvailableSpots] = useState<number>(0);
   const [editAmenities, setEditAmenities] = useState<string[]>([]);
   const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
+
+  // Image upload hook for editing pods
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      setEditImageUrl(response.objectPath);
+      toast({
+        title: "Image uploaded",
+        description: "Your pod image has been uploaded successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (JPEG, PNG, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Image must be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      await uploadFile(file);
+    }
+  };
+
+  const removeEditImage = () => {
+    setEditImageUrl("");
+  };
 
   // Fetch authenticated user with all profile data from database
   const { data: authUser, isLoading: authLoading } = useQuery({
@@ -1352,37 +1400,55 @@ export default function PodLeaderDashboard() {
                                       </div>
 
                                       <div>
-                                        <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                                          Image URL
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                          Pod Image (Optional)
                                         </label>
-                                        <input
-                                          id="imageUrl"
-                                          type="text"
-                                          placeholder="https://example.com/image.jpg"
-                                          value={editImageUrl}
-                                          onChange={(e) => setEditImageUrl(e.target.value)}
-                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                          data-testid="input-pod-image-url"
-                                        />
-                                        <p className="text-sm text-gray-500 mt-1">
-                                          Enter a URL to an image for your pod (e.g., from Unsplash, Imgur, etc.)
-                                        </p>
+                                        {editImageUrl ? (
+                                          <div className="relative">
+                                            <img
+                                              src={editImageUrl}
+                                              alt="Pod preview"
+                                              className="w-full h-48 object-cover rounded-lg border"
+                                              data-testid="img-edit-pod-preview"
+                                            />
+                                            <Button
+                                              type="button"
+                                              variant="destructive"
+                                              size="icon"
+                                              className="absolute top-2 right-2"
+                                              onClick={removeEditImage}
+                                              data-testid="button-remove-edit-image"
+                                            >
+                                              <X className="w-4 h-4" />
+                                            </Button>
+                                          </div>
+                                        ) : (
+                                          <div className="relative">
+                                            <input
+                                              type="file"
+                                              accept="image/*"
+                                              onChange={handleEditImageUpload}
+                                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                              disabled={isUploading}
+                                              data-testid="input-edit-pod-image"
+                                            />
+                                            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 transition-colors">
+                                              {isUploading ? (
+                                                <div className="flex items-center space-x-2">
+                                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600" />
+                                                  <span className="text-sm text-gray-600">Uploading...</span>
+                                                </div>
+                                              ) : (
+                                                <>
+                                                  <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+                                                  <span className="text-sm text-gray-600">Click to upload an image</span>
+                                                  <span className="text-xs text-gray-400 mt-1">Max 5MB, JPEG or PNG</span>
+                                                </>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
-                                      {editImageUrl && (
-                                        <div>
-                                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Preview
-                                          </label>
-                                          <img 
-                                            src={editImageUrl} 
-                                            alt="Pod preview" 
-                                            className="w-full h-48 object-cover rounded-lg"
-                                            onError={(e) => {
-                                              e.currentTarget.src = "https://via.placeholder.com/400x300?text=Invalid+Image+URL";
-                                            }}
-                                          />
-                                        </div>
-                                      )}
                                       <div className="flex justify-end space-x-2 pt-4 border-t">
                                         <Button 
                                           variant="outline" 
