@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import Navigation from "@/components/Navigation";
@@ -708,6 +708,9 @@ export default function PodLeaderDashboard() {
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-16 h-16">
+                    {authUser?.profileImageUrl && (
+                      <AvatarImage src={authUser.profileImageUrl} alt="Profile" data-testid="img-profile-avatar" />
+                    )}
                     <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg">
                       {getUserInitials(userData.firstName, userData.lastName)}
                     </AvatarFallback>
@@ -1290,13 +1293,12 @@ export default function PodLeaderDashboard() {
                                         <label htmlFor="podTitle" className="block text-sm font-medium text-gray-700 mb-2">
                                           Pod Title *
                                         </label>
-                                        <input
+                                        <Input
                                           id="podTitle"
                                           type="text"
                                           placeholder="Downtown Fitness Group"
                                           value={editTitle}
                                           onChange={(e) => setEditTitle(e.target.value)}
-                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           data-testid="input-pod-title"
                                         />
                                       </div>
@@ -1311,7 +1313,7 @@ export default function PodLeaderDashboard() {
                                           placeholder="Describe your pod..."
                                           value={editDescription}
                                           onChange={(e) => setEditDescription(e.target.value)}
-                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           data-testid="input-pod-description"
                                         />
                                       </div>
@@ -1321,13 +1323,12 @@ export default function PodLeaderDashboard() {
                                           <label htmlFor="clubName" className="block text-sm font-medium text-gray-700 mb-2">
                                             Club Name *
                                           </label>
-                                          <input
+                                          <Input
                                             id="clubName"
                                             type="text"
                                             placeholder="Bay Club Courtside"
                                             value={editClubName}
                                             onChange={(e) => setEditClubName(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             data-testid="input-club-name"
                                           />
                                         </div>
@@ -1336,13 +1337,12 @@ export default function PodLeaderDashboard() {
                                           <label htmlFor="clubRegion" className="block text-sm font-medium text-gray-700 mb-2">
                                             Region *
                                           </label>
-                                          <input
+                                          <Input
                                             id="clubRegion"
                                             type="text"
                                             placeholder="San Jose"
                                             value={editClubRegion}
                                             onChange={(e) => setEditClubRegion(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             data-testid="input-club-region"
                                           />
                                         </div>
@@ -1352,13 +1352,12 @@ export default function PodLeaderDashboard() {
                                         <label htmlFor="clubAddress" className="block text-sm font-medium text-gray-700 mb-2">
                                           Club Address *
                                         </label>
-                                        <input
+                                        <Input
                                           id="clubAddress"
                                           type="text"
                                           placeholder="5252 Prospect Rd, San Jose, CA 95129"
                                           value={editClubAddress}
                                           onChange={(e) => setEditClubAddress(e.target.value)}
-                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           data-testid="input-club-address"
                                         />
                                       </div>
@@ -1368,14 +1367,13 @@ export default function PodLeaderDashboard() {
                                           <label htmlFor="costPerPerson" className="block text-sm font-medium text-gray-700 mb-2">
                                             Cost Per Person ($/month) *
                                           </label>
-                                          <input
+                                          <Input
                                             id="costPerPerson"
                                             type="number"
                                             min="0"
                                             placeholder="250"
                                             value={editCostPerPerson || ''}
                                             onChange={(e) => setEditCostPerPerson(parseInt(e.target.value))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             data-testid="input-pod-cost"
                                           />
                                         </div>
@@ -1384,18 +1382,17 @@ export default function PodLeaderDashboard() {
                                           <label htmlFor="totalSpots" className="block text-sm font-medium text-gray-700 mb-2">
                                             Total Spots *
                                           </label>
-                                          <input
+                                          <Input
                                             id="totalSpots"
                                             type="number"
                                             min="1"
-                                            max="8"
+                                            max="10"
                                             placeholder="5"
                                             value={editTotalSpots || ''}
                                             onChange={(e) => setEditTotalSpots(parseInt(e.target.value))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             data-testid="input-total-spots"
                                           />
-                                          <p className="text-xs text-gray-500 mt-1">Maximum 8 members</p>
+                                          <p className="text-xs text-gray-500 mt-1">Maximum 10 members (including pod leader)</p>
                                         </div>
                                       </div>
 
@@ -1403,7 +1400,7 @@ export default function PodLeaderDashboard() {
                                         <label htmlFor="availableSpots" className="block text-sm font-medium text-gray-700 mb-2">
                                           Available Spots *
                                         </label>
-                                        <input
+                                        <Input
                                           id="availableSpots"
                                           type="number"
                                           min="0"
@@ -1411,7 +1408,6 @@ export default function PodLeaderDashboard() {
                                           placeholder="2"
                                           value={editAvailableSpots || ''}
                                           onChange={(e) => setEditAvailableSpots(parseInt(e.target.value))}
-                                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           data-testid="input-pod-spots"
                                         />
                                         <p className="text-sm text-gray-500 mt-1">
@@ -1674,21 +1670,43 @@ export default function PodLeaderDashboard() {
                         )}
                         
                         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                          <h4 className="text-sm font-medium text-gray-900 mb-2">Example Calculation</h4>
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">
+                            {leaderPods && leaderPods.length > 0 ? "Your Pod Payment Breakdown" : "Example Calculation"}
+                          </h4>
                           <div className="text-sm text-gray-600 space-y-1">
-                            <div className="flex justify-between">
-                              <span>Pod membership cost:</span>
-                              <span>$100.00</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Platform fee ({platformSettings?.feePercentage || platformFee}%):</span>
-                              <span>${((100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
-                            </div>
-                            <Separator className="my-2" />
-                            <div className="flex justify-between font-medium text-gray-900">
-                              <span>Member pays:</span>
-                              <span>${(100 + (100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
-                            </div>
+                            {leaderPods && leaderPods.length > 0 ? (
+                              <>
+                                <div className="flex justify-between">
+                                  <span>Pod membership cost:</span>
+                                  <span>${(leaderPods[0].costPerPerson / 100).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Platform fee ({platformSettings?.feePercentage || platformFee}%):</span>
+                                  <span>${((leaderPods[0].costPerPerson / 100) * (platformSettings?.feePercentage || platformFee) / 100).toFixed(2)}</span>
+                                </div>
+                                <Separator className="my-2" />
+                                <div className="flex justify-between font-medium text-gray-900">
+                                  <span>Member pays:</span>
+                                  <span>${((leaderPods[0].costPerPerson / 100) * (1 + (platformSettings?.feePercentage || platformFee) / 100)).toFixed(2)}</span>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex justify-between">
+                                  <span>Pod membership cost:</span>
+                                  <span>$100.00</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Platform fee ({platformSettings?.feePercentage || platformFee}%):</span>
+                                  <span>${((100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
+                                </div>
+                                <Separator className="my-2" />
+                                <div className="flex justify-between font-medium text-gray-900">
+                                  <span>Member pays:</span>
+                                  <span>${(100 + (100 * (platformSettings?.feePercentage || platformFee)) / 100).toFixed(2)}</span>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>

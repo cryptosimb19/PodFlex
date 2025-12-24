@@ -781,9 +781,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const podData = insertPodSchema.parse(req.body);
       
-      // Validate total spots doesn't exceed 8
-      if (podData.totalSpots > 8) {
-        return res.status(400).json({ message: "Total spots cannot exceed 8 members" });
+      // Validate total spots doesn't exceed 10
+      if (podData.totalSpots > 10) {
+        return res.status(400).json({ message: "Total spots cannot exceed 10 members (including pod leader)" });
       }
       
       // Check if the leader already has a pod
@@ -875,8 +875,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (updateData.totalSpots <= 0) {
           return res.status(400).json({ message: "Total spots must be at least 1" });
         }
-        if (updateData.totalSpots > 8) {
-          return res.status(400).json({ message: "Total spots cannot exceed 8 members" });
+        if (updateData.totalSpots > 10) {
+          return res.status(400).json({ message: "Total spots cannot exceed 10 members (including pod leader)" });
         }
         
         // Check if reducing total spots would affect existing members
@@ -1595,16 +1595,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         country,
         dateOfBirth,
         userType, 
-        hasCompletedOnboarding 
+        hasCompletedOnboarding,
+        profileImageUrl,
+        firstName,
+        lastName
       } = req.body;
       
       // Update user with all onboarding information
+      // Use request body values if provided, otherwise fall back to existing session values
+      // For firstName/lastName: use body value if it's a non-empty string, otherwise keep existing
       const updatedUser = await storage.upsertUser({
         id: userId,
         email: req.user.email,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        profileImageUrl: req.user.profileImageUrl,
+        firstName: (firstName !== undefined && firstName !== '') ? firstName : req.user.firstName,
+        lastName: (lastName !== undefined && lastName !== '') ? lastName : req.user.lastName,
+        profileImageUrl: profileImageUrl !== undefined ? profileImageUrl : req.user.profileImageUrl,
         ...(membershipId !== undefined && { membershipId }),
         ...(preferredRegion !== undefined && { preferredRegion }),
         ...(primaryClub !== undefined && { primaryClub }),

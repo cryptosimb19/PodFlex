@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/Navigation";
 import { 
@@ -55,6 +55,7 @@ interface UserData {
   primaryClub: string;
   membershipLevel: string;
   membershipId: string;
+  profileImageUrl?: string;
 }
 
 interface PodMember {
@@ -92,6 +93,7 @@ export default function Dashboard() {
     primaryClub: authUser.primaryClub || '',
     membershipLevel: authUser.membershipLevel || '',
     membershipId: authUser.membershipId || '',
+    profileImageUrl: authUser.profileImageUrl || '',
   } : null;
 
   // Fetch user's join requests
@@ -276,6 +278,9 @@ export default function Dashboard() {
               <CardHeader className="pb-4">
                 <div className="flex items-center space-x-3 sm:space-x-4">
                   <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+                    {userData.profileImageUrl && (
+                      <AvatarImage src={userData.profileImageUrl} alt="Profile" data-testid="img-profile-avatar" />
+                    )}
                     <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-base sm:text-lg">
                       {getUserInitials(userData.firstName, userData.lastName)}
                     </AvatarFallback>

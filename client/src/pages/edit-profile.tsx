@@ -28,10 +28,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navigation from "@/components/Navigation";
-import { Loader2, ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar as CalendarIcon, Camera, X, User } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useUpload } from "@/hooks/use-upload";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { parseDate } from "chrono-node";
@@ -59,12 +61,58 @@ export default function EditProfile() {
   const [dateInputValue, setDateInputValue] = useState("");
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
+
+  // Profile image upload hook
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      setProfileImageUrl(response.objectPath);
+      toast({
+        title: "Image uploaded",
+        description: "Your profile picture has been uploaded successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (JPEG, PNG, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Image must be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      await uploadFile(file);
+    }
+  };
+
+  const removeProfileImage = () => {
+    setProfileImageUrl("");
+  };
 
   const { data: authUser, isLoading: authLoading } = useQuery<any>({
     queryKey: ["/api/auth/user"],
   });
 
-  // Sync date input value when user data loads
+  // Sync date input value and profile image when user data loads
   useEffect(() => {
     if (authUser?.dateOfBirth) {
       try {
@@ -77,7 +125,10 @@ export default function EditProfile() {
         setDateInputValue("");
       }
     }
-  }, [authUser?.dateOfBirth]);
+    if (authUser?.profileImageUrl) {
+      setProfileImageUrl(authUser.profileImageUrl);
+    }
+  }, [authUser?.dateOfBirth, authUser?.profileImageUrl]);
 
   const form = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
@@ -105,7 +156,7 @@ export default function EditProfile() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, profileImageUrl }),
       });
       if (!response.ok) {
         throw new Error("Failed to update profile");
@@ -131,6 +182,13 @@ export default function EditProfile() {
 
   const onSubmit = (data: EditProfileFormData) => {
     updateProfileMutation.mutate(data);
+  };
+  
+  // Helper to get initials for avatar fallback
+  const getInitials = () => {
+    const first = authUser?.firstName?.[0] || '';
+    const last = authUser?.lastName?.[0] || '';
+    return (first + last).toUpperCase() || 'U';
   };
 
   if (authLoading) {
@@ -165,6 +223,61 @@ export default function EditProfile() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
               >
+                {/* Profile Image Upload Section */}
+                <div className="flex flex-col items-center space-y-4 pb-6 border-b">
+                  <div className="relative">
+                    <Avatar className="w-24 h-24 border-4 border-purple-100">
+                      {profileImageUrl ? (
+                        <AvatarImage src={profileImageUrl} alt="Profile" data-testid="img-profile-preview" />
+                      ) : null}
+                      <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-2xl font-semibold">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {profileImageUrl && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full"
+                        onClick={removeProfileImage}
+                        data-testid="button-remove-profile-image"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfileImageUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={isUploading}
+                      data-testid="input-profile-image"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      className="pointer-events-none"
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-4 h-4 mr-2" />
+                          {profileImageUrl ? "Change Photo" : "Upload Photo"}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">Max 5MB, JPEG or PNG</p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}

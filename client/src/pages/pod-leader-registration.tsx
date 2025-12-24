@@ -1426,7 +1426,7 @@ export default function PodLeaderRegistration() {
                   <Input
                     type="number"
                     min="1"
-                    max="8"
+                    max="10"
                     value={formData.availableSpots}
                     onChange={(e) =>
                       handleInputChange("availableSpots", e.target.value)
@@ -1434,7 +1434,7 @@ export default function PodLeaderRegistration() {
                     placeholder="3"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Maximum 8 members per pod
+                    Maximum 10 members per pod (including pod leader)
                   </p>
                 </div>
               </div>
