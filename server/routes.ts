@@ -13,6 +13,16 @@ import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 import type { User, Pod } from "@shared/schema";
 import rateLimit from "express-rate-limit";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { Polar } from "@polar-sh/sdk";
+import { validateEvent, WebhookVerificationError } from "@polar-sh/sdk/webhooks";
+
+// Platform fee constants
+const DEFAULT_PLATFORM_FEE_PERCENTAGE = 5; // 5% default platform fee
+
+// Initialize Polar SDK
+const polar = process.env.POLAR_ACCESS_TOKEN ? new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN,
+}) : null;
 
 // Sanitize user data to remove sensitive fields
 function sanitizeUser(user: User) {
@@ -1704,6 +1714,358 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching deleted members:", error);
       res.status(500).json({ message: "Failed to fetch deleted members" });
+    }
+  });
+
+  // ==========================================
+  // PAYMENT ROUTES
+  // ==========================================
+
+  // Get platform fee settings
+  app.get("/api/settings/platform-fee", async (req, res) => {
+    try {
+      const setting = await storage.getPlatformSetting("platform_fee_percentage");
+      const feePercentage = setting ? parseFloat(setting.settingValue) : DEFAULT_PLATFORM_FEE_PERCENTAGE;
+      res.json({ feePercentage });
+    } catch (error) {
+      console.error("Error fetching platform fee:", error);
+      res.status(500).json({ message: "Failed to fetch platform fee" });
+    }
+  });
+
+  // Update platform fee (admin only - for now any authenticated user can update)
+  app.patch("/api/settings/platform-fee", isAuthenticated, async (req: any, res) => {
+    try {
+      const { feePercentage } = req.body;
+      
+      if (typeof feePercentage !== 'number' || feePercentage < 0 || feePercentage > 50) {
+        return res.status(400).json({ message: "Fee percentage must be between 0 and 50" });
+      }
+
+      const setting = await storage.upsertPlatformSetting(
+        "platform_fee_percentage",
+        feePercentage.toString(),
+        "Platform fee percentage charged on pod membership payments",
+        req.user.id
+      );
+
+      res.json({ feePercentage: parseFloat(setting.settingValue) });
+    } catch (error) {
+      console.error("Error updating platform fee:", error);
+      res.status(500).json({ message: "Failed to update platform fee" });
+    }
+  });
+
+  // Calculate payment breakdown for a pod
+  app.get("/api/pods/:id/payment-breakdown", isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      const pod = await storage.getPod(podId);
+      
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      const setting = await storage.getPlatformSetting("platform_fee_percentage");
+      const feePercentage = setting ? parseFloat(setting.settingValue) : DEFAULT_PLATFORM_FEE_PERCENTAGE;
+      
+      const baseAmount = pod.costPerPerson; // Already in cents
+      const platformFeeAmount = Math.round(baseAmount * (feePercentage / 100));
+      const totalAmount = baseAmount + platformFeeAmount;
+
+      res.json({
+        baseAmount,
+        platformFeeAmount,
+        platformFeePercentage: feePercentage,
+        totalAmount,
+        currency: "usd"
+      });
+    } catch (error) {
+      console.error("Error calculating payment breakdown:", error);
+      res.status(500).json({ message: "Failed to calculate payment breakdown" });
+    }
+  });
+
+  // Create a checkout session for pod membership payment
+  app.post("/api/payments/create-checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      if (!polar) {
+        return res.status(503).json({ message: "Payment service not configured" });
+      }
+
+      const { podId } = req.body;
+      const userId = req.user.id;
+
+      if (!podId) {
+        return res.status(400).json({ message: "Pod ID is required" });
+      }
+
+      const pod = await storage.getPod(podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      // Get platform fee percentage
+      const setting = await storage.getPlatformSetting("platform_fee_percentage");
+      const feePercentage = setting ? parseFloat(setting.settingValue) : DEFAULT_PLATFORM_FEE_PERCENTAGE;
+
+      // Calculate amounts
+      const baseAmount = pod.costPerPerson;
+      const platformFeeAmount = Math.round(baseAmount * (feePercentage / 100));
+      const totalAmount = baseAmount + platformFeeAmount;
+
+      // Get user info for prefilling checkout
+      const user = await storage.getUser(userId);
+
+      // Get the base URL for redirects
+      const baseUrl = process.env.REPLIT_DEPLOYMENT_URL 
+        ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
+        : process.env.REPL_SLUG 
+          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER?.toLowerCase()}.repl.co`
+          : 'http://localhost:5000';
+
+      // Create checkout session with Polar
+      // Note: This requires a product to be created in Polar dashboard first
+      // The product should be a "Pay What You Want" or custom-priced product
+      const productId = process.env.POLAR_PRODUCT_ID;
+      if (!productId) {
+        return res.status(503).json({ message: "Payment product not configured" });
+      }
+
+      const checkout = await polar.checkouts.create({
+        products: [productId],
+        customerEmail: user?.email,
+        customerName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : undefined,
+        successUrl: `${baseUrl}/payment-success?checkout_id={CHECKOUT_ID}`,
+        metadata: {
+          podId: podId.toString(),
+          userId: userId,
+          baseAmount: baseAmount.toString(),
+          platformFeeAmount: platformFeeAmount.toString(),
+          platformFeePercentage: feePercentage.toString(),
+        },
+      });
+
+      // Create payment record in database
+      const payment = await storage.createPodPayment({
+        podId,
+        userId,
+        polarCheckoutId: checkout.id,
+        status: "pending",
+        baseAmount,
+        platformFeeAmount,
+        totalAmount,
+        platformFeePercentage: feePercentage.toString(),
+        currency: "usd",
+        checkoutUrl: checkout.url,
+        metadata: {
+          podTitle: pod.title,
+          podClubName: pod.clubName,
+        } as Record<string, any>,
+      });
+
+      res.json({
+        checkoutUrl: checkout.url,
+        checkoutId: checkout.id,
+        paymentId: payment.id,
+      });
+    } catch (error: any) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: error.message || "Failed to create checkout session" });
+    }
+  });
+
+  // Get payment history for current user
+  app.get("/api/payments/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const payments = await storage.getPodPaymentsForUser(req.user.id);
+      
+      // Enrich with pod details
+      const paymentsWithDetails = await Promise.all(
+        payments.map(async (payment) => {
+          const pod = await storage.getPod(payment.podId);
+          return {
+            ...payment,
+            pod: pod ? {
+              id: pod.id,
+              title: pod.title,
+              clubName: pod.clubName,
+            } : null,
+          };
+        })
+      );
+
+      res.json(paymentsWithDetails);
+    } catch (error) {
+      console.error("Error fetching user payments:", error);
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+
+  // Get payments for a pod (leader only)
+  app.get("/api/pods/:id/payments", isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      const pod = await storage.getPod(podId);
+      
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      // Only pod leader can see all pod payments
+      if (pod.leadId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to view pod payments" });
+      }
+
+      const payments = await storage.getPodPaymentsForPod(podId);
+      
+      // Enrich with user details
+      const paymentsWithDetails = await Promise.all(
+        payments.map(async (payment) => {
+          const user = await storage.getUser(payment.userId);
+          return {
+            ...payment,
+            user: user ? {
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+            } : null,
+          };
+        })
+      );
+
+      res.json(paymentsWithDetails);
+    } catch (error) {
+      console.error("Error fetching pod payments:", error);
+      res.status(500).json({ message: "Failed to fetch pod payments" });
+    }
+  });
+
+  // Polar webhook endpoint
+  app.post("/api/webhooks/polar", 
+    // Raw body needed for webhook signature verification
+    (req, res, next) => {
+      if (req.headers['content-type'] === 'application/json') {
+        let data = '';
+        req.setEncoding('utf8');
+        req.on('data', (chunk) => { data += chunk; });
+        req.on('end', () => {
+          (req as any).rawBody = data;
+          try {
+            req.body = JSON.parse(data);
+          } catch (e) {
+            req.body = {};
+          }
+          next();
+        });
+      } else {
+        next();
+      }
+    },
+    async (req: any, res) => {
+      try {
+        const webhookSecret = process.env.POLAR_WEBHOOK_SECRET;
+        
+        if (!webhookSecret) {
+          console.error("POLAR_WEBHOOK_SECRET not configured");
+          return res.status(500).send("Webhook secret not configured");
+        }
+
+        // Verify webhook signature
+        let event;
+        try {
+          event = validateEvent(
+            req.rawBody,
+            req.headers,
+            webhookSecret
+          );
+        } catch (error) {
+          if (error instanceof WebhookVerificationError) {
+            console.error("Webhook signature verification failed");
+            return res.status(403).send("Invalid signature");
+          }
+          throw error;
+        }
+
+        console.log(`Received Polar webhook: ${event.type}`);
+
+        // Handle checkout events
+        if (event.type === "checkout.updated" || event.type === "checkout.created") {
+          const checkoutData = event.data as any;
+          
+          if (checkoutData.status === "confirmed" || checkoutData.status === "succeeded") {
+            // Find payment by checkout ID
+            const payment = await storage.getPodPaymentByCheckoutId(checkoutData.id);
+            
+            if (payment) {
+              await storage.updatePodPaymentStatus(
+                payment.id,
+                "completed",
+                checkoutData.order_id || checkoutData.orderId || undefined,
+                new Date()
+              );
+              console.log(`Payment ${payment.id} marked as completed`);
+            }
+          } else if (checkoutData.status === "expired" || checkoutData.status === "failed") {
+            const payment = await storage.getPodPaymentByCheckoutId(checkoutData.id);
+            
+            if (payment) {
+              await storage.updatePodPaymentStatus(
+                payment.id,
+                checkoutData.status === "expired" ? "expired" : "failed"
+              );
+              console.log(`Payment ${payment.id} marked as ${checkoutData.status}`);
+            }
+          }
+        }
+
+        // Handle order events
+        if (event.type === "order.created") {
+          const orderData = event.data;
+          const checkoutId = orderData.checkoutId;
+          
+          if (checkoutId) {
+            const payment = await storage.getPodPaymentByCheckoutId(checkoutId);
+            
+            if (payment) {
+              await storage.updatePodPaymentStatus(
+                payment.id,
+                "completed",
+                orderData.id,
+                new Date()
+              );
+              console.log(`Payment ${payment.id} completed via order ${orderData.id}`);
+            }
+          }
+        }
+
+        res.status(202).send("");
+      } catch (error) {
+        console.error("Webhook error:", error);
+        res.status(500).send("Webhook processing failed");
+      }
+    }
+  );
+
+  // Get payment status by checkout ID
+  app.get("/api/payments/status/:checkoutId", isAuthenticated, async (req: any, res) => {
+    try {
+      const payment = await storage.getPodPaymentByCheckoutId(req.params.checkoutId);
+      
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+
+      // Verify user owns this payment
+      if (payment.userId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      res.json(payment);
+    } catch (error) {
+      console.error("Error fetching payment status:", error);
+      res.status(500).json({ message: "Failed to fetch payment status" });
     }
   });
 

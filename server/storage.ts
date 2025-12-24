@@ -81,6 +81,7 @@ export interface IStorage {
   
   // Join request operations
   createJoinRequest(request: InsertJoinRequest): Promise<JoinRequest>;
+  getJoinRequest(id: number): Promise<JoinRequest | undefined>;
   getJoinRequestsForPod(podId: number): Promise<JoinRequest[]>;
   getJoinRequestsForUser(userId: string): Promise<JoinRequest[]>;
   updateJoinRequestStatus(id: number, status: "accepted" | "rejected" | "cancelled" | "left"): Promise<JoinRequest | undefined>;
@@ -545,6 +546,11 @@ export class DatabaseStorage implements IStorage {
       .insert(joinRequests)
       .values(requestData)
       .returning();
+    return request;
+  }
+
+  async getJoinRequest(id: number): Promise<JoinRequest | undefined> {
+    const [request] = await db.select().from(joinRequests).where(eq(joinRequests.id, id));
     return request;
   }
 
