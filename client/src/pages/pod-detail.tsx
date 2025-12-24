@@ -47,6 +47,7 @@ type PodWithLeader = Pod & {
   leaderName: string | null;
   leaderPhone: string | null;
   leaderEmail: string | null;
+  leaderProfileImage: string | null;
 };
 
 export default function PodDetail() {
@@ -538,9 +539,24 @@ export default function PodDetail() {
               <div className="bg-muted/50 p-4 rounded-lg">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-primary" />
-                    </div>
+                    {pod.leaderProfileImage ? (
+                      <img
+                        src={pod.leaderProfileImage}
+                        alt={pod.leaderName || "Pod Leader"}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                        data-testid="img-leader-profile"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center border-2 border-primary/20">
+                        {pod.leaderName ? (
+                          <span className="text-lg font-semibold text-primary" data-testid="text-leader-initials">
+                            {pod.leaderName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </span>
+                        ) : (
+                          <User className="w-6 h-6 text-primary" />
+                        )}
+                      </div>
+                    )}
                     <div>
                       {currentUser ? (
                         <>
