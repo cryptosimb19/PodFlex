@@ -153,9 +153,20 @@ export default function PodsPage() {
             {filteredPods.map((pod, index) => (
               <div key={pod.id} className="fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
                 <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-300 hover-lift card-transition"
+                  className="cursor-pointer hover:shadow-lg transition-all duration-300 hover-lift card-transition overflow-hidden"
                   onClick={() => navigate(`/pods/${pod.id}`)}
+                  data-testid={`pod-card-${pod.id}`}
                 >
+                  {pod.imageUrl && (
+                    <div className="w-full h-40 overflow-hidden">
+                      <img
+                        src={pod.imageUrl}
+                        alt={pod.title}
+                        className="w-full h-full object-cover"
+                        data-testid={`pod-image-${pod.id}`}
+                      />
+                    </div>
+                  )}
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">

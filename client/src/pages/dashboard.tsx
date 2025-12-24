@@ -427,34 +427,46 @@ export default function Dashboard() {
                     ) : (
                       <div className="space-y-3 sm:space-y-4">
                         {activePods.map((pod) => (
-                          <div key={pod.id} className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors">
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
-                                  <h3 className="font-semibold text-base sm:text-lg truncate">{pod.clubName}</h3>
-                                  <Badge variant="outline" className="self-start sm:self-auto">{pod.clubRegion}</Badge>
-                                </div>
-                                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-sm text-gray-600 mb-2">
-                                  <div className="flex items-center space-x-1">
-                                    <MapPin className="w-4 h-4 flex-shrink-0" />
-                                    <span className="truncate">{pod.clubAddress}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <DollarSign className="w-4 h-4 flex-shrink-0" />
-                                    <span>${(pod.costPerPerson / 100)}/month</span>
-                                  </div>
-                                </div>
-                                <p className="text-sm text-gray-600 line-clamp-2">{pod.description}</p>
+                          <div key={pod.id} className="border rounded-lg overflow-hidden hover:bg-gray-50 transition-colors" data-testid={`pod-membership-${pod.id}`}>
+                            {pod.imageUrl && (
+                              <div className="w-full h-32 overflow-hidden">
+                                <img
+                                  src={pod.imageUrl}
+                                  alt={pod.clubName}
+                                  className="w-full h-full object-cover"
+                                  data-testid={`pod-image-${pod.id}`}
+                                />
                               </div>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => navigate(`/pods/${pod.id}`)}
-                                className="w-full sm:w-auto sm:ml-4 flex-shrink-0"
-                                data-testid={`button-view-pod-${pod.id}`}
-                              >
-                                View Details
-                              </Button>
+                            )}
+                            <div className="p-3 sm:p-4">
+                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
+                                    <h3 className="font-semibold text-base sm:text-lg truncate">{pod.clubName}</h3>
+                                    <Badge variant="outline" className="self-start sm:self-auto">{pod.clubRegion}</Badge>
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-sm text-gray-600 mb-2">
+                                    <div className="flex items-center space-x-1">
+                                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                                      <span className="truncate">{pod.clubAddress}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-1">
+                                      <DollarSign className="w-4 h-4 flex-shrink-0" />
+                                      <span>${(pod.costPerPerson / 100)}/month</span>
+                                    </div>
+                                  </div>
+                                  <p className="text-sm text-gray-600 line-clamp-2">{pod.description}</p>
+                                </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => navigate(`/pods/${pod.id}`)}
+                                  className="w-full sm:w-auto sm:ml-4 flex-shrink-0"
+                                  data-testid={`button-view-pod-${pod.id}`}
+                                >
+                                  View Details
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         ))}

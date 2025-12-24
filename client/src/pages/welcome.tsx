@@ -186,10 +186,20 @@ export default function Welcome() {
                   {filteredPods.map((pod) => (
                     <Card 
                       key={pod.id} 
-                      className="hover:shadow-lg transition-shadow cursor-pointer"
+                      className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
                       onClick={() => navigate(`/pods/${pod.id}`)}
                       data-testid={`pod-card-${pod.id}`}
                     >
+                      {pod.imageUrl && (
+                        <div className="w-full h-32 overflow-hidden">
+                          <img
+                            src={pod.imageUrl}
+                            alt={pod.title}
+                            className="w-full h-full object-cover"
+                            data-testid={`pod-image-${pod.id}`}
+                          />
+                        </div>
+                      )}
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-lg">{pod.title}</CardTitle>
