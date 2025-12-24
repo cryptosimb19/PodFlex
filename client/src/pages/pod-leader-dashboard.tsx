@@ -6,16 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Navigation from "@/components/Navigation";
-import { 
-  Users, 
-  Calendar, 
-  MapPin, 
-  DollarSign, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Users,
+  Calendar,
+  MapPin,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   Plus,
   Edit3,
@@ -32,7 +38,7 @@ import {
   X,
   Settings,
   Percent,
-  Save
+  Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,12 +50,12 @@ import type { Pod, JoinRequest, PodMember, LeaveRequest } from "@shared/schema";
 
 // Phone number formatting utility
 const formatPhoneNumber = (value: string): string => {
-  if (!value) return '';
+  if (!value) return "";
   // Remove all non-digit characters
-  const digits = value.replace(/\D/g, '');
-  
+  const digits = value.replace(/\D/g, "");
+
   // Format based on length
-  if (digits.length === 0) return '';
+  if (digits.length === 0) return "";
   if (digits.length <= 3) return `(${digits})`;
   if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
@@ -87,10 +93,15 @@ export default function PodLeaderDashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedRequest, setSelectedRequest] = useState<JoinRequestWithUser | null>(null);
-  const [selectedLeaveRequest, setSelectedLeaveRequest] = useState<LeaveRequestWithDetails | null>(null);
-  const [selectedMember, setSelectedMember] = useState<PodMemberWithUser | null>(null);
-  const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<JoinRequestWithUser | null>(null);
+  const [selectedLeaveRequest, setSelectedLeaveRequest] =
+    useState<LeaveRequestWithDetails | null>(null);
+  const [selectedMember, setSelectedMember] =
+    useState<PodMemberWithUser | null>(null);
+  const [selectedPodForMembers, setSelectedPodForMembers] = useState<
+    number | null
+  >(null);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -116,16 +127,19 @@ export default function PodLeaderDashboard() {
     onError: (error) => {
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload image. Please try again.",
+        description:
+          error.message || "Failed to upload image. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         toast({
           title: "Invalid file type",
           description: "Please upload an image file (JPEG, PNG, etc.)",
@@ -151,32 +165,36 @@ export default function PodLeaderDashboard() {
 
   // Fetch authenticated user with all profile data from database
   const { data: authUser, isLoading: authLoading } = useQuery({
-    queryKey: ['/api/auth/user'],
+    queryKey: ["/api/auth/user"],
     queryFn: async () => {
-      const response = await fetch('/api/auth/user', { credentials: 'include' });
+      const response = await fetch("/api/auth/user", {
+        credentials: "include",
+      });
       if (!response.ok) return null;
       return response.json();
     },
   });
 
   // Map authenticated user data to userData format
-  const userData: UserData | null = authUser ? {
-    firstName: authUser.firstName || '',
-    lastName: authUser.lastName || '',
-    email: authUser.email || '',
-    phone: authUser.phone || '',
-    primaryCampus: authUser.preferredRegion || '',
-    primaryClub: authUser.primaryClub || '',
-    membershipLevel: authUser.membershipLevel || '',
-    membershipId: authUser.membershipId || '',
-  } : null;
+  const userData: UserData | null = authUser
+    ? {
+        firstName: authUser.firstName || "",
+        lastName: authUser.lastName || "",
+        email: authUser.email || "",
+        phone: authUser.phone || "",
+        primaryCampus: authUser.preferredRegion || "",
+        primaryClub: authUser.primaryClub || "",
+        membershipLevel: authUser.membershipLevel || "",
+        membershipId: authUser.membershipId || "",
+      }
+    : null;
 
   // Fetch pods where user is the leader
   const { data: leaderPods, isLoading: podsLoading } = useQuery<Pod[]>({
-    queryKey: ['/api/pods', 'leader', authUser?.id],
+    queryKey: ["/api/pods", "leader", authUser?.id],
     queryFn: async () => {
-      const response = await fetch('/api/pods');
-      if (!response.ok) throw new Error('Failed to fetch pods');
+      const response = await fetch("/api/pods");
+      if (!response.ok) throw new Error("Failed to fetch pods");
       const allPods = await response.json();
       // Filter pods where current user is the leader
       return allPods.filter((pod: Pod) => pod.leadId === authUser?.id);
@@ -185,63 +203,73 @@ export default function PodLeaderDashboard() {
   });
 
   // Fetch join requests for leader's pods
-  const { data: allJoinRequests, isLoading: requestsLoading } = useQuery<JoinRequestWithUser[]>({
-    queryKey: ['/api/join-requests', 'leader'],
+  const { data: allJoinRequests, isLoading: requestsLoading } = useQuery<
+    JoinRequestWithUser[]
+  >({
+    queryKey: ["/api/join-requests", "leader"],
     queryFn: async () => {
       if (!leaderPods || leaderPods.length === 0) return [];
-      
+
       const requests = await Promise.all(
         leaderPods.map(async (pod) => {
           const response = await fetch(`/api/pods/${pod.id}/join-requests`);
-          if (!response.ok) throw new Error('Failed to fetch join requests');
+          if (!response.ok) throw new Error("Failed to fetch join requests");
           const podRequests = await response.json();
           return podRequests.map((req: JoinRequest) => ({
             ...req,
             podName: pod.clubName,
-            userName: req.userInfo?.name || 'Unknown User',
-            userEmail: req.userInfo?.email || '',
-            userPhone: req.userInfo?.phone || ''
+            userName: req.userInfo?.name || "Unknown User",
+            userEmail: req.userInfo?.email || "",
+            userPhone: req.userInfo?.phone || "",
           }));
-        })
+        }),
       );
-      
+
       return requests.flat();
     },
     enabled: !!leaderPods && leaderPods.length > 0,
   });
 
   // Fetch pod members for a specific pod
-  const { data: podMembers, isLoading: membersLoading } = useQuery<PodMemberWithUser[]>({
-    queryKey: ['/api/pods', selectedPodForMembers, 'members'],
+  const { data: podMembers, isLoading: membersLoading } = useQuery<
+    PodMemberWithUser[]
+  >({
+    queryKey: ["/api/pods", selectedPodForMembers, "members"],
     queryFn: async () => {
       if (!selectedPodForMembers) return [];
-      const response = await fetch(`/api/pods/${selectedPodForMembers}/members`);
-      if (!response.ok) throw new Error('Failed to fetch pod members');
+      const response = await fetch(
+        `/api/pods/${selectedPodForMembers}/members`,
+      );
+      if (!response.ok) throw new Error("Failed to fetch pod members");
       return response.json();
     },
-    enabled: !!selectedPodForMembers
+    enabled: !!selectedPodForMembers,
   });
 
   // Fetch leave requests for leader's pods
-  const { data: allLeaveRequests, isLoading: leaveRequestsLoading } = useQuery<LeaveRequestWithDetails[]>({
-    queryKey: ['/api/leave-requests', 'leader'],
+  const { data: allLeaveRequests, isLoading: leaveRequestsLoading } = useQuery<
+    LeaveRequestWithDetails[]
+  >({
+    queryKey: ["/api/leave-requests", "leader"],
     queryFn: async () => {
       if (!leaderPods || leaderPods.length === 0) return [];
-      
+
       const requests = await Promise.all(
         leaderPods.map(async (pod) => {
-          const response = await fetch(`/api/pods/${pod.id}/leave-requests`, { credentials: 'include' });
+          const response = await fetch(`/api/pods/${pod.id}/leave-requests`, {
+            credentials: "include",
+          });
           if (!response.ok) return [];
           const podRequests = await response.json();
           return podRequests.map((req: LeaveRequest) => ({
             ...req,
             podName: pod.clubName,
-            userName: req.userInfo?.name || 'Unknown User',
-            userEmail: req.userInfo?.email || ''
+            userName: req.userInfo?.name || "Unknown User",
+            userEmail: req.userInfo?.email || "",
           }));
-        })
+        }),
       );
-      
+
       return requests.flat();
     },
     enabled: !!leaderPods && leaderPods.length > 0,
@@ -249,7 +277,7 @@ export default function PodLeaderDashboard() {
 
   // Check if user is also a member of another pod (dual-role support)
   const { data: userJoinRequests } = useQuery({
-    queryKey: ['/api/join-requests', 'user', authUser?.id],
+    queryKey: ["/api/join-requests", "user", authUser?.id],
     queryFn: async () => {
       const response = await fetch(`/api/join-requests/user/${authUser?.id}`);
       if (!response.ok) return [];
@@ -259,23 +287,32 @@ export default function PodLeaderDashboard() {
   });
 
   // Check if user has any accepted memberships in other pods
-  const acceptedMemberships = userJoinRequests?.filter((req: any) => req.status === 'accepted') || [];
+  const acceptedMemberships =
+    userJoinRequests?.filter((req: any) => req.status === "accepted") || [];
   const isMemberOfPod = acceptedMemberships.length > 0;
 
   // Fetch platform settings
-  const { data: platformSettings, isLoading: settingsLoading } = useQuery<{ feePercentage: number }>({
-    queryKey: ['/api/settings/platform-fee'],
+  const { data: platformSettings, isLoading: settingsLoading } = useQuery<{
+    feePercentage: number;
+  }>({
+    queryKey: ["/api/settings/platform-fee"],
   });
 
   // Mutation to update join request status
   const updateRequestMutation = useMutation({
-    mutationFn: async ({ requestId, status }: { requestId: number; status: 'accepted' | 'rejected' }) => {
+    mutationFn: async ({
+      requestId,
+      status,
+    }: {
+      requestId: number;
+      status: "accepted" | "rejected";
+    }) => {
       const response = await fetch(`/api/join-requests/${requestId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (!response.ok) throw new Error('Failed to update join request');
+      if (!response.ok) throw new Error("Failed to update join request");
       return response.json();
     },
     onSuccess: (_, { status }) => {
@@ -283,8 +320,10 @@ export default function PodLeaderDashboard() {
         title: `Request ${status}`,
         description: `The join request has been ${status}.`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'leader'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/join-requests", "leader"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
       setSelectedRequest(null);
     },
     onError: () => {
@@ -298,70 +337,90 @@ export default function PodLeaderDashboard() {
 
   // Mutation to update leave request status
   const updateLeaveRequestMutation = useMutation({
-    mutationFn: async ({ requestId, action }: { requestId: number; action: 'approve' | 'reject' }) => {
-      const endpoint = action === 'approve' 
-        ? `/api/leave-requests/${requestId}/approve`
-        : `/api/leave-requests/${requestId}/reject`;
+    mutationFn: async ({
+      requestId,
+      action,
+    }: {
+      requestId: number;
+      action: "approve" | "reject";
+    }) => {
+      const endpoint =
+        action === "approve"
+          ? `/api/leave-requests/${requestId}/approve`
+          : `/api/leave-requests/${requestId}/reject`;
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update leave request');
+        throw new Error(error.message || "Failed to update leave request");
       }
       return response.json();
     },
     onSuccess: (_, { action }) => {
       toast({
-        title: action === 'approve' ? "Leave request approved" : "Leave request rejected",
-        description: action === 'approve' 
-          ? "The member has been removed from the pod."
-          : "The member will remain in the pod.",
+        title:
+          action === "approve"
+            ? "Leave request approved"
+            : "Leave request rejected",
+        description:
+          action === "approve"
+            ? "The member has been removed from the pod."
+            : "The member will remain in the pod.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests', 'leader'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/leave-requests", "leader"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
       setSelectedLeaveRequest(null);
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update leave request. Please try again.",
+        description:
+          error.message || "Failed to update leave request. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const handleLeaveRequestAction = (requestId: number, action: 'approve' | 'reject') => {
+  const handleLeaveRequestAction = (
+    requestId: number,
+    action: "approve" | "reject",
+  ) => {
     updateLeaveRequestMutation.mutate({ requestId, action });
   };
 
   // Mutation to update pod
   const updatePodMutation = useMutation({
-    mutationFn: async ({ podId, updates }: { 
-      podId: number; 
-      updates: { 
-        title?: string; 
-        description?: string; 
-        clubName?: string; 
-        clubRegion?: string; 
+    mutationFn: async ({
+      podId,
+      updates,
+    }: {
+      podId: number;
+      updates: {
+        title?: string;
+        description?: string;
+        clubName?: string;
+        clubRegion?: string;
         clubAddress?: string;
-        imageUrl?: string; 
-        costPerPerson?: number; 
+        imageUrl?: string;
+        costPerPerson?: number;
         totalSpots?: number;
         availableSpots?: number;
         amenities?: string[];
-      } 
+      };
     }) => {
       const response = await fetch(`/api/pods/${podId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update pod');
+        throw new Error(error.message || "Failed to update pod");
       }
       return response.json();
     },
@@ -370,8 +429,10 @@ export default function PodLeaderDashboard() {
         title: "Pod updated",
         description: "Your pod details have been updated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'leader'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/join-requests", "leader"],
+      });
       setEditingPod(null);
       setEditTitle("");
       setEditDescription("");
@@ -397,12 +458,12 @@ export default function PodLeaderDashboard() {
   const deletePodMutation = useMutation({
     mutationFn: async (podId: number) => {
       const response = await fetch(`/api/pods/${podId}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to delete pod');
+        throw new Error(error.message || "Failed to delete pod");
       }
       return response.json();
     },
@@ -411,8 +472,10 @@ export default function PodLeaderDashboard() {
         title: "Pod deleted",
         description: "Your pod has been permanently deleted.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/pods'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/join-requests', 'leader'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/join-requests", "leader"],
+      });
       if (deletingPod?.id === selectedPodForMembers) {
         setSelectedPodForMembers(null);
       }
@@ -427,7 +490,10 @@ export default function PodLeaderDashboard() {
     },
   });
 
-  const handleRequestAction = (requestId: number, status: 'accepted' | 'rejected') => {
+  const handleRequestAction = (
+    requestId: number,
+    status: "accepted" | "rejected",
+  ) => {
     updateRequestMutation.mutate({ requestId, status });
   };
 
@@ -525,7 +591,8 @@ export default function PodLeaderDashboard() {
     if (!Number.isFinite(editAvailableSpots) || editAvailableSpots < 0) {
       toast({
         title: "Invalid available spots",
-        description: "Please enter a valid number of available spots (0 or more).",
+        description:
+          "Please enter a valid number of available spots (0 or more).",
         variant: "destructive",
       });
       return;
@@ -551,8 +618,8 @@ export default function PodLeaderDashboard() {
       return;
     }
 
-    updatePodMutation.mutate({ 
-      podId: editingPod.id, 
+    updatePodMutation.mutate({
+      podId: editingPod.id,
       updates: {
         title: editTitle.trim(),
         description: editDescription.trim(),
@@ -563,34 +630,42 @@ export default function PodLeaderDashboard() {
         costPerPerson: editCostPerPerson,
         totalSpots: editTotalSpots,
         availableSpots: editAvailableSpots,
-        amenities: editAmenities
-      }
+        amenities: editAmenities,
+      },
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'accepted': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "accepted":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'accepted': return <CheckCircle className="w-4 h-4" />;
-      case 'rejected': return <XCircle className="w-4 h-4" />;
-      case 'pending': return <Clock className="w-4 h-4" />;
-      default: return <AlertCircle className="w-4 h-4" />;
+      case "accepted":
+        return <CheckCircle className="w-4 h-4" />;
+      case "rejected":
+        return <XCircle className="w-4 h-4" />;
+      case "pending":
+        return <Clock className="w-4 h-4" />;
+      default:
+        return <AlertCircle className="w-4 h-4" />;
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -598,9 +673,12 @@ export default function PodLeaderDashboard() {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  const pendingRequests = allJoinRequests?.filter(req => req.status === 'pending') || [];
-  const pendingLeaveRequests = allLeaveRequests?.filter(req => req.status === 'pending') || [];
-  const totalMembers = leaderPods?.reduce((sum, pod) => sum + (pod.availableSpots || 0), 0) || 0;
+  const pendingRequests =
+    allJoinRequests?.filter((req) => req.status === "pending") || [];
+  const pendingLeaveRequests =
+    allLeaveRequests?.filter((req) => req.status === "pending") || [];
+  const totalMembers =
+    leaderPods?.reduce((sum, pod) => sum + (pod.totalSpots || 0), 0) || 0;
 
   // Show loading state while fetching user data from database
   if (authLoading || !userData) {
@@ -612,7 +690,9 @@ export default function PodLeaderDashboard() {
               <Zap className="w-8 h-8 text-white" />
             </div>
             <CardTitle>Loading Your Dashboard</CardTitle>
-            <p className="text-muted-foreground">Please wait while we load your profile...</p>
+            <p className="text-muted-foreground">
+              Please wait while we load your profile...
+            </p>
           </CardHeader>
         </Card>
       </div>
@@ -631,8 +711,12 @@ export default function PodLeaderDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Active Pods</p>
-                    <p className="text-2xl font-bold text-gray-900">{leaderPods?.length || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Active Pods
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {leaderPods?.length || 0}
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                     <Users className="w-6 h-6 text-purple-600" />
@@ -645,8 +729,12 @@ export default function PodLeaderDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Members</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Members
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {totalMembers}
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                     <UserCheck className="w-6 h-6 text-green-600" />
@@ -659,8 +747,12 @@ export default function PodLeaderDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Pending Requests</p>
-                    <p className="text-2xl font-bold text-gray-900">{pendingRequests.length}</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      Pending Requests
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {pendingRequests.length}
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                     <Clock className="w-6 h-6 text-yellow-600" />
@@ -677,16 +769,24 @@ export default function PodLeaderDashboard() {
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-16 h-16">
                     {authUser?.profileImageUrl && (
-                      <AvatarImage src={authUser.profileImageUrl} alt="Profile" data-testid="img-profile-avatar" />
+                      <AvatarImage
+                        src={authUser.profileImageUrl}
+                        alt="Profile"
+                        data-testid="img-profile-avatar"
+                      />
                     )}
                     <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg">
                       {getUserInitials(userData.firstName, userData.lastName)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h2 className="text-xl font-semibold">{userData.firstName} {userData.lastName}</h2>
+                    <h2 className="text-xl font-semibold">
+                      {userData.firstName} {userData.lastName}
+                    </h2>
                     <p className="text-gray-600">Pod Leader</p>
-                    <Badge variant="outline" className="mt-1">{userData.membershipLevel}</Badge>
+                    <Badge variant="outline" className="mt-1">
+                      {userData.membershipLevel}
+                    </Badge>
                   </div>
                 </div>
               </CardHeader>
@@ -704,11 +804,11 @@ export default function PodLeaderDashboard() {
                   <span>{userData.primaryClub}</span>
                 </div>
                 <Separator />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full"
-                  onClick={() => navigate('/edit-profile')}
+                  onClick={() => navigate("/edit-profile")}
                   data-testid="button-edit-profile"
                 >
                   <Edit3 className="w-4 h-4 mr-2" />
@@ -729,10 +829,11 @@ export default function PodLeaderDashboard() {
                 <CardContent className="pt-0">
                   <div className="space-y-3">
                     <p className="text-sm text-gray-600">
-                      You're also a member of {acceptedMemberships.length} pod{acceptedMemberships.length > 1 ? 's' : ''}.
+                      You're also a member of {acceptedMemberships.length} pod
+                      {acceptedMemberships.length > 1 ? "s" : ""}.
                     </p>
-                    <Button 
-                      onClick={() => navigate('/dashboard')}
+                    <Button
+                      onClick={() => navigate("/dashboard")}
                       variant="outline"
                       className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
                       data-testid="button-switch-to-member-dashboard"
@@ -751,29 +852,55 @@ export default function PodLeaderDashboard() {
           <div className="lg:col-span-2">
             <Tabs defaultValue="requests" className="w-full">
               <TabsList className="grid w-full grid-cols-5 h-9 sm:h-11">
-                <TabsTrigger value="requests" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-join-requests">
+                <TabsTrigger
+                  value="requests"
+                  className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight"
+                  data-testid="tab-join-requests"
+                >
                   Join
                   {pendingRequests.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-[9px] px-1 h-4">
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 text-[9px] px-1 h-4"
+                    >
                       {pendingRequests.length}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="leave-requests" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-leave-requests">
+                <TabsTrigger
+                  value="leave-requests"
+                  className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight"
+                  data-testid="tab-leave-requests"
+                >
                   Leave
                   {pendingLeaveRequests.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-[9px] px-1 h-4">
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 text-[9px] px-1 h-4"
+                    >
                       {pendingLeaveRequests.length}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="members" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-pod-members">
+                <TabsTrigger
+                  value="members"
+                  className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight"
+                  data-testid="tab-pod-members"
+                >
                   Members
                 </TabsTrigger>
-                <TabsTrigger value="pods" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-my-pods">
+                <TabsTrigger
+                  value="pods"
+                  className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight"
+                  data-testid="tab-my-pods"
+                >
                   Pods
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight" data-testid="tab-settings">
+                <TabsTrigger
+                  value="settings"
+                  className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight"
+                  data-testid="tab-settings"
+                >
                   Settings
                 </TabsTrigger>
               </TabsList>
@@ -790,75 +917,131 @@ export default function PodLeaderDashboard() {
                     {requestsLoading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                        <p className="text-gray-600 mt-2">Loading requests...</p>
+                        <p className="text-gray-600 mt-2">
+                          Loading requests...
+                        </p>
                       </div>
                     ) : !allJoinRequests || allJoinRequests.length === 0 ? (
                       <div className="text-center py-8">
                         <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Join Requests</h3>
-                        <p className="text-gray-600">No one has requested to join your pods yet</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Join Requests
+                        </h3>
+                        <p className="text-gray-600">
+                          No one has requested to join your pods yet
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {allJoinRequests.map((request) => (
-                          <div key={request.id} className="border rounded-lg p-4">
+                          <div
+                            key={request.id}
+                            className="border rounded-lg p-4"
+                          >
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
-                                  <h3 className="font-semibold text-lg">{request.userName}</h3>
-                                  <Badge className={getStatusColor(request.status)}>
+                                  <h3 className="font-semibold text-lg">
+                                    {request.userName}
+                                  </h3>
+                                  <Badge
+                                    className={getStatusColor(request.status)}
+                                  >
                                     <div className="flex items-center space-x-1">
                                       {getStatusIcon(request.status)}
-                                      <span className="capitalize">{request.status}</span>
+                                      <span className="capitalize">
+                                        {request.status}
+                                      </span>
                                     </div>
                                   </Badge>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-2">
-                                  Wants to join: <strong>{request.podName}</strong>
+                                  Wants to join:{" "}
+                                  <strong>{request.podName}</strong>
                                 </p>
                                 <p className="text-sm text-gray-600">
-                                  Submitted: {request.createdAt ? formatDate(request.createdAt.toString()) : 'Unknown'}
+                                  Submitted:{" "}
+                                  {request.createdAt
+                                    ? formatDate(request.createdAt.toString())
+                                    : "Unknown"}
                                 </p>
                               </div>
                               <div className="flex space-x-2">
                                 <Dialog>
                                   <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        setSelectedRequest(request)
+                                      }
+                                    >
                                       View Details
                                     </Button>
                                   </DialogTrigger>
                                   <DialogContent>
                                     <DialogHeader>
-                                      <DialogTitle>Join Request Details</DialogTitle>
+                                      <DialogTitle>
+                                        Join Request Details
+                                      </DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div>
-                                        <h4 className="font-semibold mb-2">Applicant Information</h4>
+                                        <h4 className="font-semibold mb-2">
+                                          Applicant Information
+                                        </h4>
                                         <div className="space-y-2 text-sm">
-                                          <p><strong>Name:</strong> {request.userName}</p>
-                                          <p><strong>Email:</strong> {request.userEmail}</p>
-                                          <p><strong>Phone:</strong> {request.userPhone}</p>
+                                          <p>
+                                            <strong>Name:</strong>{" "}
+                                            {request.userName}
+                                          </p>
+                                          <p>
+                                            <strong>Email:</strong>{" "}
+                                            {request.userEmail}
+                                          </p>
+                                          <p>
+                                            <strong>Phone:</strong>{" "}
+                                            {request.userPhone}
+                                          </p>
                                         </div>
                                       </div>
                                       {request.message && (
                                         <div>
-                                          <h4 className="font-semibold mb-2">Message</h4>
-                                          <p className="text-sm bg-gray-50 p-3 rounded-md">{request.message}</p>
+                                          <h4 className="font-semibold mb-2">
+                                            Message
+                                          </h4>
+                                          <p className="text-sm bg-gray-50 p-3 rounded-md">
+                                            {request.message}
+                                          </p>
                                         </div>
                                       )}
-                                      {request.status === 'pending' && (
+                                      {request.status === "pending" && (
                                         <div className="flex space-x-2 pt-4">
                                           <Button
-                                            onClick={() => handleRequestAction(request.id, 'accepted')}
-                                            disabled={updateRequestMutation.isPending}
+                                            onClick={() =>
+                                              handleRequestAction(
+                                                request.id,
+                                                "accepted",
+                                              )
+                                            }
+                                            disabled={
+                                              updateRequestMutation.isPending
+                                            }
                                             className="flex-1 bg-green-600 hover:bg-green-700"
                                           >
                                             <UserCheck className="w-4 h-4 mr-2" />
                                             Accept
                                           </Button>
                                           <Button
-                                            onClick={() => handleRequestAction(request.id, 'rejected')}
-                                            disabled={updateRequestMutation.isPending}
+                                            onClick={() =>
+                                              handleRequestAction(
+                                                request.id,
+                                                "rejected",
+                                              )
+                                            }
+                                            disabled={
+                                              updateRequestMutation.isPending
+                                            }
                                             variant="destructive"
                                             className="flex-1"
                                           >
@@ -892,70 +1075,122 @@ export default function PodLeaderDashboard() {
                     {leaveRequestsLoading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                        <p className="text-gray-600 mt-2">Loading leave requests...</p>
+                        <p className="text-gray-600 mt-2">
+                          Loading leave requests...
+                        </p>
                       </div>
                     ) : !allLeaveRequests || allLeaveRequests.length === 0 ? (
                       <div className="text-center py-8">
                         <LogOut className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Leave Requests</h3>
-                        <p className="text-gray-600">No members have requested to leave your pods</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Leave Requests
+                        </h3>
+                        <p className="text-gray-600">
+                          No members have requested to leave your pods
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {allLeaveRequests.map((request) => (
-                          <div key={request.id} className="border rounded-lg p-4" data-testid={`leave-request-${request.id}`}>
+                          <div
+                            key={request.id}
+                            className="border rounded-lg p-4"
+                            data-testid={`leave-request-${request.id}`}
+                          >
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
-                                  <h3 className="font-semibold text-lg">{request.userName}</h3>
-                                  <Badge className={getStatusColor(request.status)}>
+                                  <h3 className="font-semibold text-lg">
+                                    {request.userName}
+                                  </h3>
+                                  <Badge
+                                    className={getStatusColor(request.status)}
+                                  >
                                     <div className="flex items-center space-x-1">
                                       {getStatusIcon(request.status)}
-                                      <span className="capitalize">{request.status}</span>
+                                      <span className="capitalize">
+                                        {request.status}
+                                      </span>
                                     </div>
                                   </Badge>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-2">
-                                  Wants to leave: <strong>{request.podName}</strong>
+                                  Wants to leave:{" "}
+                                  <strong>{request.podName}</strong>
                                 </p>
                                 <p className="text-sm text-gray-600">
-                                  Submitted: {request.createdAt ? formatDate(request.createdAt.toString()) : 'Unknown'}
+                                  Submitted:{" "}
+                                  {request.createdAt
+                                    ? formatDate(request.createdAt.toString())
+                                    : "Unknown"}
                                 </p>
                               </div>
                               <div className="flex space-x-2">
                                 <Dialog>
                                   <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" onClick={() => setSelectedLeaveRequest(request)} data-testid={`button-view-leave-request-${request.id}`}>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        setSelectedLeaveRequest(request)
+                                      }
+                                      data-testid={`button-view-leave-request-${request.id}`}
+                                    >
                                       View Details
                                     </Button>
                                   </DialogTrigger>
                                   <DialogContent>
                                     <DialogHeader>
-                                      <DialogTitle>Leave Request Details</DialogTitle>
+                                      <DialogTitle>
+                                        Leave Request Details
+                                      </DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div>
-                                        <h4 className="font-semibold mb-2">Member Information</h4>
+                                        <h4 className="font-semibold mb-2">
+                                          Member Information
+                                        </h4>
                                         <div className="space-y-2 text-sm">
-                                          <p><strong>Name:</strong> {request.userName}</p>
-                                          <p><strong>Email:</strong> {request.userEmail}</p>
+                                          <p>
+                                            <strong>Name:</strong>{" "}
+                                            {request.userName}
+                                          </p>
+                                          <p>
+                                            <strong>Email:</strong>{" "}
+                                            {request.userEmail}
+                                          </p>
                                         </div>
                                       </div>
                                       <div>
-                                        <h4 className="font-semibold mb-2">Pod</h4>
-                                        <p className="text-sm">{request.podName}</p>
+                                        <h4 className="font-semibold mb-2">
+                                          Pod
+                                        </h4>
+                                        <p className="text-sm">
+                                          {request.podName}
+                                        </p>
                                       </div>
                                       {request.reason && (
                                         <div>
-                                          <h4 className="font-semibold mb-2">Reason for Leaving</h4>
-                                          <p className="text-sm bg-gray-50 p-3 rounded-md">{request.reason}</p>
+                                          <h4 className="font-semibold mb-2">
+                                            Reason for Leaving
+                                          </h4>
+                                          <p className="text-sm bg-gray-50 p-3 rounded-md">
+                                            {request.reason}
+                                          </p>
                                         </div>
                                       )}
-                                      {request.status === 'pending' && (
+                                      {request.status === "pending" && (
                                         <div className="flex space-x-2 pt-4">
                                           <Button
-                                            onClick={() => handleLeaveRequestAction(request.id, 'approve')}
-                                            disabled={updateLeaveRequestMutation.isPending}
+                                            onClick={() =>
+                                              handleLeaveRequestAction(
+                                                request.id,
+                                                "approve",
+                                              )
+                                            }
+                                            disabled={
+                                              updateLeaveRequestMutation.isPending
+                                            }
                                             className="flex-1 bg-green-600 hover:bg-green-700"
                                             data-testid={`button-approve-leave-${request.id}`}
                                           >
@@ -963,8 +1198,15 @@ export default function PodLeaderDashboard() {
                                             Approve
                                           </Button>
                                           <Button
-                                            onClick={() => handleLeaveRequestAction(request.id, 'reject')}
-                                            disabled={updateLeaveRequestMutation.isPending}
+                                            onClick={() =>
+                                              handleLeaveRequestAction(
+                                                request.id,
+                                                "reject",
+                                              )
+                                            }
+                                            disabled={
+                                              updateLeaveRequestMutation.isPending
+                                            }
                                             variant="destructive"
                                             className="flex-1"
                                             data-testid={`button-reject-leave-${request.id}`}
@@ -999,12 +1241,18 @@ export default function PodLeaderDashboard() {
                     {!leaderPods || leaderPods.length === 0 ? (
                       <div className="text-center py-8">
                         <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Pods Created</h3>
-                        <p className="text-gray-600">Create a pod first to see members</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Pods Created
+                        </h3>
+                        <p className="text-gray-600">
+                          Create a pod first to see members
+                        </p>
                       </div>
                     ) : !selectedPodForMembers ? (
                       <div className="space-y-4">
-                        <p className="text-gray-600 mb-4">Select a pod to view its members:</p>
+                        <p className="text-gray-600 mb-4">
+                          Select a pod to view its members:
+                        </p>
                         <div className="grid grid-cols-1 gap-3">
                           {leaderPods.map((pod) => (
                             <div
@@ -1014,13 +1262,21 @@ export default function PodLeaderDashboard() {
                             >
                               <div className="flex justify-between items-center">
                                 <div>
-                                  <h4 className="font-semibold">{pod.clubName}</h4>
-                                  <p className="text-sm text-gray-600">{pod.clubRegion}</p>
+                                  <h4 className="font-semibold">
+                                    {pod.clubName}
+                                  </h4>
+                                  <p className="text-sm text-gray-600">
+                                    {pod.clubRegion}
+                                  </p>
                                 </div>
                                 <div className="text-right">
                                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                                     <Users className="w-4 h-4" />
-                                    <span>{pod.totalSpots - (pod.availableSpots || 0)} members</span>
+                                    <span>
+                                      {pod.totalSpots -
+                                        (pod.availableSpots || 0)}{" "}
+                                      members
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -1033,10 +1289,19 @@ export default function PodLeaderDashboard() {
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-semibold">
-                              {leaderPods?.find(p => p.id === selectedPodForMembers)?.clubName} Members
+                              {
+                                leaderPods?.find(
+                                  (p) => p.id === selectedPodForMembers,
+                                )?.clubName
+                              }{" "}
+                              Members
                             </h4>
                             <p className="text-sm text-gray-600">
-                              {leaderPods?.find(p => p.id === selectedPodForMembers)?.clubRegion}
+                              {
+                                leaderPods?.find(
+                                  (p) => p.id === selectedPodForMembers,
+                                )?.clubRegion
+                              }
                             </p>
                           </div>
                           <Button
@@ -1051,13 +1316,19 @@ export default function PodLeaderDashboard() {
                         {membersLoading ? (
                           <div className="text-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto loading-spin"></div>
-                            <p className="text-gray-600 mt-2">Loading members...</p>
+                            <p className="text-gray-600 mt-2">
+                              Loading members...
+                            </p>
                           </div>
                         ) : !podMembers || podMembers.length === 0 ? (
                           <div className="text-center py-8">
                             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No Members Yet</h3>
-                            <p className="text-gray-600">This pod doesn't have any members yet</p>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                              No Members Yet
+                            </h3>
+                            <p className="text-gray-600">
+                              This pod doesn't have any members yet
+                            </p>
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -1071,32 +1342,53 @@ export default function PodLeaderDashboard() {
                                   <div className="flex items-center space-x-3">
                                     <Avatar className="w-10 h-10">
                                       <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                                        {member.user ? getUserInitials(member.user.firstName, member.user.lastName) : 'U'}
+                                        {member.user
+                                          ? getUserInitials(
+                                              member.user.firstName,
+                                              member.user.lastName,
+                                            )
+                                          : "U"}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div>
                                       <h4 className="font-semibold">
-                                        {member.user ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
+                                        {member.user
+                                          ? `${member.user.firstName} ${member.user.lastName}`
+                                          : "Unknown User"}
                                       </h4>
                                       <p className="text-sm text-gray-500">
-                                        Joined {member.joinedAt ? formatDate(member.joinedAt.toString()) : 'Unknown'}
+                                        Joined{" "}
+                                        {member.joinedAt
+                                          ? formatDate(
+                                              member.joinedAt.toString(),
+                                            )
+                                          : "Unknown"}
                                       </p>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <Badge variant="outline" className="mb-1">
-                                      {member.userId === leaderPods?.find(p => p.id === selectedPodForMembers)?.leadId ? 'Leader' : 'Member'}
+                                      {member.userId ===
+                                      leaderPods?.find(
+                                        (p) => p.id === selectedPodForMembers,
+                                      )?.leadId
+                                        ? "Leader"
+                                        : "Member"}
                                     </Badge>
                                     <div className="text-sm text-gray-600">
-                                      {member.user?.membershipId || 'No membership ID'}
+                                      {member.user?.membershipId ||
+                                        "No membership ID"}
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             ))}
-                            
+
                             {/* Member Details Modal */}
-                            <Dialog open={selectedMember !== null} onOpenChange={() => setSelectedMember(null)}>
+                            <Dialog
+                              open={selectedMember !== null}
+                              onOpenChange={() => setSelectedMember(null)}
+                            >
                               <DialogContent>
                                 <DialogHeader>
                                   <DialogTitle>Member Details</DialogTitle>
@@ -1106,63 +1398,114 @@ export default function PodLeaderDashboard() {
                                     <div className="flex items-center space-x-4">
                                       <Avatar className="w-16 h-16">
                                         <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg">
-                                          {selectedMember.user ? getUserInitials(selectedMember.user.firstName, selectedMember.user.lastName) : 'U'}
+                                          {selectedMember.user
+                                            ? getUserInitials(
+                                                selectedMember.user.firstName,
+                                                selectedMember.user.lastName,
+                                              )
+                                            : "U"}
                                         </AvatarFallback>
                                       </Avatar>
                                       <div>
                                         <h3 className="text-xl font-semibold">
-                                          {selectedMember.user ? `${selectedMember.user.firstName} ${selectedMember.user.lastName}` : 'Unknown User'}
+                                          {selectedMember.user
+                                            ? `${selectedMember.user.firstName} ${selectedMember.user.lastName}`
+                                            : "Unknown User"}
                                         </h3>
-                                        <Badge variant="outline" className="mt-1">
-                                          {selectedMember.userId === leaderPods?.find(p => p.id === selectedPodForMembers)?.leadId ? 'Pod Leader' : 'Member'}
+                                        <Badge
+                                          variant="outline"
+                                          className="mt-1"
+                                        >
+                                          {selectedMember.userId ===
+                                          leaderPods?.find(
+                                            (p) =>
+                                              p.id === selectedPodForMembers,
+                                          )?.leadId
+                                            ? "Pod Leader"
+                                            : "Member"}
                                         </Badge>
                                       </div>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-1 gap-4">
                                       <div>
-                                        <h4 className="font-semibold mb-2">Contact Information</h4>
+                                        <h4 className="font-semibold mb-2">
+                                          Contact Information
+                                        </h4>
                                         <div className="space-y-2 text-sm">
                                           <div className="flex items-center space-x-2">
                                             <Mail className="w-4 h-4 text-gray-500" />
-                                            <span>{selectedMember.user?.email || 'No email'}</span>
+                                            <span>
+                                              {selectedMember.user?.email ||
+                                                "No email"}
+                                            </span>
                                           </div>
                                           <div className="flex items-center space-x-2">
                                             <Phone className="w-4 h-4 text-gray-500" />
-                                            <span>{selectedMember.user?.phone || 'No phone'}</span>
+                                            <span>
+                                              {selectedMember.user?.phone ||
+                                                "No phone"}
+                                            </span>
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       <div>
-                                        <h4 className="font-semibold mb-2">Membership Details</h4>
+                                        <h4 className="font-semibold mb-2">
+                                          Membership Details
+                                        </h4>
                                         <div className="space-y-2 text-sm">
                                           <div className="flex items-center space-x-2">
                                             <MapPin className="w-4 h-4 text-gray-500" />
-                                            <span>{selectedMember.user?.primaryClub || 'No primary club'}</span>
+                                            <span>
+                                              {selectedMember.user
+                                                ?.primaryClub ||
+                                                "No primary club"}
+                                            </span>
                                           </div>
                                           <div className="flex items-center space-x-2">
                                             <Users className="w-4 h-4 text-gray-500" />
-                                            <span>{selectedMember.user?.membershipLevel || 'No membership level'}</span>
+                                            <span>
+                                              {selectedMember.user
+                                                ?.membershipLevel ||
+                                                "No membership level"}
+                                            </span>
                                           </div>
                                           <div className="flex items-center space-x-2">
                                             <UserCheck className="w-4 h-4 text-gray-500" />
-                                            <span>{selectedMember.user?.membershipId || 'No membership ID'}</span>
+                                            <span>
+                                              {selectedMember.user
+                                                ?.membershipId ||
+                                                "No membership ID"}
+                                            </span>
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       <div>
-                                        <h4 className="font-semibold mb-2">Pod Activity</h4>
+                                        <h4 className="font-semibold mb-2">
+                                          Pod Activity
+                                        </h4>
                                         <div className="space-y-2 text-sm">
                                           <div className="flex justify-between">
                                             <span>Joined Date:</span>
-                                            <span>{selectedMember.joinedAt ? formatDate(selectedMember.joinedAt.toString()) : 'Unknown'}</span>
+                                            <span>
+                                              {selectedMember.joinedAt
+                                                ? formatDate(
+                                                    selectedMember.joinedAt.toString(),
+                                                  )
+                                                : "Unknown"}
+                                            </span>
                                           </div>
                                           <div className="flex justify-between">
                                             <span>Status:</span>
-                                            <Badge variant="outline" className="text-xs">
-                                              {selectedMember.isActive ? 'Active' : 'Inactive'}
+                                            <Badge
+                                              variant="outline"
+                                              className="text-xs"
+                                            >
+                                              {selectedMember.isActive
+                                                ? "Active"
+                                                : "Inactive"}
                                             </Badge>
                                           </div>
                                         </div>
@@ -1197,23 +1540,44 @@ export default function PodLeaderDashboard() {
                     ) : !leaderPods || leaderPods.length === 0 ? (
                       <div className="text-center py-8">
                         <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Pods Created</h3>
-                        <p className="text-gray-600 mb-4">You haven't created any pods yet</p>
-                        <Button onClick={() => navigate('/pod-leader-registration')}>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Pods Created
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          You haven't created any pods yet
+                        </p>
+                        <Button
+                          onClick={() => navigate("/pod-leader-registration")}
+                        >
                           Create Your First Pod
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {leaderPods.map((pod) => (
-                          <div key={pod.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div
+                            key={pod.id}
+                            className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                          >
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
-                                  <h3 className="font-semibold text-lg">{pod.clubName}</h3>
-                                  <Badge variant="outline">{pod.clubRegion}</Badge>
-                                  <Badge variant={(pod.availableSpots || 0) > 0 ? "default" : "secondary"}>
-                                    {(pod.availableSpots || 0) > 0 ? "Open" : "Full"}
+                                  <h3 className="font-semibold text-lg">
+                                    {pod.clubName}
+                                  </h3>
+                                  <Badge variant="outline">
+                                    {pod.clubRegion}
+                                  </Badge>
+                                  <Badge
+                                    variant={
+                                      (pod.availableSpots || 0) > 0
+                                        ? "default"
+                                        : "secondary"
+                                    }
+                                  >
+                                    {(pod.availableSpots || 0) > 0
+                                      ? "Open"
+                                      : "Full"}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
@@ -1227,24 +1591,35 @@ export default function PodLeaderDashboard() {
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <Users className="w-4 h-4" />
-                                    <span>{pod.totalSpots - (pod.availableSpots || 0)}/{pod.totalSpots}</span>
+                                    <span>
+                                      {pod.totalSpots -
+                                        (pod.availableSpots || 0)}
+                                      /{pod.totalSpots}
+                                    </span>
                                   </div>
                                 </div>
-                                <p className="text-sm text-gray-600 line-clamp-2">{pod.description}</p>
+                                <p className="text-sm text-gray-600 line-clamp-2">
+                                  {pod.description}
+                                </p>
                               </div>
                               <div className="flex space-x-2">
-                                <Button 
-                                  variant="outline" 
+                                <Button
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => navigate(`/pods/${pod.id}`)}
                                   data-testid={`button-view-pod-${pod.id}`}
                                 >
                                   View Details
                                 </Button>
-                                <Dialog open={editingPod?.id === pod.id} onOpenChange={(open) => !open && setEditingPod(null)}>
+                                <Dialog
+                                  open={editingPod?.id === pod.id}
+                                  onOpenChange={(open) =>
+                                    !open && setEditingPod(null)
+                                  }
+                                >
                                   <DialogTrigger asChild>
-                                    <Button 
-                                      variant="outline" 
+                                    <Button
+                                      variant="outline"
                                       size="sm"
                                       onClick={() => handleEditPod(pod)}
                                       data-testid={`button-edit-pod-${pod.id}`}
@@ -1254,11 +1629,16 @@ export default function PodLeaderDashboard() {
                                   </DialogTrigger>
                                   <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                                     <DialogHeader>
-                                      <DialogTitle>Edit Pod Details</DialogTitle>
+                                      <DialogTitle>
+                                        Edit Pod Details
+                                      </DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div>
-                                        <label htmlFor="podTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label
+                                          htmlFor="podTitle"
+                                          className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
                                           Pod Title *
                                         </label>
                                         <Input
@@ -1266,13 +1646,18 @@ export default function PodLeaderDashboard() {
                                           type="text"
                                           placeholder="Downtown Fitness Group"
                                           value={editTitle}
-                                          onChange={(e) => setEditTitle(e.target.value)}
+                                          onChange={(e) =>
+                                            setEditTitle(e.target.value)
+                                          }
                                           data-testid="input-pod-title"
                                         />
                                       </div>
 
                                       <div>
-                                        <label htmlFor="podDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label
+                                          htmlFor="podDescription"
+                                          className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
                                           Description *
                                         </label>
                                         <textarea
@@ -1280,7 +1665,9 @@ export default function PodLeaderDashboard() {
                                           rows={3}
                                           placeholder="Describe your pod..."
                                           value={editDescription}
-                                          onChange={(e) => setEditDescription(e.target.value)}
+                                          onChange={(e) =>
+                                            setEditDescription(e.target.value)
+                                          }
                                           className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           data-testid="input-pod-description"
                                         />
@@ -1288,7 +1675,10 @@ export default function PodLeaderDashboard() {
 
                                       <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                          <label htmlFor="clubName" className="block text-sm font-medium text-gray-700 mb-2">
+                                          <label
+                                            htmlFor="clubName"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                          >
                                             Club Name *
                                           </label>
                                           <Input
@@ -1296,13 +1686,18 @@ export default function PodLeaderDashboard() {
                                             type="text"
                                             placeholder="Bay Club Courtside"
                                             value={editClubName}
-                                            onChange={(e) => setEditClubName(e.target.value)}
+                                            onChange={(e) =>
+                                              setEditClubName(e.target.value)
+                                            }
                                             data-testid="input-club-name"
                                           />
                                         </div>
 
                                         <div>
-                                          <label htmlFor="clubRegion" className="block text-sm font-medium text-gray-700 mb-2">
+                                          <label
+                                            htmlFor="clubRegion"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                          >
                                             Region *
                                           </label>
                                           <Input
@@ -1310,14 +1705,19 @@ export default function PodLeaderDashboard() {
                                             type="text"
                                             placeholder="San Jose"
                                             value={editClubRegion}
-                                            onChange={(e) => setEditClubRegion(e.target.value)}
+                                            onChange={(e) =>
+                                              setEditClubRegion(e.target.value)
+                                            }
                                             data-testid="input-club-region"
                                           />
                                         </div>
                                       </div>
 
                                       <div>
-                                        <label htmlFor="clubAddress" className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label
+                                          htmlFor="clubAddress"
+                                          className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
                                           Club Address *
                                         </label>
                                         <Input
@@ -1325,14 +1725,19 @@ export default function PodLeaderDashboard() {
                                           type="text"
                                           placeholder="5252 Prospect Rd, San Jose, CA 95129"
                                           value={editClubAddress}
-                                          onChange={(e) => setEditClubAddress(e.target.value)}
+                                          onChange={(e) =>
+                                            setEditClubAddress(e.target.value)
+                                          }
                                           data-testid="input-club-address"
                                         />
                                       </div>
 
                                       <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                          <label htmlFor="costPerPerson" className="block text-sm font-medium text-gray-700 mb-2">
+                                          <label
+                                            htmlFor="costPerPerson"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                          >
                                             Cost Per Person ($/month) *
                                           </label>
                                           <Input
@@ -1340,14 +1745,21 @@ export default function PodLeaderDashboard() {
                                             type="number"
                                             min="0"
                                             placeholder="250"
-                                            value={editCostPerPerson || ''}
-                                            onChange={(e) => setEditCostPerPerson(parseInt(e.target.value))}
+                                            value={editCostPerPerson || ""}
+                                            onChange={(e) =>
+                                              setEditCostPerPerson(
+                                                parseInt(e.target.value),
+                                              )
+                                            }
                                             data-testid="input-pod-cost"
                                           />
                                         </div>
 
                                         <div>
-                                          <label htmlFor="totalSpots" className="block text-sm font-medium text-gray-700 mb-2">
+                                          <label
+                                            htmlFor="totalSpots"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                          >
                                             Total Spots *
                                           </label>
                                           <Input
@@ -1356,16 +1768,26 @@ export default function PodLeaderDashboard() {
                                             min="1"
                                             max="10"
                                             placeholder="5"
-                                            value={editTotalSpots || ''}
-                                            onChange={(e) => setEditTotalSpots(parseInt(e.target.value))}
+                                            value={editTotalSpots || ""}
+                                            onChange={(e) =>
+                                              setEditTotalSpots(
+                                                parseInt(e.target.value),
+                                              )
+                                            }
                                             data-testid="input-total-spots"
                                           />
-                                          <p className="text-xs text-gray-500 mt-1">Maximum 10 members (including pod leader)</p>
+                                          <p className="text-xs text-gray-500 mt-1">
+                                            Maximum 10 members (including pod
+                                            leader)
+                                          </p>
                                         </div>
                                       </div>
 
                                       <div>
-                                        <label htmlFor="availableSpots" className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label
+                                          htmlFor="availableSpots"
+                                          className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
                                           Available Spots *
                                         </label>
                                         <Input
@@ -1374,36 +1796,66 @@ export default function PodLeaderDashboard() {
                                           min="0"
                                           max={editTotalSpots || 10}
                                           placeholder="2"
-                                          value={editAvailableSpots || ''}
-                                          onChange={(e) => setEditAvailableSpots(parseInt(e.target.value))}
+                                          value={editAvailableSpots || ""}
+                                          onChange={(e) =>
+                                            setEditAvailableSpots(
+                                              parseInt(e.target.value),
+                                            )
+                                          }
                                           data-testid="input-pod-spots"
                                         />
                                         <p className="text-sm text-gray-500 mt-1">
-                                          Number of spots currently available (max: {editTotalSpots})
+                                          Number of spots currently available
+                                          (max: {editTotalSpots})
                                         </p>
                                       </div>
 
                                       <div>
-                                        <label htmlFor="amenities" className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label
+                                          htmlFor="amenities"
+                                          className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
                                           Amenities
                                         </label>
                                         <div className="flex flex-wrap gap-2 mb-2">
-                                          {['tennis', 'pickleball', 'pool', 'spa', 'fitness', 'basketball', 'yoga'].map((amenity) => (
-                                            <label key={amenity} className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full cursor-pointer hover:bg-gray-200">
+                                          {[
+                                            "tennis",
+                                            "pickleball",
+                                            "pool",
+                                            "spa",
+                                            "fitness",
+                                            "basketball",
+                                            "yoga",
+                                          ].map((amenity) => (
+                                            <label
+                                              key={amenity}
+                                              className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full cursor-pointer hover:bg-gray-200"
+                                            >
                                               <input
                                                 type="checkbox"
-                                                checked={editAmenities.includes(amenity)}
+                                                checked={editAmenities.includes(
+                                                  amenity,
+                                                )}
                                                 onChange={(e) => {
                                                   if (e.target.checked) {
-                                                    setEditAmenities([...editAmenities, amenity]);
+                                                    setEditAmenities([
+                                                      ...editAmenities,
+                                                      amenity,
+                                                    ]);
                                                   } else {
-                                                    setEditAmenities(editAmenities.filter(a => a !== amenity));
+                                                    setEditAmenities(
+                                                      editAmenities.filter(
+                                                        (a) => a !== amenity,
+                                                      ),
+                                                    );
                                                   }
                                                 }}
                                                 className="rounded text-purple-600 focus:ring-purple-500"
                                                 data-testid={`checkbox-amenity-${amenity}`}
                                               />
-                                              <span className="text-sm capitalize">{amenity}</span>
+                                              <span className="text-sm capitalize">
+                                                {amenity}
+                                              </span>
                                             </label>
                                           ))}
                                         </div>
@@ -1446,13 +1898,19 @@ export default function PodLeaderDashboard() {
                                               {isUploading ? (
                                                 <div className="flex items-center space-x-2">
                                                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600" />
-                                                  <span className="text-sm text-gray-600">Uploading...</span>
+                                                  <span className="text-sm text-gray-600">
+                                                    Uploading...
+                                                  </span>
                                                 </div>
                                               ) : (
                                                 <>
                                                   <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
-                                                  <span className="text-sm text-gray-600">Click to upload an image</span>
-                                                  <span className="text-xs text-gray-400 mt-1">Max 5MB, JPEG or PNG</span>
+                                                  <span className="text-sm text-gray-600">
+                                                    Click to upload an image
+                                                  </span>
+                                                  <span className="text-xs text-gray-400 mt-1">
+                                                    Max 5MB, JPEG or PNG
+                                                  </span>
                                                 </>
                                               )}
                                             </div>
@@ -1460,28 +1918,35 @@ export default function PodLeaderDashboard() {
                                         )}
                                       </div>
                                       <div className="flex justify-end space-x-2 pt-4 border-t">
-                                        <Button 
-                                          variant="outline" 
+                                        <Button
+                                          variant="outline"
                                           onClick={() => setEditingPod(null)}
                                           data-testid="button-cancel-edit"
                                         >
                                           Cancel
                                         </Button>
-                                        <Button 
+                                        <Button
                                           onClick={handleSavePod}
                                           disabled={updatePodMutation.isPending}
                                           data-testid="button-save-pod"
                                         >
-                                          {updatePodMutation.isPending ? "Saving..." : "Save Changes"}
+                                          {updatePodMutation.isPending
+                                            ? "Saving..."
+                                            : "Save Changes"}
                                         </Button>
                                       </div>
                                     </div>
                                   </DialogContent>
                                 </Dialog>
-                                <Dialog open={deletingPod?.id === pod.id} onOpenChange={(open) => !open && setDeletingPod(null)}>
+                                <Dialog
+                                  open={deletingPod?.id === pod.id}
+                                  onOpenChange={(open) =>
+                                    !open && setDeletingPod(null)
+                                  }
+                                >
                                   <DialogTrigger asChild>
-                                    <Button 
-                                      variant="destructive" 
+                                    <Button
+                                      variant="destructive"
                                       size="sm"
                                       onClick={() => setDeletingPod(pod)}
                                       data-testid={`button-delete-pod-${pod.id}`}
@@ -1498,12 +1963,18 @@ export default function PodLeaderDashboard() {
                                         <div className="flex items-start space-x-3">
                                           <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
                                           <div>
-                                            <h4 className="text-sm font-semibold text-red-800 mb-1">Warning: This action cannot be undone</h4>
+                                            <h4 className="text-sm font-semibold text-red-800 mb-1">
+                                              Warning: This action cannot be
+                                              undone
+                                            </h4>
                                             <p className="text-sm text-red-700">
-                                              Deleting this pod will permanently remove:
+                                              Deleting this pod will permanently
+                                              remove:
                                             </p>
                                             <ul className="text-sm text-red-700 list-disc list-inside mt-2 space-y-1">
-                                              <li>The pod and all its details</li>
+                                              <li>
+                                                The pod and all its details
+                                              </li>
                                               <li>All current members</li>
                                               <li>All pending join requests</li>
                                             </ul>
@@ -1511,24 +1982,29 @@ export default function PodLeaderDashboard() {
                                         </div>
                                       </div>
                                       <p className="text-sm text-gray-600">
-                                        Are you sure you want to delete <strong>{pod.clubName}</strong>?
+                                        Are you sure you want to delete{" "}
+                                        <strong>{pod.clubName}</strong>?
                                       </p>
                                       <div className="flex justify-end space-x-2">
-                                        <Button 
-                                          variant="outline" 
+                                        <Button
+                                          variant="outline"
                                           onClick={() => setDeletingPod(null)}
                                           disabled={deletePodMutation.isPending}
                                           data-testid="button-cancel-delete"
                                         >
                                           Cancel
                                         </Button>
-                                        <Button 
+                                        <Button
                                           variant="destructive"
-                                          onClick={() => deletePodMutation.mutate(pod.id)}
+                                          onClick={() =>
+                                            deletePodMutation.mutate(pod.id)
+                                          }
                                           disabled={deletePodMutation.isPending}
                                           data-testid="button-confirm-delete"
                                         >
-                                          {deletePodMutation.isPending ? "Deleting..." : "Delete Pod"}
+                                          {deletePodMutation.isPending
+                                            ? "Deleting..."
+                                            : "Delete Pod"}
                                         </Button>
                                       </div>
                                     </div>
@@ -1561,14 +2037,18 @@ export default function PodLeaderDashboard() {
                             <Percent className="w-5 h-5 text-purple-600" />
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900">Platform Fee</h3>
+                            <h3 className="font-semibold text-gray-900">
+                              Platform Fee
+                            </h3>
                             <p className="text-sm text-gray-600 mt-1">
-                              Set the percentage fee that FlexPod adds to membership payments. 
-                              This fee helps cover platform costs and is added on top of the pod membership cost.
+                              Set the percentage fee that FlexPod adds to
+                              membership payments. This fee helps cover platform
+                              costs and is added on top of the pod membership
+                              cost.
                             </p>
                           </div>
                         </div>
-                        
+
                         {settingsLoading ? (
                           <div className="flex items-center justify-center py-4">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
@@ -1576,32 +2056,61 @@ export default function PodLeaderDashboard() {
                         ) : (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              <span className="text-2xl font-bold text-purple-600">{platformSettings?.feePercentage || 5}%</span>
-                              <span className="text-sm text-gray-500">of membership cost</span>
+                              <span className="text-2xl font-bold text-purple-600">
+                                {platformSettings?.feePercentage || 5}%
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                of membership cost
+                              </span>
                             </div>
-                            <span className="text-xs text-gray-400">Set by platform admin</span>
+                            <span className="text-xs text-gray-400">
+                              Set by platform admin
+                            </span>
                           </div>
                         )}
-                        
+
                         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                           <h4 className="text-sm font-medium text-gray-900 mb-2">
-                            {leaderPods && leaderPods.length > 0 ? "Your Pod Payment Breakdown" : "Example Calculation"}
+                            {leaderPods && leaderPods.length > 0
+                              ? "Your Pod Payment Breakdown"
+                              : "Example Calculation"}
                           </h4>
                           <div className="text-sm text-gray-600 space-y-1">
                             {leaderPods && leaderPods.length > 0 ? (
                               <>
                                 <div className="flex justify-between">
                                   <span>Pod membership cost:</span>
-                                  <span>${(leaderPods[0].costPerPerson / 100).toFixed(2)}</span>
+                                  <span>
+                                    ${leaderPods[0].costPerPerson.toFixed(2)}
+                                  </span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Platform fee ({platformSettings?.feePercentage || 5}%):</span>
-                                  <span>${((leaderPods[0].costPerPerson / 100) * (platformSettings?.feePercentage || 5) / 100).toFixed(2)}</span>
+                                  <span>
+                                    Platform fee (
+                                    {platformSettings?.feePercentage || 5}%):
+                                  </span>
+                                  <span>
+                                    $
+                                    {(
+                                      (leaderPods[0].costPerPerson *
+                                        (platformSettings?.feePercentage ||
+                                          5)) /
+                                      100
+                                    ).toFixed(2)}
+                                  </span>
                                 </div>
                                 <Separator className="my-2" />
                                 <div className="flex justify-between font-medium text-gray-900">
                                   <span>Member pays:</span>
-                                  <span>${((leaderPods[0].costPerPerson / 100) * (1 + (platformSettings?.feePercentage || 5) / 100)).toFixed(2)}</span>
+                                  <span>
+                                    $
+                                    {(
+                                      leaderPods[0].costPerPerson *
+                                      (1 +
+                                        (platformSettings?.feePercentage || 5) /
+                                          100)
+                                    ).toFixed(2)}
+                                  </span>
                                 </div>
                               </>
                             ) : (
@@ -1611,13 +2120,33 @@ export default function PodLeaderDashboard() {
                                   <span>$100.00</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Platform fee ({platformSettings?.feePercentage || 5}%):</span>
-                                  <span>${((100 * (platformSettings?.feePercentage || 5)) / 100).toFixed(2)}</span>
+                                  <span>
+                                    Platform fee (
+                                    {platformSettings?.feePercentage || 5}%):
+                                  </span>
+                                  <span>
+                                    $
+                                    {(
+                                      (100 *
+                                        (platformSettings?.feePercentage ||
+                                          5)) /
+                                      100
+                                    ).toFixed(2)}
+                                  </span>
                                 </div>
                                 <Separator className="my-2" />
                                 <div className="flex justify-between font-medium text-gray-900">
                                   <span>Member pays:</span>
-                                  <span>${(100 + (100 * (platformSettings?.feePercentage || 5)) / 100).toFixed(2)}</span>
+                                  <span>
+                                    $
+                                    {(
+                                      100 +
+                                      (100 *
+                                        (platformSettings?.feePercentage ||
+                                          5)) /
+                                        100
+                                    ).toFixed(2)}
+                                  </span>
                                 </div>
                               </>
                             )}
@@ -1630,10 +2159,14 @@ export default function PodLeaderDashboard() {
                         <div className="flex items-start space-x-3">
                           <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
                           <div>
-                            <h4 className="font-medium text-blue-900">About Platform Fees</h4>
+                            <h4 className="font-medium text-blue-900">
+                              About Platform Fees
+                            </h4>
                             <p className="text-sm text-blue-800 mt-1">
-                              Platform fees are added to help maintain FlexPod's services. Members will see a breakdown 
-                              of costs (membership + platform fee) before completing their payment.
+                              Platform fees are added to help maintain FlexPod's
+                              services. Members will see a breakdown of costs
+                              (membership + platform fee) before completing
+                              their payment.
                             </p>
                           </div>
                         </div>
