@@ -6,6 +6,8 @@ import {
   otpVerifications,
   email2FAVerifications,
   leaveRequests,
+  platformSettings,
+  podPayments,
   type User,
   type Pod,
   type InsertUser,
@@ -20,6 +22,10 @@ import {
   type InsertEmail2FAVerification,
   type LeaveRequest,
   type InsertLeaveRequest,
+  type PlatformSetting,
+  type InsertPlatformSetting,
+  type PodPayment,
+  type InsertPodPayment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, inArray, or, sql } from "drizzle-orm";
@@ -96,6 +102,18 @@ export interface IStorage {
   
   // Initialization
   initializeSamplePods(): Promise<void>;
+  
+  // Platform settings operations
+  getPlatformSetting(key: string): Promise<PlatformSetting | undefined>;
+  upsertPlatformSetting(key: string, value: string, description?: string, updatedBy?: string): Promise<PlatformSetting>;
+  
+  // Pod payment operations
+  createPodPayment(payment: InsertPodPayment): Promise<PodPayment>;
+  getPodPayment(id: number): Promise<PodPayment | undefined>;
+  getPodPaymentByCheckoutId(checkoutId: string): Promise<PodPayment | undefined>;
+  getPodPaymentsForUser(userId: string): Promise<PodPayment[]>;
+  getPodPaymentsForPod(podId: number): Promise<PodPayment[]>;
+  updatePodPaymentStatus(id: number, status: string, polarOrderId?: string, paidAt?: Date): Promise<PodPayment | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1041,6 +1059,80 @@ export class DatabaseStorage implements IStorage {
     ];
 
     await db.insert(podMembers).values(sampleMembers);
+  }
+
+  // Platform settings operations
+  async getPlatformSetting(key: string): Promise<PlatformSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.settingKey, key));
+    return setting;
+  }
+
+  async upsertPlatformSetting(key: string, value: string, description?: string, updatedBy?: string): Promise<PlatformSetting> {
+    const [setting] = await db
+      .insert(platformSettings)
+      .values({
+        settingKey: key,
+        settingValue: value,
+        description,
+        updatedBy,
+      })
+      .onConflictDoUpdate({
+        target: platformSettings.settingKey,
+        set: {
+          settingValue: value,
+          description,
+          updatedBy,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return setting;
+  }
+
+  // Pod payment operations
+  async createPodPayment(payment: InsertPodPayment): Promise<PodPayment> {
+    const [newPayment] = await db.insert(podPayments).values(payment).returning();
+    return newPayment;
+  }
+
+  async getPodPayment(id: number): Promise<PodPayment | undefined> {
+    const [payment] = await db.select().from(podPayments).where(eq(podPayments.id, id));
+    return payment;
+  }
+
+  async getPodPaymentByCheckoutId(checkoutId: string): Promise<PodPayment | undefined> {
+    const [payment] = await db
+      .select()
+      .from(podPayments)
+      .where(eq(podPayments.polarCheckoutId, checkoutId));
+    return payment;
+  }
+
+  async getPodPaymentsForUser(userId: string): Promise<PodPayment[]> {
+    return db.select().from(podPayments).where(eq(podPayments.userId, userId));
+  }
+
+  async getPodPaymentsForPod(podId: number): Promise<PodPayment[]> {
+    return db.select().from(podPayments).where(eq(podPayments.podId, podId));
+  }
+
+  async updatePodPaymentStatus(id: number, status: string, polarOrderId?: string, paidAt?: Date): Promise<PodPayment | undefined> {
+    const updateData: Partial<PodPayment> = {
+      status,
+      updatedAt: new Date(),
+    };
+    if (polarOrderId) updateData.polarOrderId = polarOrderId;
+    if (paidAt) updateData.paidAt = paidAt;
+
+    const [payment] = await db
+      .update(podPayments)
+      .set(updateData)
+      .where(eq(podPayments.id, id))
+      .returning();
+    return payment;
   }
 }
 

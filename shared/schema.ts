@@ -227,3 +227,58 @@ export type Email2FAVerification = typeof email2FAVerifications.$inferSelect;
 export type InsertEmail2FAVerification = z.infer<typeof insertEmail2FAVerificationSchema>;
 export type LeaveRequest = typeof leaveRequests.$inferSelect;
 export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
+
+// Platform settings for configurable fees
+export const platformSettings = pgTable("platform_settings", {
+  id: serial("id").primaryKey(),
+  settingKey: varchar("setting_key").unique().notNull(), // e.g., "platform_fee_percentage"
+  settingValue: text("setting_value").notNull(), // stored as string, parsed as needed
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: varchar("updated_by").references(() => users.id),
+});
+
+// Pod payments tracking
+export const podPayments = pgTable("pod_payments", {
+  id: serial("id").primaryKey(),
+  podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
+  // Polar checkout/order tracking
+  polarCheckoutId: varchar("polar_checkout_id"),
+  polarOrderId: varchar("polar_order_id"),
+  polarSubscriptionId: varchar("polar_subscription_id"),
+  // Payment status
+  status: varchar("status").notNull().default("pending"), // "pending", "processing", "completed", "failed", "expired"
+  // Amount breakdown (all in cents)
+  baseAmount: integer("base_amount").notNull(), // Pod membership fee
+  platformFeeAmount: integer("platform_fee_amount").notNull(), // Platform fee
+  totalAmount: integer("total_amount").notNull(), // Total charged
+  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).notNull(), // Fee % at time of payment
+  currency: varchar("currency").notNull().default("usd"),
+  // Billing period
+  billingPeriodStart: timestamp("billing_period_start"),
+  billingPeriodEnd: timestamp("billing_period_end"),
+  // Metadata
+  metadata: json("metadata").$type<Record<string, any>>(),
+  checkoutUrl: text("checkout_url"),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  paidAt: timestamp("paid_at"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPlatformSettingSchema = createInsertSchema(platformSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertPodPaymentSchema = createInsertSchema(podPayments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type PlatformSetting = typeof platformSettings.$inferSelect;
+export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
+export type PodPayment = typeof podPayments.$inferSelect;
+export type InsertPodPayment = z.infer<typeof insertPodPaymentSchema>;
