@@ -22,6 +22,7 @@ import PodLeaderDashboard from "@/pages/pod-leader-dashboard";
 import EditProfile from "@/pages/edit-profile";
 import CheckEmailPage from "@/pages/check-email";
 import VerifyEmailPage from "@/pages/verify-email";
+import PaymentSuccess from "@/pages/payment-success";
 import { useEffect } from "react";
 
 function LoginRedirect() {
@@ -255,6 +256,12 @@ function Router() {
       <Route path="/edit-profile">
         <ProtectedRoute requireOnboarding>
           <EditProfile />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/payment-success">
+        <ProtectedRoute>
+          <PaymentSuccess />
         </ProtectedRoute>
       </Route>
       
