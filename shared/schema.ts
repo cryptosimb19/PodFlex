@@ -73,7 +73,7 @@ export const pods = pgTable("pods", {
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by").references(() => users.id),
+  deletedBy: varchar("deleted_by").references(() => users.id, { onDelete: 'set null' }),
 });
 
 export const joinRequests = pgTable("join_requests", {
@@ -91,7 +91,7 @@ export const joinRequests = pgTable("join_requests", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by").references(() => users.id),
+  deletedBy: varchar("deleted_by").references(() => users.id, { onDelete: 'set null' }),
 });
 
 export const podMembers = pgTable("pod_members", {
@@ -101,7 +101,7 @@ export const podMembers = pgTable("pod_members", {
   joinedAt: timestamp("joined_at").defaultNow(),
   isActive: boolean("is_active").default(true),
   deletedAt: timestamp("deleted_at"),
-  deletedBy: varchar("deleted_by").references(() => users.id),
+  deletedBy: varchar("deleted_by").references(() => users.id, { onDelete: 'set null' }),
 });
 
 export const otpVerifications = pgTable("otp_verifications", {
@@ -235,7 +235,7 @@ export const platformSettings = pgTable("platform_settings", {
   settingValue: text("setting_value").notNull(), // stored as string, parsed as needed
   description: text("description"),
   updatedAt: timestamp("updated_at").defaultNow(),
-  updatedBy: varchar("updated_by").references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id, { onDelete: 'set null' }),
 });
 
 // Pod payments tracking
