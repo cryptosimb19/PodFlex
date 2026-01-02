@@ -288,6 +288,81 @@ export async function sendJoinRequestRejectedNotification(
   });
 }
 
+// Template for auto-cancelled join requests notification
+export async function sendJoinRequestsAutoCancelledNotification(
+  applicantEmail: string,
+  applicantName: string,
+  acceptedPodTitle: string,
+  cancelledPodTitles: string[],
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Pod Requests Update - FlexPod`;
+  const baseUrl = "https://podmembership.com";
+  
+  const cancelledList = cancelledPodTitles.map(title => `<li style="color: #4b5563;">${title}</li>`).join('');
+
+  const html =
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Request Update</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${applicantName},</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10b981;">
+          <h3 style="color: #10b981; margin-top: 0;">🎉 Great news!</h3>
+          <p style="color: #4b5563; margin: 0;">You've been accepted to <strong>${acceptedPodTitle}</strong>!</p>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+          <h4 style="color: #d97706; margin-top: 0;">Other pending requests cancelled</h4>
+          <p style="color: #4b5563; margin-bottom: 10px;">Since you can only be a member of one pod at a time, your other pending requests have been automatically cancelled:</p>
+          <ul style="margin: 0; padding-left: 20px;">
+            ${cancelledList}
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="` +
+    baseUrl +
+    `/dashboard" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Go to Dashboard
+          </a>
+        </div>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>Welcome to your new pod! Check your dashboard for next steps.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Pod Requests Update - FlexPod
+    
+    Hi ${applicantName},
+    
+    Great news! You've been accepted to: ${acceptedPodTitle}
+    
+    Since you can only be a member of one pod at a time, your other pending requests have been automatically cancelled:
+    ${cancelledPodTitles.map(title => `- ${title}`).join('\n')}
+    
+    Visit your FlexPod dashboard to get started with your new pod!
+  `;
+
+  return await sendEmail({
+    to: applicantEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}
+
 // Template for password reset notification
 export async function sendPasswordResetEmail(
   userEmail: string,

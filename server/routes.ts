@@ -6,7 +6,7 @@ import { joinRequests } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated, hashPassword, comparePassword } from "./multiAuth";
 import passport from "passport";
-import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, sendEmailVerification, sendLeaveRequestNotification, sendLeaveRequestApprovedNotification, sendLeaveRequestRejectedNotification, FROM_EMAIL } from "./emailService";
+import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendJoinRequestsAutoCancelledNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, sendEmailVerification, sendLeaveRequestNotification, sendLeaveRequestApprovedNotification, sendLeaveRequestRejectedNotification, FROM_EMAIL } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
@@ -1045,7 +1045,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Join request not found" });
       }
 
-      // If accepted, add user to pod members
+      // If accepted, add user to pod members and cancel other pending requests
+      let cancelledRequests: any[] = [];
       if (status === "accepted") {
         await storage.addPodMember(updatedRequest.podId, updatedRequest.userId);
         
@@ -1053,6 +1054,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const pod = await storage.getPod(updatedRequest.podId);
         if (pod && pod.availableSpots > 0) {
           await storage.updatePodAvailability(updatedRequest.podId, pod.availableSpots - 1);
+        }
+        
+        // Cancel all other pending requests from this user
+        cancelledRequests = await storage.cancelOtherPendingRequests(updatedRequest.userId, updatedRequest.id);
+        if (cancelledRequests.length > 0) {
+          console.log(`Auto-cancelled ${cancelledRequests.length} other pending requests for user ${updatedRequest.userId}`);
         }
       }
 
@@ -1066,14 +1073,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const podLeader = await storage.getUser(pod.leadId);
             const podLeaderName = podLeader ? `${podLeader.firstName} ${podLeader.lastName}` : "Pod Leader";
             
-            console.log(`Sending join request accepted email to ${applicant.email}`);
-            await sendJoinRequestAcceptedNotification(
-              applicant.email,
-              `${applicant.firstName} ${applicant.lastName}`,
-              pod.title,
-              podLeaderName,
-              FROM_EMAIL
-            );
+            // If there were cancelled requests, send combined notification
+            if (cancelledRequests.length > 0) {
+              // Get the pod titles for cancelled requests
+              const cancelledPodTitles: string[] = [];
+              for (const req of cancelledRequests) {
+                const cancelledPod = await storage.getPod(req.podId);
+                if (cancelledPod) {
+                  cancelledPodTitles.push(cancelledPod.title);
+                }
+              }
+              
+              console.log(`Sending combined accepted + auto-cancelled email to ${applicant.email}`);
+              await sendJoinRequestsAutoCancelledNotification(
+                applicant.email,
+                `${applicant.firstName} ${applicant.lastName}`,
+                pod.title,
+                cancelledPodTitles,
+                FROM_EMAIL
+              );
+            } else {
+              console.log(`Sending join request accepted email to ${applicant.email}`);
+              await sendJoinRequestAcceptedNotification(
+                applicant.email,
+                `${applicant.firstName} ${applicant.lastName}`,
+                pod.title,
+                podLeaderName,
+                FROM_EMAIL
+              );
+            }
           } else if (status === "rejected") {
             console.log(`Sending join request rejected email to ${applicant.email}`);
             await sendJoinRequestRejectedNotification(

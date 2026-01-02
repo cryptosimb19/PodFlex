@@ -86,6 +86,7 @@ export interface IStorage {
   getJoinRequestsForUser(userId: string): Promise<JoinRequest[]>;
   updateJoinRequestStatus(id: number, status: "accepted" | "rejected" | "cancelled" | "left"): Promise<JoinRequest | undefined>;
   updateJoinRequestEmailStatus(id: number, emailStatus: string): Promise<JoinRequest | undefined>;
+  cancelOtherPendingRequests(userId: string, excludeRequestId: number): Promise<JoinRequest[]>;
   
   // Pod member operations
   getPodMembers(podId: number): Promise<PodMember[]>;
@@ -600,6 +601,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(joinRequests.id, id))
       .returning();
     return request;
+  }
+
+  async cancelOtherPendingRequests(userId: string, excludeRequestId: number): Promise<JoinRequest[]> {
+    const cancelledRequests = await db
+      .update(joinRequests)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(
+        and(
+          eq(joinRequests.userId, userId),
+          eq(joinRequests.status, "pending"),
+          sql`${joinRequests.id} != ${excludeRequestId}`,
+          sql`${joinRequests.deletedAt} IS NULL`
+        )
+      )
+      .returning();
+    return cancelledRequests;
   }
 
   // Pod member operations
