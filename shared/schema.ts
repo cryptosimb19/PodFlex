@@ -71,6 +71,7 @@ export const pods = pgTable("pods", {
   rules: text("rules"),
   imageUrl: text("image_url"),
   isActive: boolean("is_active").default(true),
+  exitTimelineDays: integer("exit_timeline_days").default(30), // Days after billing cycle end before member exit
   createdAt: timestamp("created_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
   deletedBy: varchar("deleted_by").references(() => users.id, { onDelete: 'set null' }),
@@ -128,7 +129,7 @@ export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
   podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
   userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade', onUpdate: 'cascade' }).notNull(),
-  status: text("status").notNull().default("pending"), // "pending", "approved", "rejected"
+  status: text("status").notNull().default("pending"), // "pending", "approved", "rejected", "completed"
   reason: text("reason"), // Optional reason for leaving
   userInfo: json("user_info").$type<{
     name: string;
@@ -136,6 +137,8 @@ export const leaveRequests = pgTable("leave_requests", {
     phone?: string;
   }>(),
   leaderResponse: text("leader_response"), // Optional response from leader
+  exitDate: timestamp("exit_date"), // Calculated based on billing cycle end + exit timeline
+  approvedAt: timestamp("approved_at"), // When the request was approved
   emailStatus: text("email_status").notNull().default("sent"), // "sent", "failed", "pending"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
