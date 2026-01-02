@@ -51,6 +51,19 @@ Preferred communication style: Simple, everyday language.
 - **Privacy Controls**:
   - **Pod Leader Details Hidden for Guests**: When browsing pods from the welcome page, pod leader details (name, email, phone) are hidden until users register or sign in. Guest visitors see a "Sign in to view leader details" message instead.
   - **Fellow Pod Members Privacy**: Pod members can only see other members' names and join dates - emails and phone numbers are hidden for privacy.
+- **Member Leave Requests**:
+  - **Leave Request Flow**: Members can request to leave a pod from their dashboard. The request is reviewed by the pod leader who can approve or reject it.
+  - **Billing Cycle Constraints**: Members can only leave at the end of the current billing cycle plus the pod's exit timeline days (configurable by pod leader, default 30 days).
+  - **Pending Payment Validation**: Leave requests are blocked if the member has pending payments - all payments must be completed first.
+  - **Exit Date Calculation**: When approved, the exit date is calculated as the last day of the current billing month plus the pod's `exitTimelineDays` setting.
+  - **Exit Timeline Configuration**: Pod leaders can configure the exit timeline (0-90 days) in their dashboard Settings tab. This determines how many days after the billing cycle a member must wait before leaving.
+  - **API Endpoints**:
+    - `POST /api/pods/:podId/leave-request` - Create a leave request
+    - `GET /api/pods/:podId/leave-requests` - Get leave requests for a pod (leader)
+    - `GET /api/leave-requests/user` - Get user's leave requests (member)
+    - `POST /api/leave-requests/:id/approve` - Approve a leave request (calculates exit date)
+    - `POST /api/leave-requests/:id/reject` - Reject a leave request
+    - `POST /api/leave-requests/process-exits` - Process approved exits that have reached their exit date
 
 ## External Dependencies
 

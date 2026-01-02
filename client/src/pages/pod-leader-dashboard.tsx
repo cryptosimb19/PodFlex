@@ -419,6 +419,7 @@ export default function PodLeaderDashboard() {
       const response = await fetch(`/api/pods/${podId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(updates),
       });
       if (!response.ok) {
