@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import { 
   User, 
@@ -27,10 +30,12 @@ import {
   RefreshCw,
   Crown,
   ArrowRight,
-  Plus
+  Plus,
+  LogOut,
+  CalendarDays
 } from "lucide-react";
 import { useLocation } from "wouter";
-import type { Pod, JoinRequest } from "@shared/schema";
+import type { Pod, JoinRequest, LeaveRequest } from "@shared/schema";
 import PaymentHistory from "@/components/PaymentHistory";
 
 // Phone number formatting utility
@@ -68,10 +73,17 @@ interface PodMember {
   joinedAt?: string;
 }
 
+interface LeaveRequestWithPod extends LeaveRequest {
+  pod: Pod | null;
+}
+
 export default function Dashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [selectedPodForMembers, setSelectedPodForMembers] = useState<number | null>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [selectedPodForLeave, setSelectedPodForLeave] = useState<number | null>(null);
+  const [leaveReason, setLeaveReason] = useState("");
 
   // Fetch authenticated user with all profile data
   const { data: authUser, isLoading: authLoading } = useQuery({
@@ -152,6 +164,56 @@ export default function Dashboard() {
     },
     enabled: !!selectedPodForMembers,
   });
+
+  // Fetch user's leave requests
+  const { data: leaveRequests, isLoading: leaveRequestsLoading } = useQuery<LeaveRequestWithPod[]>({
+    queryKey: ['/api/leave-requests/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/leave-requests/user', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch leave requests');
+      return response.json();
+    },
+    enabled: !!authUser?.id,
+  });
+
+  // Leave request mutation
+  const leaveRequestMutation = useMutation({
+    mutationFn: async ({ podId, reason }: { podId: number; reason: string }) => {
+      const response = await fetch(`/api/pods/${podId}/leave-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reason }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to submit leave request');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Leave request submitted",
+        description: "Your request to leave the pod has been sent to the pod leader for approval.",
+      });
+      setLeaveDialogOpen(false);
+      setLeaveReason("");
+      setSelectedPodForLeave(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests/user'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit leave request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Check if user has a pending/approved leave request for a pod
+  const getLeaveRequestForPod = (podId: number) => {
+    return leaveRequests?.find(lr => lr.podId === podId && (lr.status === 'pending' || lr.status === 'approved'));
+  };
 
   // Resend email mutation
   const resendEmailMutation = useMutation({
@@ -437,50 +499,90 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       <div className="space-y-3 sm:space-y-4">
-                        {activePods.map((pod) => (
-                          <div key={pod.id} className="border rounded-lg overflow-hidden hover:bg-gray-50 transition-colors" data-testid={`pod-membership-${pod.id}`}>
-                            {pod.imageUrl && (
-                              <div className="w-full h-32 overflow-hidden">
-                                <img
-                                  src={pod.imageUrl}
-                                  alt={pod.clubName}
-                                  className="w-full h-full object-cover"
-                                  data-testid={`pod-image-${pod.id}`}
-                                />
-                              </div>
-                            )}
-                            <div className="p-3 sm:p-4">
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
-                                    <h3 className="font-semibold text-base sm:text-lg truncate">{pod.clubName}</h3>
-                                    <Badge variant="outline" className="self-start sm:self-auto">{pod.clubRegion}</Badge>
-                                  </div>
-                                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-sm text-gray-600 mb-2">
-                                    <div className="flex items-center space-x-1">
-                                      <MapPin className="w-4 h-4 flex-shrink-0" />
-                                      <span className="truncate">{pod.clubAddress}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-1">
-                                      <DollarSign className="w-4 h-4 flex-shrink-0" />
-                                      <span>${(pod.costPerPerson / 100)}/month</span>
-                                    </div>
-                                  </div>
-                                  <p className="text-sm text-gray-600 line-clamp-2">{pod.description}</p>
+                        {activePods.map((pod) => {
+                          const leaveRequest = getLeaveRequestForPod(pod.id);
+                          return (
+                            <div key={pod.id} className="border rounded-lg overflow-hidden hover:bg-gray-50 transition-colors" data-testid={`pod-membership-${pod.id}`}>
+                              {pod.imageUrl && (
+                                <div className="w-full h-32 overflow-hidden">
+                                  <img
+                                    src={pod.imageUrl}
+                                    alt={pod.clubName}
+                                    className="w-full h-full object-cover"
+                                    data-testid={`pod-image-${pod.id}`}
+                                  />
                                 </div>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => navigate(`/pods/${pod.id}`)}
-                                  className="w-full sm:w-auto sm:ml-4 flex-shrink-0"
-                                  data-testid={`button-view-pod-${pod.id}`}
-                                >
-                                  View Details
-                                </Button>
+                              )}
+                              <div className="p-3 sm:p-4">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
+                                      <h3 className="font-semibold text-base sm:text-lg truncate">{pod.clubName}</h3>
+                                      <Badge variant="outline" className="self-start sm:self-auto">{pod.clubRegion}</Badge>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-sm text-gray-600 mb-2">
+                                      <div className="flex items-center space-x-1">
+                                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                                        <span className="truncate">{pod.clubAddress}</span>
+                                      </div>
+                                      <div className="flex items-center space-x-1">
+                                        <DollarSign className="w-4 h-4 flex-shrink-0" />
+                                        <span>${(pod.costPerPerson / 100)}/month</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-gray-600 line-clamp-2">{pod.description}</p>
+                                    
+                                    {/* Leave Request Status */}
+                                    {leaveRequest && (
+                                      <div className="mt-3 p-2 rounded-md bg-amber-50 border border-amber-200">
+                                        {leaveRequest.status === 'pending' && (
+                                          <div className="flex items-center space-x-2 text-amber-700">
+                                            <Clock className="w-4 h-4" />
+                                            <span className="text-sm font-medium">Leave request pending approval</span>
+                                          </div>
+                                        )}
+                                        {leaveRequest.status === 'approved' && leaveRequest.exitDate && (
+                                          <div className="flex items-center space-x-2 text-green-700">
+                                            <CalendarDays className="w-4 h-4" />
+                                            <span className="text-sm font-medium">
+                                              Leaving on {new Date(leaveRequest.exitDate).toLocaleDateString()}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => navigate(`/pods/${pod.id}`)}
+                                      className="w-full sm:w-auto"
+                                      data-testid={`button-view-pod-${pod.id}`}
+                                    >
+                                      View Details
+                                    </Button>
+                                    {!leaveRequest && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedPodForLeave(pod.id);
+                                          setLeaveDialogOpen(true);
+                                        }}
+                                        className="w-full sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        data-testid={`button-leave-pod-${pod.id}`}
+                                      >
+                                        <LogOut className="w-4 h-4 mr-1" />
+                                        Leave Pod
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
@@ -730,6 +832,66 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Leave Request Dialog */}
+      <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Request to Leave Pod</DialogTitle>
+            <DialogDescription>
+              Submit a request to leave this pod. Your request will be reviewed by the pod leader.
+              You can only leave at the end of the current billing cycle.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="leave-reason">Reason for leaving (optional)</Label>
+              <Textarea
+                id="leave-reason"
+                placeholder="Please share why you'd like to leave this pod..."
+                value={leaveReason}
+                onChange={(e) => setLeaveReason(e.target.value)}
+                className="min-h-[100px]"
+                data-testid="textarea-leave-reason"
+              />
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+              <p className="text-sm text-amber-800">
+                <strong>Note:</strong> If approved, you will remain a member until the end of the current billing cycle 
+                plus the pod's configured exit timeline (typically 30 days).
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setLeaveDialogOpen(false);
+                setLeaveReason("");
+                setSelectedPodForLeave(null);
+              }}
+              data-testid="button-cancel-leave"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedPodForLeave) {
+                  leaveRequestMutation.mutate({ 
+                    podId: selectedPodForLeave, 
+                    reason: leaveReason 
+                  });
+                }
+              }}
+              disabled={leaveRequestMutation.isPending}
+              data-testid="button-submit-leave-request"
+            >
+              {leaveRequestMutation.isPending ? 'Submitting...' : 'Submit Leave Request'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
