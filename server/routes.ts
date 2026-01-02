@@ -1251,6 +1251,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You already have a pending leave request for this pod" });
       }
 
+      // Check for pending payments - members can only leave if no pending payments
+      const pendingPayments = await storage.getPendingPaymentsForUserInPod(userId, podId);
+      if (pendingPayments.length > 0) {
+        return res.status(400).json({ 
+          message: "You cannot leave the pod while you have pending payments. Please complete all outstanding payments first.",
+          pendingPaymentsCount: pendingPayments.length
+        });
+      }
+
       // Get user info
       const user = await storage.getUser(userId);
       const memberName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Member';
@@ -1395,23 +1404,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only the pod leader can approve leave requests" });
       }
 
-      // Update leave request status
-      const updatedRequest = await storage.updateLeaveRequestStatus(leaveRequestId, "approved", response);
+      // Calculate exit date based on billing cycle end + exit timeline
+      // Exit date = end of current billing month + exitTimelineDays
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      
+      // End of current billing cycle (end of current month)
+      const billingCycleEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59);
+      
+      // Add exit timeline days (default 30 if not set)
+      const exitTimelineDays = pod.exitTimelineDays ?? 30;
+      const exitDate = new Date(billingCycleEnd);
+      exitDate.setDate(exitDate.getDate() + exitTimelineDays);
 
-      // Remove the member from the pod
-      await storage.removePodMember(leaveRequest.podId, leaveRequest.userId, userId);
+      // Update leave request status with exit date
+      const updatedRequest = await storage.updateLeaveRequestWithExitDate(leaveRequestId, "approved", exitDate, response);
 
-      // Update the original join request status to 'left' so dashboard doesn't show this pod
-      const joinRequests = await storage.getJoinRequestsForUser(leaveRequest.userId);
-      const originalJoinRequest = joinRequests.find(jr => jr.podId === leaveRequest.podId && jr.status === 'accepted');
-      if (originalJoinRequest) {
-        await storage.updateJoinRequestStatus(originalJoinRequest.id, 'left');
-      }
+      // Note: Member is NOT removed immediately - they will be removed on the exit date
+      // The actual removal should be handled by a scheduled job or when the exit date passes
 
-      // Update pod availability
-      await storage.updatePodAvailability(leaveRequest.podId, pod.availableSpots + 1);
-
-      // Send email notification to member
+      // Send email notification to member with exit date info
       try {
         const member = await storage.getUser(leaveRequest.userId);
         if (member && member.email) {
@@ -1421,7 +1434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             member.email,
             memberName,
             pod.title,
-            response || null,
+            response ? `${response}\n\nYour exit date is: ${exitDate.toLocaleDateString()}` : `Your exit date is: ${exitDate.toLocaleDateString()}`,
             FROM_EMAIL
           );
         }
@@ -1430,12 +1443,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        message: "Leave request approved. Member has been removed from the pod.",
-        leaveRequest: updatedRequest
+        message: `Leave request approved. Member will be removed from the pod on ${exitDate.toLocaleDateString()}.`,
+        leaveRequest: updatedRequest,
+        exitDate: exitDate.toISOString()
       });
     } catch (error) {
       console.error("Error approving leave request:", error);
       res.status(500).json({ message: "Failed to approve leave request" });
+    }
+  });
+
+  // Process approved leave requests that have reached their exit date
+  app.post("/api/leave-requests/process-exits", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get all approved leave requests for pods where user is the leader
+      const userPods = await storage.getPodsByLeaderId(userId);
+      const processedExits: any[] = [];
+      
+      for (const pod of userPods) {
+        const leaveRequests = await storage.getLeaveRequestsForPod(pod.id);
+        const approvedRequests = leaveRequests.filter(
+          lr => lr.status === "approved" && lr.exitDate && new Date(lr.exitDate) <= new Date()
+        );
+        
+        for (const leaveRequest of approvedRequests) {
+          // Remove the member from the pod
+          await storage.removePodMember(leaveRequest.podId, leaveRequest.userId, userId);
+          
+          // Update the original join request status to 'left'
+          const joinRequests = await storage.getJoinRequestsForUser(leaveRequest.userId);
+          const originalJoinRequest = joinRequests.find(jr => jr.podId === leaveRequest.podId && jr.status === 'accepted');
+          if (originalJoinRequest) {
+            await storage.updateJoinRequestStatus(originalJoinRequest.id, 'left');
+          }
+          
+          // Update pod availability
+          await storage.updatePodAvailability(leaveRequest.podId, pod.availableSpots + 1);
+          
+          // Mark leave request as completed
+          await storage.updateLeaveRequestStatus(leaveRequest.id, "approved");
+          
+          processedExits.push({
+            leaveRequestId: leaveRequest.id,
+            userId: leaveRequest.userId,
+            podId: leaveRequest.podId
+          });
+        }
+      }
+      
+      res.json({
+        message: `Processed ${processedExits.length} exit(s).`,
+        processedExits
+      });
+    } catch (error) {
+      console.error("Error processing leave request exits:", error);
+      res.status(500).json({ message: "Failed to process exits" });
     }
   });
 
@@ -1495,6 +1559,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting leave request:", error);
       res.status(500).json({ message: "Failed to reject leave request" });
+    }
+  });
+
+  // Update pod exit timeline days (leader only)
+  app.patch("/api/pods/:id/exit-timeline", isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const { exitTimelineDays } = req.body;
+
+      // Validate exit timeline days
+      if (typeof exitTimelineDays !== 'number' || exitTimelineDays < 0 || exitTimelineDays > 90) {
+        return res.status(400).json({ message: "Exit timeline must be between 0 and 90 days" });
+      }
+
+      // Get the pod
+      const pod = await storage.getPod(podId);
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+
+      // Check if user is the pod leader
+      if (pod.leadId !== userId) {
+        return res.status(403).json({ message: "Only the pod leader can update exit timeline settings" });
+      }
+
+      // Update the pod
+      const updatedPod = await storage.updatePod(podId, { exitTimelineDays });
+
+      res.json({
+        message: "Exit timeline updated successfully",
+        pod: updatedPod
+      });
+    } catch (error) {
+      console.error("Error updating exit timeline:", error);
+      res.status(500).json({ message: "Failed to update exit timeline" });
     }
   });
 

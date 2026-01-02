@@ -115,6 +115,10 @@ export interface IStorage {
   getPodPaymentsForUser(userId: string): Promise<PodPayment[]>;
   getPodPaymentsForPod(podId: number): Promise<PodPayment[]>;
   updatePodPaymentStatus(id: number, status: string, polarOrderId?: string, paidAt?: Date): Promise<PodPayment | undefined>;
+  getPendingPaymentsForUserInPod(userId: string, podId: number): Promise<PodPayment[]>;
+  
+  // Enhanced leave request operations
+  updateLeaveRequestWithExitDate(id: number, status: "approved" | "rejected", exitDate: Date | null, leaderResponse?: string): Promise<LeaveRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1141,6 +1145,38 @@ export class DatabaseStorage implements IStorage {
       .where(eq(podPayments.id, id))
       .returning();
     return payment;
+  }
+
+  async getPendingPaymentsForUserInPod(userId: string, podId: number): Promise<PodPayment[]> {
+    return db
+      .select()
+      .from(podPayments)
+      .where(
+        and(
+          eq(podPayments.userId, userId),
+          eq(podPayments.podId, podId),
+          inArray(podPayments.status, ["pending", "processing"])
+        )
+      );
+  }
+
+  async updateLeaveRequestWithExitDate(id: number, status: "approved" | "rejected", exitDate: Date | null, leaderResponse?: string): Promise<LeaveRequest | undefined> {
+    const updateData: Partial<LeaveRequest> = {
+      status,
+      updatedAt: new Date(),
+    };
+    if (status === "approved") {
+      updateData.approvedAt = new Date();
+      updateData.exitDate = exitDate;
+    }
+    if (leaderResponse) updateData.leaderResponse = leaderResponse;
+
+    const [request] = await db
+      .update(leaveRequests)
+      .set(updateData)
+      .where(eq(leaveRequests.id, id))
+      .returning();
+    return request;
   }
 }
 
