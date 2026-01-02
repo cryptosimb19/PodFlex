@@ -23,6 +23,7 @@ Preferred communication style: Simple, everyday language.
   - **Security Measures**: Rate limiting (3 OTP requests/15min, 5 verify attempts/15min, 3 2FA resend requests/15min, 3 email verification resend requests/15min), one-time OTP and 2FA code use with deletion after verification, phone number validation (E.164 format), OTP and 2FA code cleanup before new creation.
 - **Core Features**:
     - **Pod Discovery**: Region-based filtering (e.g., Bay Club campuses), membership type categorization, advanced filtering, search functionality.
+- **Auto-Cancel Pending Requests**: When a user's join request is accepted, all their other pending requests are automatically cancelled. The user receives a single email notification informing them of their accepted pod and listing any cancelled requests.
     - **Membership Management**: Pod creation/management for leaders, comprehensive pod editing with 10+ editable fields (title, description, club details, amenities, pricing, capacity), join request workflow with approval, member tracking, rich pod profiles.
     - **User Experience**: Offline capability, push notifications.
 - **Data Flow**: Structured for user onboarding, pod discovery, join request processing, and pod management.
