@@ -114,6 +114,8 @@ export default function PodLeaderDashboard() {
   const [editAvailableSpots, setEditAvailableSpots] = useState<number>(0);
   const [editAmenities, setEditAmenities] = useState<string[]>([]);
   const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
+  const [exitTimelineDays, setExitTimelineDays] = useState<number>(30);
+  const [isEditingExitTimeline, setIsEditingExitTimeline] = useState(false);
 
   // Image upload hook for editing pods
   const { uploadFile, isUploading } = useUpload({
@@ -411,6 +413,7 @@ export default function PodLeaderDashboard() {
         totalSpots?: number;
         availableSpots?: number;
         amenities?: string[];
+        exitTimelineDays?: number;
       };
     }) => {
       const response = await fetch(`/api/pods/${podId}`, {
@@ -2153,6 +2156,110 @@ export default function PodLeaderDashboard() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Exit Timeline Setting */}
+                      {leaderPods && leaderPods.length > 0 && (
+                        <div className="border rounded-lg p-4 sm:p-6">
+                          <div className="flex items-start space-x-3 mb-4">
+                            <div className="p-2 bg-amber-100 rounded-lg">
+                              <Calendar className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900">
+                                Exit Timeline
+                              </h3>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Set the number of days after the billing cycle ends
+                                that members must wait before leaving the pod. This
+                                helps ensure smooth transitions.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            {isEditingExitTimeline ? (
+                              <div className="flex items-center space-x-3">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="90"
+                                  value={exitTimelineDays}
+                                  onChange={(e) =>
+                                    setExitTimelineDays(
+                                      Math.max(0, Math.min(90, parseInt(e.target.value) || 0))
+                                    )
+                                  }
+                                  className="w-20"
+                                  data-testid="input-exit-timeline-days"
+                                />
+                                <span className="text-sm text-gray-500">days</span>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    updatePodMutation.mutate({
+                                      podId: leaderPods[0].id,
+                                      updates: { exitTimelineDays },
+                                    });
+                                    setIsEditingExitTimeline(false);
+                                  }}
+                                  disabled={updatePodMutation.isPending}
+                                  data-testid="button-save-exit-timeline"
+                                >
+                                  <Save className="w-4 h-4 mr-1" />
+                                  Save
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setExitTimelineDays(
+                                      leaderPods[0].exitTimelineDays ?? 30
+                                    );
+                                    setIsEditingExitTimeline(false);
+                                  }}
+                                  data-testid="button-cancel-exit-timeline"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-2xl font-bold text-amber-600">
+                                    {leaderPods[0].exitTimelineDays ?? 30}
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    days after billing cycle
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setExitTimelineDays(
+                                      leaderPods[0].exitTimelineDays ?? 30
+                                    );
+                                    setIsEditingExitTimeline(true);
+                                  }}
+                                  data-testid="button-edit-exit-timeline"
+                                >
+                                  <Edit3 className="w-4 h-4 mr-1" />
+                                  Edit
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-4 p-3 bg-amber-50 rounded-lg">
+                            <p className="text-sm text-amber-800">
+                              <strong>How it works:</strong> When a member's leave
+                              request is approved, their exit date will be set to
+                              the end of the current billing month plus this number
+                              of days.
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Additional Info */}
                       <div className="border rounded-lg p-4 sm:p-6 bg-blue-50 border-blue-200">
