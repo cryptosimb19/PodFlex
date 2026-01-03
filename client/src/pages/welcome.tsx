@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Users, DollarSign, Shield, ArrowRight, MapPin, Search, X } from "lucide-react";
 import type { Pod } from "@shared/schema";
 
+const PODS_PER_PAGE = 9;
+
 export default function Welcome() {
   const [, navigate] = useLocation();
   const [currentFeature, setCurrentFeature] = useState(0);
   const [showPods, setShowPods] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [displayLimit, setDisplayLimit] = useState(PODS_PER_PAGE);
 
   const features = [
     {
@@ -63,7 +66,20 @@ export default function Welcome() {
 
   const clearSearch = () => {
     setSearchQuery("");
+    setDisplayLimit(PODS_PER_PAGE);
   };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setDisplayLimit(PODS_PER_PAGE);
+  };
+
+  const loadMore = () => {
+    setDisplayLimit(prev => prev + PODS_PER_PAGE);
+  };
+
+  const displayedPods = filteredPods.slice(0, displayLimit);
+  const hasMorePods = filteredPods.length > displayLimit;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -143,7 +159,7 @@ export default function Welcome() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Search by city, state, zip code, or club name..."
                     className="pl-10 pr-10 py-6 text-lg"
                     data-testid="input-search-pods"
@@ -182,67 +198,82 @@ export default function Welcome() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredPods.map((pod) => (
-                    <Card 
-                      key={pod.id} 
-                      className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
-                      onClick={() => navigate(`/pods/${pod.id}`)}
-                      data-testid={`pod-card-${pod.id}`}
-                    >
-                      {pod.imageUrl && (
-                        <div className="w-full h-32 overflow-hidden">
-                          <img
-                            src={pod.imageUrl}
-                            alt={pod.title}
-                            className="w-full h-full object-cover"
-                            data-testid={`pod-image-${pod.id}`}
-                          />
-                        </div>
-                      )}
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg">{pod.title}</CardTitle>
-                          {pod.availableSpots > 0 ? (
-                            <Badge className="bg-green-100 text-green-800">
-                              {pod.availableSpots} spots
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">Full</Badge>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <p className="font-medium text-purple-600">{pod.clubName}</p>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                            <span className="truncate">{pod.clubAddress}</span>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {displayedPods.map((pod) => (
+                      <Card 
+                        key={pod.id} 
+                        className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+                        onClick={() => navigate(`/pods/${pod.id}`)}
+                        data-testid={`pod-card-${pod.id}`}
+                      >
+                        {pod.imageUrl && (
+                          <div className="w-full h-32 overflow-hidden">
+                            <img
+                              src={pod.imageUrl}
+                              alt={pod.title}
+                              className="w-full h-full object-cover"
+                              data-testid={`pod-image-${pod.id}`}
+                            />
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <Badge variant="outline">{pod.clubRegion}</Badge>
-                            <span className="font-semibold text-gray-900">
-                              ${pod.costPerPerson}/mo
-                            </span>
+                        )}
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start justify-between">
+                            <CardTitle className="text-lg">{pod.title}</CardTitle>
+                            {pod.availableSpots > 0 ? (
+                              <Badge className="bg-green-100 text-green-800">
+                                {pod.availableSpots} spots
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Full</Badge>
+                            )}
                           </div>
-                          <p className="text-sm text-gray-600 line-clamp-2 mt-2">
-                            {pod.description}
-                          </p>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          className="w-full mt-4"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/pods/${pod.id}`);
-                          }}
-                          data-testid={`button-view-pod-${pod.id}`}
-                        >
-                          View Details
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <p className="font-medium text-purple-600">{pod.clubName}</p>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                              <span className="truncate">{pod.clubAddress}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <Badge variant="outline">{pod.clubRegion}</Badge>
+                              <span className="font-semibold text-gray-900">
+                                ${pod.costPerPerson}/mo
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 line-clamp-2 mt-2">
+                              {pod.description}
+                            </p>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            className="w-full mt-4"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/pods/${pod.id}`);
+                            }}
+                            data-testid={`button-view-pod-${pod.id}`}
+                          >
+                            View Details
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {hasMorePods && (
+                    <div className="text-center">
+                      <Button
+                        onClick={loadMore}
+                        variant="outline"
+                        className="px-8 py-6 text-lg border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50"
+                        data-testid="button-load-more"
+                      >
+                        Load More ({filteredPods.length - displayLimit} more pods)
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
