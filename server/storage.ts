@@ -86,6 +86,7 @@ export interface IStorage {
   getJoinRequestsForUser(userId: string): Promise<JoinRequest[]>;
   updateJoinRequestStatus(id: number, status: "accepted" | "rejected" | "cancelled" | "left"): Promise<JoinRequest | undefined>;
   updateJoinRequestEmailStatus(id: number, emailStatus: string): Promise<JoinRequest | undefined>;
+  updateMembershipVerificationStatus(id: number, status: "not_sent" | "sent" | "confirmed"): Promise<JoinRequest | undefined>;
   cancelOtherPendingRequests(userId: string, excludeRequestId: number): Promise<JoinRequest[]>;
   
   // Pod member operations
@@ -598,6 +599,25 @@ export class DatabaseStorage implements IStorage {
     const [request] = await db
       .update(joinRequests)
       .set({ emailStatus, updatedAt: new Date() })
+      .where(eq(joinRequests.id, id))
+      .returning();
+    return request;
+  }
+
+  async updateMembershipVerificationStatus(id: number, status: "not_sent" | "sent" | "confirmed"): Promise<JoinRequest | undefined> {
+    const updateData: { membershipVerificationStatus: string; updatedAt: Date; membershipVerificationSentAt?: Date } = {
+      membershipVerificationStatus: status,
+      updatedAt: new Date(),
+    };
+    
+    // Set the sentAt timestamp when marking as sent
+    if (status === "sent") {
+      updateData.membershipVerificationSentAt = new Date();
+    }
+    
+    const [request] = await db
+      .update(joinRequests)
+      .set(updateData)
       .where(eq(joinRequests.id, id))
       .returning();
     return request;

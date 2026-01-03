@@ -1701,6 +1701,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send membership verification email to Bay Club
+  app.post("/api/join-requests/:id/verify-membership", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.id;
+      const { bayClubEmail, membershipId } = req.body;
+      
+      if (!bayClubEmail || !membershipId) {
+        return res.status(400).json({ message: "Bay Club email and membership ID are required" });
+      }
+      
+      // Get the join request
+      const joinRequest = await storage.getJoinRequest(id);
+      
+      if (!joinRequest) {
+        return res.status(404).json({ message: "Join request not found" });
+      }
+      
+      // Get the pod and verify the requester is the pod leader
+      const pod = await storage.getPod(joinRequest.podId);
+      
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+      
+      if (pod.leadId !== userId) {
+        return res.status(403).json({ message: "Only the pod leader can request membership verification" });
+      }
+      
+      // Get pod leader info
+      const podLeader = await storage.getUser(userId);
+      if (!podLeader) {
+        return res.status(404).json({ message: "Pod leader not found" });
+      }
+      
+      // Get applicant info
+      const applicant = await storage.getUser(joinRequest.userId);
+      if (!applicant) {
+        return res.status(404).json({ message: "Applicant not found" });
+      }
+      
+      // Send verification email
+      const { sendMembershipVerificationRequest, SUPPORT_EMAIL, FROM_EMAIL: emailFromAddress } = await import("./emailService");
+      
+      const emailSent = await sendMembershipVerificationRequest(
+        bayClubEmail,
+        [SUPPORT_EMAIL], // CC support team
+        `${podLeader.firstName} ${podLeader.lastName}`,
+        podLeader.email || "",
+        podLeader.phoneNumber || "",
+        pod.title,
+        pod.clubName,
+        joinRequest.userInfo?.name || `${applicant.firstName} ${applicant.lastName}`,
+        joinRequest.userInfo?.email || applicant.email || "",
+        joinRequest.userInfo?.phone || applicant.phoneNumber,
+        membershipId,
+        emailFromAddress
+      );
+      
+      if (!emailSent) {
+        return res.status(500).json({ message: "Failed to send verification email" });
+      }
+      
+      // Update the join request verification status
+      const updatedRequest = await storage.updateMembershipVerificationStatus(id, "sent");
+      
+      res.json({
+        message: "Membership verification email sent successfully",
+        request: updatedRequest
+      });
+    } catch (error) {
+      console.error("Error sending membership verification email:", error);
+      res.status(500).json({ message: "Failed to send membership verification email" });
+    }
+  });
+
+  // Mark membership as verified (after receiving confirmation from Bay Club)
+  app.post("/api/join-requests/:id/confirm-verification", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Get the join request
+      const joinRequest = await storage.getJoinRequest(id);
+      
+      if (!joinRequest) {
+        return res.status(404).json({ message: "Join request not found" });
+      }
+      
+      // Get the pod and verify the requester is the pod leader
+      const pod = await storage.getPod(joinRequest.podId);
+      
+      if (!pod) {
+        return res.status(404).json({ message: "Pod not found" });
+      }
+      
+      if (pod.leadId !== userId) {
+        return res.status(403).json({ message: "Only the pod leader can confirm membership verification" });
+      }
+      
+      // Update the verification status to confirmed
+      const updatedRequest = await storage.updateMembershipVerificationStatus(id, "confirmed");
+      
+      res.json({
+        message: "Membership verification confirmed",
+        request: updatedRequest
+      });
+    } catch (error) {
+      console.error("Error confirming membership verification:", error);
+      res.status(500).json({ message: "Failed to confirm membership verification" });
+    }
+  });
+
   // Get user by ID (for profile info)
   app.get("/api/users/:id", async (req, res) => {
     try {
