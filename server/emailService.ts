@@ -1124,3 +1124,191 @@ export async function sendLeaveRequestRejectedNotification(
     text,
   });
 }
+
+// Support team email for CC on membership verification
+export const SUPPORT_EMAIL = "support@podmembership.com";
+
+// Template for membership verification request to Bay Club
+export async function sendMembershipVerificationRequest(
+  bayClubEmail: string,
+  ccEmails: string[],
+  podLeaderName: string,
+  podLeaderEmail: string,
+  podLeaderPhone: string,
+  podTitle: string,
+  clubName: string,
+  applicantName: string,
+  applicantEmail: string,
+  applicantPhone: string | undefined,
+  membershipId: string,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Membership ID Verification Request - ${membershipId} - ${applicantName}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #2563eb, #1e40af); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Membership Verification Request</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f0f9ff;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Membership ID Verification Request</h2>
+        
+        <p style="color: #4b5563; margin-bottom: 20px;">
+          Dear Bay Club Membership Team,
+        </p>
+        
+        <p style="color: #4b5563; margin-bottom: 20px;">
+          We are writing to request verification of a membership ID for a user who wishes to join a shared pod at <strong>${clubName}</strong>.
+        </p>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2563eb;">
+          <h3 style="color: #2563eb; margin-top: 0;">Member Information to Verify</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; width: 140px;"><strong>Membership ID:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0; font-weight: bold; font-size: 16px;">${membershipId}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;"><strong>Name:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${applicantName}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;"><strong>Email:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${applicantEmail}</td>
+            </tr>
+            ${applicantPhone ? `
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;"><strong>Phone:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${applicantPhone}</td>
+            </tr>
+            ` : ''}
+          </table>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #8B5CF6;">
+          <h3 style="color: #8B5CF6; margin-top: 0;">Pod Details</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; width: 140px;"><strong>Pod Name:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${podTitle}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;"><strong>Club Location:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${clubName}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10b981;">
+          <h3 style="color: #10b981; margin-top: 0;">Pod Leader Contact</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0; width: 140px;"><strong>Name:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${podLeaderName}</td>
+            </tr>
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;"><strong>Email:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${podLeaderEmail}</td>
+            </tr>
+            ${podLeaderPhone ? `
+            <tr>
+              <td style="color: #6b7280; padding: 8px 0;"><strong>Phone:</strong></td>
+              <td style="color: #1f2937; padding: 8px 0;">${podLeaderPhone}</td>
+            </tr>
+            ` : ''}
+          </table>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <p style="color: #92400e; margin: 0; font-size: 14px;">
+            <strong>Action Requested:</strong> Please verify that the above Membership ID is valid and belongs to the individual named. Please reply to this email with confirmation.
+          </p>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          Thank you for your assistance with this verification request.
+        </p>
+        
+        <p style="color: #6b7280; font-size: 14px;">
+          Best regards,<br />
+          FlexPod Team
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>This is an automated verification request from FlexPod.</p>
+        <p>Please reply to confirm or deny the membership ID validity.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Membership ID Verification Request - FlexPod
+    
+    Dear Bay Club Membership Team,
+    
+    We are writing to request verification of a membership ID for a user who wishes to join a shared pod at ${clubName}.
+    
+    MEMBER INFORMATION TO VERIFY:
+    Membership ID: ${membershipId}
+    Name: ${applicantName}
+    Email: ${applicantEmail}
+    ${applicantPhone ? `Phone: ${applicantPhone}` : ''}
+    
+    POD DETAILS:
+    Pod Name: ${podTitle}
+    Club Location: ${clubName}
+    
+    POD LEADER CONTACT:
+    Name: ${podLeaderName}
+    Email: ${podLeaderEmail}
+    ${podLeaderPhone ? `Phone: ${podLeaderPhone}` : ''}
+    
+    ACTION REQUESTED: Please verify that the above Membership ID is valid and belongs to the individual named. Please reply to this email with confirmation.
+    
+    Thank you for your assistance with this verification request.
+    
+    Best regards,
+    FlexPod Team
+  `;
+
+  if (!sendGridInitialized) {
+    console.log("Email service not available - skipping membership verification email");
+    return false;
+  }
+
+  if (!fromEmail) {
+    console.error("Email send failed: No from email address configured");
+    return false;
+  }
+
+  try {
+    const msg = {
+      to: bayClubEmail,
+      cc: ccEmails,
+      from: fromEmail,
+      replyTo: podLeaderEmail,
+      subject,
+      text,
+      html,
+      trackingSettings: {
+        clickTracking: { enable: false, enableText: false },
+      },
+    };
+
+    await sgMail.send(msg);
+    console.log(`Membership verification email sent to ${bayClubEmail} with CC to ${ccEmails.join(', ')}`);
+    return true;
+  } catch (error: any) {
+    console.error("SendGrid email error:", error);
+    if (error.response) {
+      console.error(
+        "SendGrid error response:",
+        JSON.stringify(error.response.body, null, 2),
+      );
+    }
+    return false;
+  }
+}
