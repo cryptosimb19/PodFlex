@@ -39,6 +39,9 @@ import {
   Settings,
   Percent,
   Save,
+  Shield,
+  ShieldCheck,
+  Send,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,6 +119,10 @@ export default function PodLeaderDashboard() {
   const [deletingPod, setDeletingPod] = useState<Pod | null>(null);
   const [exitTimelineDays, setExitTimelineDays] = useState<number>(30);
   const [isEditingExitTimeline, setIsEditingExitTimeline] = useState(false);
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [verifyingRequest, setVerifyingRequest] = useState<JoinRequestWithUser | null>(null);
+  const [bayClubEmail, setBayClubEmail] = useState("");
+  const [membershipIdInput, setMembershipIdInput] = useState("");
 
   // Image upload hook for editing pods
   const { uploadFile, isUploading } = useUpload({
@@ -393,6 +400,99 @@ export default function PodLeaderDashboard() {
     action: "approve" | "reject",
   ) => {
     updateLeaveRequestMutation.mutate({ requestId, action });
+  };
+
+  // Mutation to send membership verification email
+  const verifyMembershipMutation = useMutation({
+    mutationFn: async ({
+      requestId,
+      bayClubEmail,
+      membershipId,
+    }: {
+      requestId: number;
+      bayClubEmail: string;
+      membershipId: string;
+    }) => {
+      const response = await fetch(`/api/join-requests/${requestId}/verify-membership`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ bayClubEmail, membershipId }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to send verification email");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Verification email sent",
+        description: "The membership verification request has been sent to Bay Club.",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/join-requests", "leader"],
+      });
+      setVerificationDialogOpen(false);
+      setVerifyingRequest(null);
+      setBayClubEmail("");
+      setMembershipIdInput("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send verification email. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to confirm membership verification
+  const confirmVerificationMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      const response = await fetch(`/api/join-requests/${requestId}/confirm-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to confirm verification");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Verification confirmed",
+        description: "The member's Bay Club membership has been verified.",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/join-requests", "leader"],
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to confirm verification. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendVerification = () => {
+    if (!verifyingRequest || !bayClubEmail || !membershipIdInput) return;
+    verifyMembershipMutation.mutate({
+      requestId: verifyingRequest.id,
+      bayClubEmail,
+      membershipId: membershipIdInput,
+    });
+  };
+
+  const openVerificationDialog = (request: JoinRequestWithUser) => {
+    setVerifyingRequest(request);
+    setBayClubEmail("");
+    setMembershipIdInput(request.userInfo?.membershipId || "");
+    setVerificationDialogOpen(true);
   };
 
   // Mutation to update pod
@@ -1020,39 +1120,90 @@ export default function PodLeaderDashboard() {
                                         </div>
                                       )}
                                       {request.status === "pending" && (
-                                        <div className="flex space-x-2 pt-4">
-                                          <Button
-                                            onClick={() =>
-                                              handleRequestAction(
-                                                request.id,
-                                                "accepted",
-                                              )
-                                            }
-                                            disabled={
-                                              updateRequestMutation.isPending
-                                            }
-                                            className="flex-1 bg-green-600 hover:bg-green-700"
-                                          >
-                                            <UserCheck className="w-4 h-4 mr-2" />
-                                            Accept
-                                          </Button>
-                                          <Button
-                                            onClick={() =>
-                                              handleRequestAction(
-                                                request.id,
-                                                "rejected",
-                                              )
-                                            }
-                                            disabled={
-                                              updateRequestMutation.isPending
-                                            }
-                                            variant="destructive"
-                                            className="flex-1"
-                                          >
-                                            <UserX className="w-4 h-4 mr-2" />
-                                            Reject
-                                          </Button>
-                                        </div>
+                                        <>
+                                          <div className="border-t pt-4">
+                                            <h4 className="font-semibold mb-2 flex items-center">
+                                              <Shield className="w-4 h-4 mr-2" />
+                                              Membership Verification
+                                            </h4>
+                                            <div className="text-sm">
+                                              {request.membershipVerificationStatus === "confirmed" ? (
+                                                <div className="flex items-center text-green-600 bg-green-50 p-3 rounded-md">
+                                                  <ShieldCheck className="w-5 h-5 mr-2" />
+                                                  <span>Membership verified with Bay Club</span>
+                                                </div>
+                                              ) : request.membershipVerificationStatus === "sent" ? (
+                                                <div className="space-y-2">
+                                                  <div className="flex items-center text-amber-600 bg-amber-50 p-3 rounded-md">
+                                                    <Clock className="w-5 h-5 mr-2" />
+                                                    <span>Verification email sent - awaiting confirmation</span>
+                                                  </div>
+                                                  <Button
+                                                    onClick={() => confirmVerificationMutation.mutate(request.id)}
+                                                    disabled={confirmVerificationMutation.isPending}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    data-testid={`confirm-verification-${request.id}`}
+                                                  >
+                                                    <ShieldCheck className="w-4 h-4 mr-2" />
+                                                    Mark as Verified
+                                                  </Button>
+                                                </div>
+                                              ) : (
+                                                <div className="space-y-2">
+                                                  <div className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-md">
+                                                    <AlertCircle className="w-5 h-5 mr-2" />
+                                                    <span>Membership not yet verified</span>
+                                                  </div>
+                                                  <Button
+                                                    onClick={() => openVerificationDialog(request)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    data-testid={`verify-membership-${request.id}`}
+                                                  >
+                                                    <Send className="w-4 h-4 mr-2" />
+                                                    Verify Membership
+                                                  </Button>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="flex space-x-2 pt-4">
+                                            <Button
+                                              onClick={() =>
+                                                handleRequestAction(
+                                                  request.id,
+                                                  "accepted",
+                                                )
+                                              }
+                                              disabled={
+                                                updateRequestMutation.isPending
+                                              }
+                                              className="flex-1 bg-green-600 hover:bg-green-700"
+                                            >
+                                              <UserCheck className="w-4 h-4 mr-2" />
+                                              Accept
+                                            </Button>
+                                            <Button
+                                              onClick={() =>
+                                                handleRequestAction(
+                                                  request.id,
+                                                  "rejected",
+                                                )
+                                              }
+                                              disabled={
+                                                updateRequestMutation.isPending
+                                              }
+                                              variant="destructive"
+                                              className="flex-1"
+                                            >
+                                              <UserX className="w-4 h-4 mr-2" />
+                                              Reject
+                                            </Button>
+                                          </div>
+                                        </>
                                       )}
                                     </div>
                                   </DialogContent>
@@ -2287,6 +2438,85 @@ export default function PodLeaderDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Membership Verification Dialog */}
+      <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Shield className="w-5 h-5 mr-2" />
+              Verify Bay Club Membership
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Send a verification request to Bay Club to confirm this applicant's membership before accepting them to your pod.
+            </p>
+            
+            {verifyingRequest && (
+              <div className="bg-gray-50 p-3 rounded-md text-sm">
+                <p><strong>Applicant:</strong> {verifyingRequest.userName}</p>
+                <p><strong>Email:</strong> {verifyingRequest.userEmail}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="bayClubEmail">Bay Club Email Address</Label>
+                <Input
+                  id="bayClubEmail"
+                  type="email"
+                  placeholder="membership@bayclubs.com"
+                  value={bayClubEmail}
+                  onChange={(e) => setBayClubEmail(e.target.value)}
+                  data-testid="input-bay-club-email"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter the Bay Club's membership verification email
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="membershipId">Member's Bay Club ID</Label>
+                <Input
+                  id="membershipId"
+                  type="text"
+                  placeholder="Enter membership ID"
+                  value={membershipIdInput}
+                  onChange={(e) => setMembershipIdInput(e.target.value)}
+                  data-testid="input-membership-id"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  The member's Bay Club membership number to verify
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setVerificationDialogOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendVerification}
+                disabled={!bayClubEmail || !membershipIdInput || verifyMembershipMutation.isPending}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+                data-testid="button-send-verification"
+              >
+                {verifyMembershipMutation.isPending ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Send Verification
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
