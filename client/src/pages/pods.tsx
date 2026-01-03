@@ -6,13 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Users, DollarSign, Filter, Plus, Zap } from "lucide-react";
+import { Search, MapPin, Users, DollarSign, Filter, Plus, Zap, ChevronDown, ChevronUp, X } from "lucide-react";
 import type { Pod } from "@shared/schema";
 
 export default function PodsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [titleFilter, setTitleFilter] = useState("");
+  const [clubNameFilter, setClubNameFilter] = useState<string>("");
+  const [addressFilter, setAddressFilter] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [, navigate] = useLocation();
 
   // Fetch pods from API
@@ -27,18 +31,44 @@ export default function PodsPage() {
     },
   });
 
+  // Get unique club names for filter dropdown
+  const uniqueClubNames = Array.from(new Set(pods.map(pod => pod.clubName))).sort();
+
   // Filter pods based on search and filters
   const filteredPods = pods.filter(pod => {
     const matchesSearch = !searchQuery || 
       pod.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pod.clubName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pod.description.toLowerCase().includes(searchQuery.toLowerCase());
+      pod.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pod.clubAddress.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesTitle = !titleFilter || 
+      pod.title.toLowerCase().includes(titleFilter.toLowerCase());
+    
+    const matchesClubName = !clubNameFilter || clubNameFilter === 'all' || 
+      pod.clubName === clubNameFilter;
+    
+    const matchesAddress = !addressFilter || 
+      pod.clubAddress.toLowerCase().includes(addressFilter.toLowerCase());
     
     const matchesRegion = !selectedRegion || selectedRegion === 'all' || pod.clubRegion === selectedRegion;
     const matchesType = !selectedType || selectedType === 'all' || pod.membershipType === selectedType;
     
-    return matchesSearch && matchesRegion && matchesType;
+    return matchesSearch && matchesTitle && matchesClubName && matchesAddress && matchesRegion && matchesType;
   });
+
+  // Check if any filters are active
+  const hasActiveFilters = titleFilter || clubNameFilter || addressFilter || selectedRegion || selectedType;
+
+  // Clear all filters
+  const clearFilters = () => {
+    setTitleFilter("");
+    setClubNameFilter("");
+    setAddressFilter("");
+    setSelectedRegion("");
+    setSelectedType("");
+    setSearchQuery("");
+  };
 
   const formatPrice = (amount: number) => {
     return `$${amount}`;
@@ -104,10 +134,10 @@ export default function PodsPage() {
             />
           </div>
 
-          {/* Filters */}
-          <div className="flex space-x-3 overflow-x-auto pb-2">
+          {/* Quick Filters */}
+          <div className="flex flex-wrap items-center gap-3 pb-2">
             <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[160px]" data-testid="select-region">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
@@ -120,7 +150,7 @@ export default function PodsPage() {
             </Select>
 
             <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px]" data-testid="select-membership-type">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
@@ -130,7 +160,93 @@ export default function PodsPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="flex items-center gap-1"
+              data-testid="button-toggle-advanced-filters"
+            >
+              <Filter className="w-4 h-4" />
+              More Filters
+              {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+
+            {hasActiveFilters && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={clearFilters}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                data-testid="button-clear-filters"
+              >
+                <X className="w-4 h-4 mr-1" />
+                Clear All
+              </Button>
+            )}
           </div>
+
+          {/* Advanced Filters */}
+          {showAdvancedFilters && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border space-y-4 fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pod Title</label>
+                  <Input
+                    placeholder="Filter by title..."
+                    value={titleFilter}
+                    onChange={(e) => setTitleFilter(e.target.value)}
+                    data-testid="input-filter-title"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Club Name</label>
+                  <Select value={clubNameFilter} onValueChange={setClubNameFilter}>
+                    <SelectTrigger data-testid="select-club-name">
+                      <SelectValue placeholder="All Clubs" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Clubs</SelectItem>
+                      {uniqueClubNames.map(name => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address / Zip Code</label>
+                  <Input
+                    placeholder="Search address or zip..."
+                    value={addressFilter}
+                    onChange={(e) => setAddressFilter(e.target.value)}
+                    data-testid="input-filter-address"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                  <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                    <SelectTrigger data-testid="select-region-advanced">
+                      <SelectValue placeholder="All Regions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Regions</SelectItem>
+                      {regions.map(region => (
+                        <SelectItem key={region} value={region}>{region}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-500">
+                Showing {filteredPods.length} of {pods.length} pods
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
