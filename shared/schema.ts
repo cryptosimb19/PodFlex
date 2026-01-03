@@ -87,8 +87,11 @@ export const joinRequests = pgTable("join_requests", {
     name: string;
     email: string;
     phone?: string;
+    membershipId?: string;
   }>(), // Contact information for the join request
   emailStatus: text("email_status").notNull().default("sent"), // "sent", "failed", "pending"
+  membershipVerificationStatus: text("membership_verification_status").notNull().default("not_sent"), // "not_sent", "sent", "confirmed"
+  membershipVerificationSentAt: timestamp("membership_verification_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
