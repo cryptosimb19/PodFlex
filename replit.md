@@ -102,6 +102,20 @@ Preferred communication style: Simple, everyday language.
 - **Frontend Components**: PaymentCard (cost breakdown + checkout button), PaymentHistory (user's past payments), PaymentSuccess (post-checkout confirmation page)
 - **Dashboards**: Member dashboard has "Payments" tab showing payment history; Leader dashboard has "Settings" tab for platform fee management
 
+### Membership Verification
+- **Purpose**: Pod leaders can verify a prospective member's Bay Club membership ID before accepting them to the pod.
+- **Database Fields**: `membershipVerificationStatus` (not_sent/sent/confirmed) and `membershipVerificationSentAt` on join_requests table.
+- **Verification Flow**:
+  1. Pod leader views pending join request and clicks "Verify Membership" button
+  2. Enters Bay Club email address and member's membership ID
+  3. System sends verification email to Bay Club with CC to support@podmembership.com
+  4. Pod leader clicks "Mark as Verified" when Bay Club confirms membership
+  5. Pod leader can then accept/reject the join request
+- **API Endpoints**:
+  - `POST /api/join-requests/:id/verify-membership` - Send verification email to Bay Club
+  - `POST /api/join-requests/:id/confirm-verification` - Mark membership as verified
+- **UI Location**: Pod Leader Dashboard > Join Requests tab > View Details dialog
+
 ### Development Tools
 - `Vite`: Build tool and development server.
 - `TypeScript`: Static type checking.
