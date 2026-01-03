@@ -1520,15 +1520,11 @@ export default function PodLeaderRegistration() {
               <div className="flex space-x-3 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    hasExistingPersonalInfo
-                      ? navigate("/dashboard")
-                      : setCurrentStep(1)
-                  }
+                  onClick={() => setCurrentStep(1)}
                   className="flex-1"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  {hasExistingPersonalInfo ? "Cancel" : "Back"}
+                  Back
                 </Button>
                 <Button
                   onClick={() => setCurrentStep(3)}
