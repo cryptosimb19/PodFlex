@@ -7,6 +7,24 @@ import { Mail, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
+// Obfuscate email: john.doe@example.com -> j***@e***.com
+function obfuscateEmail(email: string): string {
+  if (!email || !email.includes('@')) return email;
+  
+  const [localPart, domain] = email.split('@');
+  const [domainName, ...tld] = domain.split('.');
+  
+  const obfuscatedLocal = localPart.length > 1 
+    ? localPart[0] + '***' 
+    : localPart + '***';
+  
+  const obfuscatedDomain = domainName.length > 1 
+    ? domainName[0] + '***' 
+    : domainName + '***';
+  
+  return `${obfuscatedLocal}@${obfuscatedDomain}.${tld.join('.')}`;
+}
+
 export default function CheckEmailPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -73,7 +91,7 @@ export default function CheckEmailPage() {
               
               {email && (
                 <p className="font-semibold text-purple-600" data-testid="text-verification-email">
-                  {email}
+                  {obfuscateEmail(email)}
                 </p>
               )}
               
