@@ -124,6 +124,10 @@ export default function PodLeaderRegistration() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   
+  // Start date picker state
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [startDateValue, setStartDateValue] = useState("");
+  
   // Image upload hook
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
@@ -1439,15 +1443,66 @@ export default function PodLeaderRegistration() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Start Date</label>
-                <Input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    handleInputChange("startDate", e.target.value)
-                  }
-                />
+              <div className="flex flex-col gap-3">
+                <label htmlFor="startDate" className="text-sm font-medium">
+                  Start Date
+                </label>
+                <div className="relative flex gap-2">
+                  <Input
+                    id="startDate"
+                    value={startDateValue}
+                    placeholder="MM/DD/YYYY"
+                    onChange={(e) => {
+                      setStartDateValue(e.target.value);
+                      const parsedDate = parseDate(e.target.value);
+                      if (parsedDate) {
+                        handleInputChange(
+                          "startDate",
+                          format(parsedDate, "yyyy-MM-dd"),
+                        );
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setStartDatePickerOpen(true);
+                      }
+                    }}
+                  />
+                  <Popover open={startDatePickerOpen} onOpenChange={setStartDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <span className="sr-only">Select Start Date</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-64 overflow-hidden p-0"
+                      align="end"
+                    >
+                      <Calendar
+                        mode="single"
+                        className="w-full"
+                        onSelect={(selectedDate) => {
+                          if (selectedDate) {
+                            setStartDateValue(format(selectedDate, "MM/dd/yyyy"));
+                            setStartDatePickerOpen(false);
+                            handleInputChange(
+                              "startDate",
+                              format(selectedDate, "yyyy-MM-dd"),
+                            );
+                          } else {
+                            handleInputChange("startDate", "");
+                          }
+                        }}
+                        captionLayout="dropdown"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div className="space-y-3">
