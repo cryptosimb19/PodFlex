@@ -33,7 +33,7 @@ function sanitizeUser(user: User) {
 
  const corsOptions = {
    origin: process.env.NODE_ENV === 'production' 
-     ? 'https://podmemebership.com' 
+     ? 'https://podmembership.com' 
      : 'http://localhost:3000', 
    credentials: true, 
 
