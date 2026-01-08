@@ -9,6 +9,7 @@ import passport from "passport";
 import { sendJoinRequestNotification, sendJoinRequestAcceptedNotification, sendJoinRequestRejectedNotification, sendJoinRequestsAutoCancelledNotification, sendPasswordResetEmail, sendWelcomeEmail, sendPodCreatedEmail, sendMemberRemovedNotification, send2FAVerificationEmail, sendEmailVerification, sendLeaveRequestNotification, sendLeaveRequestApprovedNotification, sendLeaveRequestRejectedNotification, FROM_EMAIL } from "./emailService";
 import crypto from "crypto";
 import { z } from "zod";
+import cors from 'cors';
 import { insertPodSchema, insertJoinRequestSchema } from "@shared/schema";
 import type { User, Pod } from "@shared/schema";
 import rateLimit from "express-rate-limit";
@@ -30,13 +31,28 @@ function sanitizeUser(user: User) {
   return sanitized;
 }
 
+ const corsOptions = {
+   origin: process.env.NODE_ENV === 'production' 
+     ? 'https://podmemebership.com' 
+     : 'http://localhost:3000', 
+   credentials: true, 
+
+   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+
+   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+ };
+
+
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
   // Register object storage routes for file uploads
   registerObjectStorageRoutes(app);
-
+  
+   app.use(cors(corsOptions));
+  
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -615,20 +631,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Logout error:", err);
         return res.status(500).json({ message: "Logout failed" });
       }
-      // Destroy the session to completely clear user data
+
       req.session.destroy((destroyErr) => {
         if (destroyErr) {
           console.error("Session destroy error:", destroyErr);
           return res.status(500).json({ message: "Failed to destroy session" });
         }
-        // Clear the session cookie with matching options for Chrome compatibility
+
         res.clearCookie('connect.sid', {
           path: '/',
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
         });
-        res.json({ message: "Logout successful" });
+
+        return res.json({ message: "Logout successful" });
       });
     });
   });
