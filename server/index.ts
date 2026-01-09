@@ -1,16 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
-import cors from 'cors';
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://podmembership.com' 
-    : ['http://localhost:3000', 'http://localhost:5000'],
+  origin:
+    process.env.NODE_ENV === "production"
+      ? ["https://podmembership.com", "https://www.podmembership.com"]
+      : ["http://localhost:3000", "http://localhost:5000"],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 
 const app = express();
@@ -52,7 +53,7 @@ app.use((req, res, next) => {
 (async () => {
   // Initialize sample data
   await storage.initializeSamplePods();
-  
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -76,11 +77,14 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  server.listen(
+    {
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    },
+    () => {
+      log(`serving on port ${port}`);
+    },
+  );
 })();
