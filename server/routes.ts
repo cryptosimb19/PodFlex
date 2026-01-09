@@ -38,6 +38,7 @@ import {
   validateEvent,
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
+import * as client from "openid-client";
 
 // Platform fee constants
 const DEFAULT_PLATFORM_FEE_PERCENTAGE = 5; // 5% default platform fee
@@ -746,7 +747,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sameSite: "lax",
         });
 
-        return res.json({ message: "Logout successful" });
+        res.redirect(
+          client.buildEndSessionUrl(config, {
+            client_id: process.env.REPL_ID!,
+            post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+          }).href
+        );
       });
     });
   });
