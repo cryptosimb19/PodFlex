@@ -1000,6 +1000,7 @@ export default function PodLeaderDashboard() {
                 >
                   Pods
                 </TabsTrigger>
+{/* Settings tab hidden for now
                 <TabsTrigger
                   value="settings"
                   className="px-1 sm:px-3 text-[10px] sm:text-sm leading-tight"
@@ -1007,6 +1008,7 @@ export default function PodLeaderDashboard() {
                 >
                   Settings
                 </TabsTrigger>
+*/}
               </TabsList>
 
               <TabsContent value="requests" className="mt-6">
@@ -2175,7 +2177,8 @@ export default function PodLeaderDashboard() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="settings" className="mt-6">
+{/* Settings tab hidden for now */}
+              {false && <TabsContent value="settings" className="mt-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -2433,7 +2436,7 @@ export default function PodLeaderDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </TabsContent>}
             </Tabs>
           </div>
         </div>
