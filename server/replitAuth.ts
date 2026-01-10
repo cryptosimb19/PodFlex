@@ -125,7 +125,7 @@ export async function setupAuth(app: Express) {
         }).href
       );
     });
-  });
+});
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {

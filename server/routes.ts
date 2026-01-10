@@ -39,6 +39,7 @@ import {
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
 import * as client from "openid-client";
+import { getOidcConfig } from "./replitAuth";
 
 // Platform fee constants
 const DEFAULT_PLATFORM_FEE_PERCENTAGE = 5; // 5% default platform fee
@@ -726,33 +727,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logout route
-  app.post("/api/auth/logout", (req, res) => {
+  app.get("/api/auth/logout", async (req, res) => {
+    const config = await getOidcConfig(); // Get the OIDC config for the redirect
+
     req.logout((err) => {
-      if (err) {
-        console.error("Logout error:", err);
-        return res.status(500).json({ message: "Logout failed" });
-      }
+      if (err) return res.status(500).json({ message: "Logout failed" });
 
       req.session.destroy((destroyErr) => {
-        if (destroyErr) {
-          console.error("Session destroy error:", destroyErr);
-          return res.status(500).json({ message: "Failed to destroy session" });
-        }
+        if (destroyErr) return res.status(500).json({ message: "Failed to destroy session" });
 
-        // Explicitly clear the cookie with matching attributes
-        res.clearCookie("connect.sid", {
-          path: "/",
+        // 1. Clear the local cookie
+        res.clearCookie('connect.sid', {
+          path: '/',
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
         });
 
-        res.redirect(
-          client.buildEndSessionUrl(config, {
-            client_id: process.env.REPL_ID!,
-            post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-          }).href
-        );
+        // 2. Redirect to OIDC provider to end the global session
+        const endSessionUrl = client.buildEndSessionUrl(config, {
+          client_id: process.env.REPL_ID!,
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+        }).href;
+
+        res.redirect(endSessionUrl);
       });
     });
   });
