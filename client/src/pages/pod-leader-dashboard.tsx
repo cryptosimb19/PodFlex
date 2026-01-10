@@ -28,6 +28,7 @@ import {
   Zap,
   UserCheck,
   UserX,
+  UserMinus,
   Mail,
   Phone,
   LogOut,
@@ -494,6 +495,45 @@ export default function PodLeaderDashboard() {
     setMembershipIdInput(request.userInfo?.membershipId || "");
     setVerificationDialogOpen(true);
   };
+
+  // State for member removal confirmation
+  const [memberToRemove, setMemberToRemove] = useState<{
+    podId: number;
+    userId: string;
+    userName: string;
+  } | null>(null);
+
+  // Mutation to remove a pod member
+  const removeMemberMutation = useMutation({
+    mutationFn: async ({ podId, userId }: { podId: number; userId: string }) => {
+      const response = await fetch(`/api/pods/${podId}/members/${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to remove member");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Member removed",
+        description: "The member has been removed from the pod and notified by email.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pods", selectedPodForMembers, "members"] });
+      setMemberToRemove(null);
+      setSelectedMember(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove member. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Mutation to update pod
   const updatePodMutation = useMutation({
@@ -1523,19 +1563,44 @@ export default function PodLeaderDashboard() {
                                       </p>
                                     </div>
                                   </div>
-                                  <div className="text-right">
-                                    <Badge variant="outline" className="mb-1">
-                                      {member.userId ===
+                                  <div className="flex items-center space-x-2">
+                                    <div className="text-right">
+                                      <Badge variant="outline" className="mb-1">
+                                        {member.userId ===
+                                        leaderPods?.find(
+                                          (p) => p.id === selectedPodForMembers,
+                                        )?.leadId
+                                          ? "Leader"
+                                          : "Member"}
+                                      </Badge>
+                                      <div className="text-sm text-gray-600">
+                                        {member.user?.membershipId ||
+                                          "No membership ID"}
+                                      </div>
+                                    </div>
+                                    {member.userId !==
                                       leaderPods?.find(
                                         (p) => p.id === selectedPodForMembers,
-                                      )?.leadId
-                                        ? "Leader"
-                                        : "Member"}
-                                    </Badge>
-                                    <div className="text-sm text-gray-600">
-                                      {member.user?.membershipId ||
-                                        "No membership ID"}
-                                    </div>
+                                      )?.leadId && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setMemberToRemove({
+                                            podId: selectedPodForMembers!,
+                                            userId: member.userId,
+                                            userName: member.user
+                                              ? `${member.user.firstName} ${member.user.lastName}`
+                                              : "Unknown User",
+                                          });
+                                        }}
+                                        data-testid={`button-remove-member-${member.id}`}
+                                      >
+                                        <UserMinus className="w-4 h-4" />
+                                      </Button>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -2441,6 +2506,61 @@ export default function PodLeaderDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Member Removal Confirmation Dialog */}
+      <Dialog open={memberToRemove !== null} onOpenChange={() => setMemberToRemove(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-red-600">
+              <UserMinus className="w-5 h-5 mr-2" />
+              Remove Pod Member
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to remove <strong>{memberToRemove?.userName}</strong> from your pod? 
+              They will be notified by email about this removal.
+            </p>
+            
+            <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
+              <p className="text-sm text-amber-800">
+                <strong>Note:</strong> This action cannot be undone. The member will need to submit a new join request if they want to rejoin.
+              </p>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setMemberToRemove(null)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (memberToRemove) {
+                    removeMemberMutation.mutate({
+                      podId: memberToRemove.podId,
+                      userId: memberToRemove.userId,
+                    });
+                  }
+                }}
+                disabled={removeMemberMutation.isPending}
+                className="flex-1"
+                data-testid="button-confirm-remove-member"
+              >
+                {removeMemberMutation.isPending ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                ) : (
+                  <UserMinus className="w-4 h-4 mr-2" />
+                )}
+                Remove Member
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Membership Verification Dialog */}
       <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
