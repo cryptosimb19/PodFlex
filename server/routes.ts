@@ -737,12 +737,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (destroyErr) return res.status(500).json({ message: "Failed to destroy session" });
 
         // 1. Clear the local cookie
-        res.clearCookie('connect.sid', {
+        const cookieOptions = {
           path: '/',
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-        });
+          sameSite: 'lax' as const,
+          domain: process.env.NODE_ENV === 'production' ? 'podmembership.com' : undefined,
+        };
+
+        res.clearCookie('connect.sid', cookieOptions);
 
         // 2. Redirect to OIDC provider to end the global session
         const endSessionUrl = client.buildEndSessionUrl(config, {
