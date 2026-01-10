@@ -36,28 +36,18 @@ export default function Navigation({ userType }: NavigationProps) {
   const isAuthenticated = !!currentUser;
 
   const handleLogout = () => {
-    try {
-      console.log("🔓 Initiating OIDC Logout...");
+    console.log("🔓 Initiating OIDC Logout...");
 
-      // 1. Clear local state immediately for a responsive UI
-      localStorage.removeItem('userData');
-      localStorage.removeItem('flexpod_user_type');
-      localStorage.removeItem('flexpod_onboarding_complete');
-      localStorage.removeItem('flexpod_seen_welcome');
+    // Clear local state first
+    localStorage.removeItem('userData');
+    localStorage.removeItem('flexpod_user_type');
+    localStorage.removeItem('flexpod_onboarding_complete');
+    localStorage.removeItem('flexpod_seen_welcome');
 
-      // 2. Clear React Query cache
-      queryClient.clear();
+    queryClient.clear();
 
-      // 3. Navigate the entire window to the logout endpoint.
-      // This is REQUIRED because the server will redirect to an external URL 
-      // (Replit OIDC end session) which fetch cannot follow.
-      window.location.href = '/api/auth/logout';
-
-    } catch (error) {
-      console.error('❌ Logout transition failed:', error);
-      // Fallback redirect if something fails
-      window.location.href = '/';
-    }
+    // Redirect the entire window to allow the OIDC redirect flow
+    window.location.href = '/api/auth/logout';
   };
 
   // Build nav items based on authentication status
