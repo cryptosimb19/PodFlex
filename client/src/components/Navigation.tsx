@@ -35,41 +35,27 @@ export default function Navigation({ userType }: NavigationProps) {
   
   const isAuthenticated = !!currentUser;
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
-      console.log("🔓 Logging out...");
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      
-      // Clear localStorage first
+      console.log("🔓 Initiating OIDC Logout...");
+
+      // 1. Clear local state immediately for a responsive UI
       localStorage.removeItem('userData');
       localStorage.removeItem('flexpod_user_type');
       localStorage.removeItem('flexpod_onboarding_complete');
       localStorage.removeItem('flexpod_seen_welcome');
-      
-      // Clear all React Query cache to remove user data
+
+      // 2. Clear React Query cache
       queryClient.clear();
-      
-      // Set auth query data to null AFTER clearing (so it persists)
-      queryClient.setQueryData(['/api/auth/user'], null);
-      
-      console.log("📋 Auth set to null, cache cleared");
-      console.log("✅ Logout successful, redirecting to Welcome page");
-      
-      // Use full page reload for logout to ensure clean state
-      window.location.href = '/';
+
+      // 3. Navigate the entire window to the logout endpoint.
+      // This is REQUIRED because the server will redirect to an external URL 
+      // (Replit OIDC end session) which fetch cannot follow.
+      window.location.href = '/api/auth/logout';
+
     } catch (error) {
-      console.error('❌ Logout failed:', error);
-      // Clear cache and localStorage even on error
-      localStorage.removeItem('userData');
-      localStorage.removeItem('flexpod_user_type');
-      localStorage.removeItem('flexpod_onboarding_complete');
-      localStorage.removeItem('flexpod_seen_welcome');
-      queryClient.clear();
-      queryClient.setQueryData(['/api/auth/user'], null);
-      // Use full page reload for logout to ensure clean state
+      console.error('❌ Logout transition failed:', error);
+      // Fallback redirect if something fails
       window.location.href = '/';
     }
   };
