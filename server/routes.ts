@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerObjectStorageRoutes(app);
 
   // Auth routes
-app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
       console.log("📥 GET /api/auth/user - Returning user:", {
         id: req.user.id,
@@ -181,12 +181,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
         user.emailVerificationExpires &&
         new Date() > new Date(user.emailVerificationExpires)
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Verification token has expired. Please request a new one.",
-          });
+        return res.status(400).json({
+          message: "Verification token has expired. Please request a new one.",
+        });
       }
 
       // Mark email as verified and clear the token
@@ -609,12 +606,10 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
   } else {
     // Return error if Apple OAuth is not configured
     app.get("/api/auth/apple", (req, res) => {
-      res
-        .status(503)
-        .json({
-          message:
-            "Apple OAuth is not configured. Please configure Apple OAuth credentials.",
-        });
+      res.status(503).json({
+        message:
+          "Apple OAuth is not configured. Please configure Apple OAuth credentials.",
+      });
     });
   }
 
@@ -734,18 +729,19 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
       if (err) return res.status(500).json({ message: "Logout failed" });
 
       req.session.destroy((destroyErr) => {
-        if (destroyErr) return res.status(500).json({ message: "Failed to destroy session" });
+        if (destroyErr)
+          return res.status(500).json({ message: "Failed to destroy session" });
 
         // 1. Clear the local cookie
         const cookieOptions = {
-          path: '/',
+          path: "/",
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax' as const,
-          domain: process.env.NODE_ENV === 'production' ? 'podmembership.com' : undefined,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax" as const,
+          domain: "podmembership.com",
         };
 
-        res.clearCookie('connect.sid', cookieOptions);
+        res.clearCookie("connect.sid", cookieOptions);
 
         // 2. Redirect to OIDC provider to end the global session
         const endSessionUrl = client.buildEndSessionUrl(config, {
@@ -925,23 +921,19 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
 
       // Validate total spots doesn't exceed 10
       if (podData.totalSpots > 10) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Total spots cannot exceed 10 members (including pod leader)",
-          });
+        return res.status(400).json({
+          message:
+            "Total spots cannot exceed 10 members (including pod leader)",
+        });
       }
 
       // Check if the leader already has a pod
       const existingPods = await storage.getPodsByLeaderId(req.user.id);
       if (existingPods && existingPods.length > 0) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "You can only create one pod. Please edit your existing pod or delete it to create a new one.",
-          });
+        return res.status(400).json({
+          message:
+            "You can only create one pod. Please edit your existing pod or delete it to create a new one.",
+        });
       }
 
       // Set the leadId from the authenticated user
@@ -1057,12 +1049,10 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
             .json({ message: "Total spots must be at least 1" });
         }
         if (updateData.totalSpots > 10) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Total spots cannot exceed 10 members (including pod leader)",
-            });
+          return res.status(400).json({
+            message:
+              "Total spots cannot exceed 10 members (including pod leader)",
+          });
         }
 
         // Check if reducing total spots would affect existing members
@@ -1076,11 +1066,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
 
       if (updateData.availableSpots !== undefined) {
         if (!Number.isFinite(updateData.availableSpots)) {
-          return res
-            .status(400)
-            .json({
-              message: "Please enter a valid number of available spots",
-            });
+          return res.status(400).json({
+            message: "Please enter a valid number of available spots",
+          });
         }
         if (updateData.availableSpots < 0) {
           return res
@@ -1444,12 +1432,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
 
         // Cannot remove yourself (the leader) from the pod
         if (memberUserId === req.user.id) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Pod leaders cannot remove themselves from their own pod",
-            });
+          return res.status(400).json({
+            message: "Pod leaders cannot remove themselves from their own pod",
+          });
         }
 
         // Get the member user info before removal (for email notification)
@@ -1540,11 +1525,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
         const existingRequest =
           await storage.getPendingLeaveRequestForUserInPod(userId, podId);
         if (existingRequest) {
-          return res
-            .status(400)
-            .json({
-              message: "You already have a pending leave request for this pod",
-            });
+          return res.status(400).json({
+            message: "You already have a pending leave request for this pod",
+          });
         }
 
         // Check for pending payments - members can only leave if no pending payments
@@ -1723,11 +1706,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
 
         // Check if user is the pod leader
         if (pod.leadId !== userId) {
-          return res
-            .status(403)
-            .json({
-              message: "Only the pod leader can approve leave requests",
-            });
+          return res.status(403).json({
+            message: "Only the pod leader can approve leave requests",
+          });
         }
 
         // Calculate exit date based on billing cycle end + exit timeline
@@ -1980,11 +1961,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
 
         // Check if user is the pod leader
         if (pod.leadId !== userId) {
-          return res
-            .status(403)
-            .json({
-              message: "Only the pod leader can update exit timeline settings",
-            });
+          return res.status(403).json({
+            message: "Only the pod leader can update exit timeline settings",
+          });
         }
 
         // Update the pod
@@ -2104,12 +2083,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
         }
 
         if (pod.leadId !== userId) {
-          return res
-            .status(403)
-            .json({
-              message:
-                "Only the pod leader can request membership verification",
-            });
+          return res.status(403).json({
+            message: "Only the pod leader can request membership verification",
+          });
         }
 
         // Get pod leader info
@@ -2196,12 +2172,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
         }
 
         if (pod.leadId !== userId) {
-          return res
-            .status(403)
-            .json({
-              message:
-                "Only the pod leader can confirm membership verification",
-            });
+          return res.status(403).json({
+            message: "Only the pod leader can confirm membership verification",
+          });
         }
 
         // Update the verification status to confirmed
@@ -2602,11 +2575,9 @@ app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
         });
       } catch (error: any) {
         console.error("Error creating checkout session:", error);
-        res
-          .status(500)
-          .json({
-            message: error.message || "Failed to create checkout session",
-          });
+        res.status(500).json({
+          message: error.message || "Failed to create checkout session",
+        });
       }
     },
   );
