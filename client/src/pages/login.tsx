@@ -525,6 +525,7 @@ export default function LoginPage() {
                         </Button>
                       )}
 
+                      {/* Phone login temporarily hidden
                       {isPhoneAvailable && (
                         <Button 
                           type="button" 
@@ -537,6 +538,7 @@ export default function LoginPage() {
                           Sign in with Phone
                         </Button>
                       )}
+                      */}
                     </div>
                   </>
                 )}
@@ -699,6 +701,7 @@ export default function LoginPage() {
                         </Button>
                       )}
 
+                      {/* Phone registration temporarily hidden
                       {isPhoneAvailable && (
                         <Button 
                           type="button" 
@@ -711,6 +714,7 @@ export default function LoginPage() {
                           Sign up with Phone
                         </Button>
                       )}
+                      */}
                     </div>
                   </>
                 )}

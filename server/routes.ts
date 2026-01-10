@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerObjectStorageRoutes(app);
 
   // Auth routes
-  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
       console.log("📥 GET /api/auth/user - Returning user:", {
         id: req.user.id,
