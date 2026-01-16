@@ -723,7 +723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Logout route
   app.get("/api/auth/logout", async (req, res) => {
-    const config = await getOidcConfig(); // Get the OIDC config for the redirect
+    // const config = await getOidcConfig(); // Get the OIDC config for the redirect
 
     req.logout((err) => {
       if (err) return res.status(500).json({ message: "Logout failed" });
@@ -732,13 +732,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (destroyErr)
           return res.status(500).json({ message: "Failed to destroy session" });
 
-        console.log(`REDIRECT TO: ${req.protocol}://${req.hostname}`);
 
         // 1. Clear the local cookie
         const cookieOptions = {
           path: "/",
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: true, // process.env.NODE_ENV === "production",
           sameSite: "lax" as const,
           domain: "podmembership.com",
         };
@@ -747,14 +746,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.user = undefined;
 
         // 2. Redirect to OIDC provider to end the global session
-        const endSessionUrl = client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href;
-        console.log(`REDIRECT TO: ${req.protocol}://${req.hostname}`);
-        console.log(`REDIRECT END SESSION: ${endSessionUrl}`);
-        console.log(`REDIRECT TO USER: ${req.user}`);
-        res.redirect(endSessionUrl);
+        // const endSessionUrl = client.buildEndSessionUrl(config, {
+        //   client_id: process.env.REPL_ID!,
+        //   post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+        // }).href;
+        res.redirect("/");
       });
     });
   });
