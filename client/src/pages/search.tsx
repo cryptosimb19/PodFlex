@@ -189,9 +189,18 @@ export default function SearchScreen() {
             {pods.map(pod => (
               <Card 
                 key={pod.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
                 onClick={() => handlePodClick(pod.id)}
               >
+                {pod.imageUrl && (
+                  <div className="w-full h-40 bg-gray-100">
+                    <img 
+                      src={pod.imageUrl} 
+                      alt={pod.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
