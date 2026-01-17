@@ -21,7 +21,8 @@ import {
   EyeOff,
   AlertCircle,
   Loader2,
-  Phone
+  Phone,
+  CheckCircle
 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { SiApple } from "react-icons/si";
@@ -66,6 +67,9 @@ export default function LoginPage() {
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [showPasswordSetupDialog, setShowPasswordSetupDialog] = useState(false);
+  const [passwordSetupEmail, setPasswordSetupEmail] = useState("");
+  const [passwordSetupSent, setPasswordSetupSent] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -117,6 +121,10 @@ export default function LoginPage() {
         if (responseData.requiresEmailVerification) {
           sessionStorage.setItem("verification_email", responseData.email);
           throw { requiresEmailVerification: true, email: responseData.email, message: responseData.message };
+        }
+        // Check if password setup is required (OAuth user trying to use email/password)
+        if (responseData.requiresPasswordSetup) {
+          throw { requiresPasswordSetup: true, email: responseData.email, message: responseData.message };
         }
         throw new Error(responseData.message || 'Login failed');
       }
@@ -185,6 +193,13 @@ export default function LoginPage() {
           variant: "destructive",
         });
         navigate('/check-email');
+        return;
+      }
+      
+      // Check if password setup is required
+      if (error.requiresPasswordSetup) {
+        setPasswordSetupEmail(error.email);
+        setShowPasswordSetupDialog(true);
         return;
       }
       
@@ -382,6 +397,43 @@ export default function LoginPage() {
 
   const handleAppleLogin = () => {
     window.location.href = '/api/auth/apple';
+  };
+
+  // Password setup mutation for OAuth users
+  const requestPasswordSetupMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await fetch('/api/auth/request-password-setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to request password setup');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setPasswordSetupSent(true);
+      toast({
+        title: "Email sent",
+        description: "Check your email for the password setup link.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to send email",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRequestPasswordSetup = () => {
+    requestPasswordSetupMutation.mutate(passwordSetupEmail);
   };
 
   const handlePhoneLogin = () => {
@@ -838,6 +890,96 @@ export default function LoginPage() {
                   </Button>
                 </div>
               </form>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Password Setup Dialog for OAuth users */}
+        <Dialog open={showPasswordSetupDialog} onOpenChange={(open) => {
+          setShowPasswordSetupDialog(open);
+          if (!open) {
+            setPasswordSetupSent(false);
+          }
+        }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {passwordSetupSent ? "Check Your Email" : "Set Up a Password"}
+              </DialogTitle>
+              <DialogDescription>
+                {passwordSetupSent 
+                  ? "We've sent you an email with a link to set up your password."
+                  : "Your account was created using Google Sign-In. To log in with email and password, you need to set up a password first."
+                }
+              </DialogDescription>
+            </DialogHeader>
+
+            {!passwordSetupSent ? (
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    We'll send a password setup link to <strong>{passwordSetupEmail}</strong>
+                  </p>
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowPasswordSetupDialog(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleRequestPasswordSetup}
+                    disabled={requestPasswordSetupMutation.isPending}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    data-testid="button-send-password-setup"
+                  >
+                    {requestPasswordSetupMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Setup Link"
+                    )}
+                  </Button>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">
+                    Or you can continue signing in with{" "}
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setShowPasswordSetupDialog(false);
+                        handleGoogleLogin();
+                      }}
+                      className="text-purple-600 hover:text-purple-700 font-medium"
+                    >
+                      Google
+                    </button>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
+                  <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                  <p className="text-sm text-green-800">
+                    Email sent! Check your inbox for the password setup link.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => setShowPasswordSetupDialog(false)}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Close
+                </Button>
+              </div>
             )}
           </DialogContent>
         </Dialog>

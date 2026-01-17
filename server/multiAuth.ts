@@ -103,10 +103,17 @@ export async function setupAuth(app: Express) {
           
           if (user) {
             // Link Google account to existing user
+            // Preserve existing auth provider if they have local login, add google
+            const newAuthProvider = user.passwordHash 
+              ? (user.authProvider === "google" ? "google" : "local+google")
+              : "google";
+            
             await storage.updateUser(user.id, {
               googleId: profile.id,
-              authProvider: "google",
-              profileImageUrl: profile.photos?.[0]?.value,
+              authProvider: newAuthProvider,
+              isEmailVerified: true, // Google verifies email
+              // Only update profile image if user doesn't have one
+              ...(user.profileImageUrl ? {} : { profileImageUrl: profile.photos?.[0]?.value }),
             });
             user = await storage.getUser(user.id);
             return done(null, user);

@@ -442,6 +442,87 @@ export async function sendPasswordResetEmail(
   });
 }
 
+// Template for password setup (for OAuth users who want to add password login)
+export async function sendPasswordSetupEmail(
+  userEmail: string,
+  userName: string,
+  setupToken: string,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = "Set Up Your Password - FlexPod";
+  const baseUrl = "https://podmembership.com";
+  const setupUrl = `${baseUrl}/setup-password?token=${setupToken}`;
+
+  const html =
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Password Setup Request</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${userName},</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #8B5CF6;">
+          <p style="color: #4b5563; margin: 0;">You requested to set up a password for your FlexPod account. This will allow you to sign in with your email and password in addition to Google Sign-In.</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="` +
+    setupUrl +
+    `" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Set Up Password
+          </a>
+        </div>
+        
+        <div style="background: #dbeafe; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+          <p style="color: #1e40af; margin: 0; font-size: 14px;">
+            <strong>Note:</strong> This link will expire in 24 hours. After setting up your password, you'll be able to sign in with either Google or your email and password.
+          </p>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          If the button doesn't work, copy and paste this link into your browser:
+        </p>
+        <p style="color: #8B5CF6; font-size: 12px; word-break: break-all; background: #f3f4f6; padding: 10px; border-radius: 4px;">
+          ${setupUrl}
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>This email was sent by FlexPod in response to a password setup request.</p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Password Setup Request - FlexPod
+    
+    Hi ${userName},
+    
+    You requested to set up a password for your FlexPod account. This will allow you to sign in with your email and password in addition to Google Sign-In.
+    
+    Click the link below to set up your password:
+    
+    ${setupUrl}
+    
+    This link will expire in 24 hours.
+    
+    If you didn't request this, you can safely ignore this email.
+  `;
+
+  return await sendEmail({
+    to: userEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}
+
 // Template for email verification - sent when user signs up
 export async function sendEmailVerification(
   userEmail: string,

@@ -12,6 +12,7 @@ import LoginPage from "@/pages/login";
 import Verify2FAPage from "@/pages/verify-2fa";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
+import SetupPasswordPage from "@/pages/setup-password";
 import OnboardingWizard from "@/pages/onboarding";
 import UserTypeSelection from "@/pages/user-type-selection";
 import PodLeaderRegistration from "@/pages/pod-leader-registration";
@@ -212,6 +213,7 @@ function Router() {
       <Route path="/verify-2fa" component={Verify2FAPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
+      <Route path="/setup-password" component={SetupPasswordPage} />
       <Route path="/check-email" component={CheckEmailPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
       

@@ -17,6 +17,7 @@ import {
   sendJoinRequestRejectedNotification,
   sendJoinRequestsAutoCancelledNotification,
   sendPasswordResetEmail,
+  sendPasswordSetupEmail,
   sendWelcomeEmail,
   sendPodCreatedEmail,
   sendMemberRemovedNotification,
@@ -272,9 +273,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     password: z.string().min(1, "Password is required"),
   });
 
-  app.post("/api/auth/login", (req, res, next) => {
+  app.post("/api/auth/login", async (req, res, next) => {
     try {
       const validatedData = loginSchema.parse(req.body);
+
+      // Check if user exists and needs password setup (signed up with OAuth but trying email/password login)
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser && !existingUser.passwordHash) {
+        // User signed up with OAuth and needs to set up a password
+        return res.status(403).json({
+          message: "This account was created using Google Sign-In. Please set up a password to log in with email.",
+          requiresPasswordSetup: true,
+          email: existingUser.email,
+        });
+      }
 
       passport.authenticate("local", async (err: any, user: any, info: any) => {
         if (err) {
@@ -853,6 +865,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       console.error("Reset password error:", error);
+      res.status(500).json({ message: "An error occurred. Please try again." });
+    }
+  });
+
+  // Request password setup for OAuth users
+  const requestPasswordSetupSchema = z.object({
+    email: z.string().email("Invalid email format"),
+  });
+
+  app.post("/api/auth/request-password-setup", async (req, res) => {
+    try {
+      const validatedData = requestPasswordSetupSchema.parse(req.body);
+
+      // Check if user exists and has no password (OAuth user)
+      const user = await storage.getUserByEmail(validatedData.email);
+
+      if (!user) {
+        // Return success to prevent email enumeration
+        return res.json({
+          message: "If an account exists with that email, a password setup link has been sent.",
+        });
+      }
+
+      // Only allow password setup for OAuth users without password
+      if (user.passwordHash) {
+        return res.status(400).json({
+          message: "This account already has a password. Use 'Forgot Password' if you need to reset it.",
+        });
+      }
+
+      // Generate setup token (32 bytes, hex encoded = 64 characters)
+      const setupToken = crypto.randomBytes(32).toString("hex");
+
+      // Set token expiration to 24 hours from now
+      const setupExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Save token to database (reuse password reset token fields)
+      await storage.setPasswordResetToken(
+        validatedData.email,
+        setupToken,
+        setupExpires,
+      );
+
+      // Send password setup email
+      const userName = user.firstName || user.email.split("@")[0];
+
+      console.log(`Sending password setup email to ${user.email}`);
+      await sendPasswordSetupEmail(
+        user.email,
+        userName,
+        setupToken,
+        FROM_EMAIL,
+      );
+
+      res.json({
+        message: "Password setup link has been sent to your email.",
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Invalid email format",
+          errors: error.errors,
+        });
+      }
+      console.error("Request password setup error:", error);
+      res.status(500).json({ message: "An error occurred. Please try again." });
+    }
+  });
+
+  // Setup password for OAuth users
+  const setupPasswordSchema = z.object({
+    token: z.string().min(1, "Setup token is required"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  });
+
+  app.post("/api/auth/setup-password", async (req, res) => {
+    try {
+      const validatedData = setupPasswordSchema.parse(req.body);
+
+      // Get user by reset token (validates token and expiration)
+      const user = await storage.getUserByResetToken(validatedData.token);
+
+      if (!user) {
+        return res.status(400).json({
+          message: "Invalid or expired setup token. Please request a new password setup link.",
+        });
+      }
+
+      // Hash new password
+      const passwordHash = await hashPassword(validatedData.newPassword);
+
+      // Update user with password and update auth provider
+      const newAuthProvider = user.googleId 
+        ? "local+google" 
+        : (user.appleId ? "local+apple" : "local");
+      
+      await storage.updateUser(user.id, { 
+        passwordHash,
+        authProvider: newAuthProvider,
+      });
+
+      // Clear setup token
+      await storage.clearPasswordResetToken(user.id);
+
+      res.json({
+        message: "Password setup successful. You can now log in with your email and password.",
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Invalid input data",
+          errors: error.errors,
+        });
+      }
+      console.error("Setup password error:", error);
       res.status(500).json({ message: "An error occurred. Please try again." });
     }
   });
