@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Users, DollarSign, Shield, ArrowRight, MapPin, Search, X } from "lucide-react";
+import { Zap, Users, DollarSign, Shield, ArrowRight, MapPin, Search, X, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import type { Pod } from "@shared/schema";
 
 const PODS_PER_PAGE = 9;
+const GUEST_POD_LIMIT = 10;
 
 export default function Welcome() {
   const [, navigate] = useLocation();
@@ -16,6 +18,7 @@ export default function Welcome() {
   const [showPods, setShowPods] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [displayLimit, setDisplayLimit] = useState(PODS_PER_PAGE);
+  const { isAuthenticated } = useAuth();
 
   const features = [
     {
@@ -78,8 +81,13 @@ export default function Welcome() {
     setDisplayLimit(prev => prev + PODS_PER_PAGE);
   };
 
-  const displayedPods = filteredPods.slice(0, displayLimit);
-  const hasMorePods = filteredPods.length > displayLimit;
+  // For guests, limit to GUEST_POD_LIMIT pods
+  const maxPods = isAuthenticated ? filteredPods.length : Math.min(filteredPods.length, GUEST_POD_LIMIT);
+  const displayedPods = filteredPods.slice(0, Math.min(displayLimit, maxPods));
+  const hasMorePods = isAuthenticated 
+    ? filteredPods.length > displayLimit 
+    : false; // Guests can't load more
+  const guestLimitReached = !isAuthenticated && filteredPods.length > GUEST_POD_LIMIT;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -271,6 +279,26 @@ export default function Welcome() {
                         data-testid="button-load-more"
                       >
                         Load More ({filteredPods.length - displayLimit} more pods)
+                      </Button>
+                    </div>
+                  )}
+
+                  {guestLimitReached && (
+                    <div className="text-center py-8 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl border border-purple-200">
+                      <Lock className="w-10 h-10 text-purple-500 mx-auto mb-3" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Want to see more pods?
+                      </h3>
+                      <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                        Sign up for free to browse all {filteredPods.length} available pods and request to join!
+                      </p>
+                      <Button
+                        onClick={() => navigate('/login')}
+                        className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg transition-all"
+                        data-testid="button-signup-see-more"
+                      >
+                        Sign Up to See More
+                        <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </div>
                   )}
