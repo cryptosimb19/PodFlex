@@ -878,6 +878,8 @@ export default function PodLeaderRegistration() {
         clubName: formData.primaryClub,
         clubRegion: formData.primaryCampus,
         clubAddress: `${formData.primaryClub}, ${formData.primaryCampus}`,
+        city: formData.city || null,
+        zipCode: formData.zipCode || null,
         membershipType: formData.membershipLevel,
         title: formData.podName,
         description: formData.podDescription,

@@ -112,6 +112,8 @@ export default function PodLeaderDashboard() {
   const [editClubName, setEditClubName] = useState("");
   const [editClubRegion, setEditClubRegion] = useState("");
   const [editClubAddress, setEditClubAddress] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editZipCode, setEditZipCode] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editCostPerPerson, setEditCostPerPerson] = useState<number>(0);
   const [editTotalSpots, setEditTotalSpots] = useState<number>(0);
@@ -548,6 +550,8 @@ export default function PodLeaderDashboard() {
         clubName?: string;
         clubRegion?: string;
         clubAddress?: string;
+        city?: string;
+        zipCode?: string;
         imageUrl?: string;
         costPerPerson?: number;
         totalSpots?: number;
@@ -583,6 +587,8 @@ export default function PodLeaderDashboard() {
       setEditClubName("");
       setEditClubRegion("");
       setEditClubAddress("");
+      setEditCity("");
+      setEditZipCode("");
       setEditImageUrl("");
       setEditCostPerPerson(0);
       setEditTotalSpots(0);
@@ -648,6 +654,8 @@ export default function PodLeaderDashboard() {
     setEditClubName(pod.clubName || "");
     setEditClubRegion(pod.clubRegion || "");
     setEditClubAddress(pod.clubAddress || "");
+    setEditCity(pod.city || "");
+    setEditZipCode(pod.zipCode || "");
     setEditImageUrl(pod.imageUrl || "");
     setEditCostPerPerson(pod.costPerPerson);
     setEditTotalSpots(pod.totalSpots);
@@ -770,6 +778,8 @@ export default function PodLeaderDashboard() {
         clubName: editClubName.trim(),
         clubRegion: editClubRegion.trim(),
         clubAddress: editClubAddress.trim(),
+        city: editCity.trim() || undefined,
+        zipCode: editZipCode.trim() || undefined,
         imageUrl: editImageUrl.trim(),
         costPerPerson: editCostPerPerson,
         totalSpots: editTotalSpots,
@@ -1952,6 +1962,46 @@ export default function PodLeaderDashboard() {
                                           }
                                           data-testid="input-club-address"
                                         />
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label
+                                            htmlFor="city"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                          >
+                                            City
+                                          </label>
+                                          <Input
+                                            id="city"
+                                            type="text"
+                                            placeholder="San Jose"
+                                            value={editCity}
+                                            onChange={(e) =>
+                                              setEditCity(e.target.value)
+                                            }
+                                            data-testid="input-city"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <label
+                                            htmlFor="zipCode"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                          >
+                                            Zip Code
+                                          </label>
+                                          <Input
+                                            id="zipCode"
+                                            type="text"
+                                            placeholder="95129"
+                                            value={editZipCode}
+                                            onChange={(e) =>
+                                              setEditZipCode(e.target.value)
+                                            }
+                                            data-testid="input-zip-code"
+                                          />
+                                        </div>
                                       </div>
 
                                       <div className="grid grid-cols-2 gap-4">

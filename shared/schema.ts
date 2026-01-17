@@ -61,6 +61,8 @@ export const pods = pgTable("pods", {
   clubName: text("club_name").notNull(), // "Bay Club Courtside", "Bay Club San Francisco", etc.
   clubRegion: text("club_region").notNull(), // "San Jose", "San Francisco", etc.
   clubAddress: text("club_address").notNull(), // Full address of the club
+  city: text("city"), // City where the club is located
+  zipCode: text("zip_code"), // Zip code for the club location
   membershipType: text("membership_type").notNull(), // "Single-Club", "Multi-Club", "Family"
   title: text("title").notNull(),
   description: text("description").notNull(),

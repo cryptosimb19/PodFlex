@@ -53,11 +53,14 @@ export default function Welcome() {
   const filteredPods = pods?.filter(pod => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
+    const title = pod.title?.toLowerCase() || "";
     const address = pod.clubAddress?.toLowerCase() || "";
     const region = pod.clubRegion?.toLowerCase() || "";
     const name = pod.clubName?.toLowerCase() || "";
+    const city = pod.city?.toLowerCase() || "";
+    const zipCode = pod.zipCode?.toLowerCase() || "";
     
-    return address.includes(query) || region.includes(query) || name.includes(query);
+    return title.includes(query) || address.includes(query) || region.includes(query) || name.includes(query) || city.includes(query) || zipCode.includes(query);
   }) || [];
 
   useEffect(() => {
