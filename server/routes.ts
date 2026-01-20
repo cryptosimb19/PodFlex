@@ -745,16 +745,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: "Failed to destroy session" });
 
 
-        // 1. Clear the local cookie
-        const cookieOptions = {
+        // 1. Clear the local cookie - use dynamic domain based on hostname
+        const hostname = req.hostname;
+        const isProduction = hostname.includes("podmembership.com");
+        
+        const cookieOptions: {
+          path: string;
+          httpOnly: boolean;
+          secure: boolean;
+          sameSite: "lax";
+          domain?: string;
+        } = {
           path: "/",
           httpOnly: true,
-          secure: true, // process.env.NODE_ENV === "production",
+          secure: process.env.NODE_ENV === "production" || hostname.includes("replit"),
           sameSite: "lax" as const,
-          domain: "podmembership.com",
         };
+        
+        // Only set domain for production to avoid cookie mismatch issues
+        if (isProduction) {
+          cookieOptions.domain = "podmembership.com";
+        }
 
         res.clearCookie("connect.sid", cookieOptions);
+        
+        // Also try clearing without domain option as fallback
+        res.clearCookie("connect.sid", { path: "/" });
         req.user = undefined;
 
         // 2. Redirect to OIDC provider to end the global session
