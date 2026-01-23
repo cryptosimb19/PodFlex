@@ -745,32 +745,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: "Failed to destroy session" });
 
 
-        // 1. Clear the local cookie - use dynamic domain based on hostname
-        const hostname = req.hostname;
-        const isProduction = hostname.includes("podmembership.com");
-        
-        const cookieOptions: {
-          path: string;
-          httpOnly: boolean;
-          secure: boolean;
-          sameSite: "lax";
-          domain?: string;
-        } = {
+        // 1. Clear the local cookie - match EXACTLY how it was set in multiAuth.ts
+        // The session cookie is set with: httpOnly: true, secure: NODE_ENV === 'production', sameSite: 'lax', no domain
+        const cookieOptions = {
           path: "/",
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production" || hostname.includes("replit"),
+          secure: process.env.NODE_ENV === "production",
           sameSite: "lax" as const,
         };
-        
-        // Only set domain for production to avoid cookie mismatch issues
-        if (isProduction) {
-          cookieOptions.domain = "podmembership.com";
-        }
 
+        console.log("🔓 Logout: Clearing session cookie with options:", cookieOptions);
+        
         res.clearCookie("connect.sid", cookieOptions);
         
-        // Also try clearing without domain option as fallback
+        // Also try clearing with minimal options as fallback
+        res.clearCookie("connect.sid");
         res.clearCookie("connect.sid", { path: "/" });
+        
         req.user = undefined;
 
         // 2. Redirect to OIDC provider to end the global session

@@ -35,8 +35,8 @@ export default function Navigation({ userType }: NavigationProps) {
   
   const isAuthenticated = !!currentUser;
 
-  const handleLogout = () => {
-    console.log("🔓 Initiating OIDC Logout...");
+  const handleLogout = async () => {
+    console.log("🔓 Initiating Logout...");
 
     // Clear local state first
     localStorage.removeItem('userData');
@@ -44,9 +44,39 @@ export default function Navigation({ userType }: NavigationProps) {
     localStorage.removeItem('flexpod_onboarding_complete');
     localStorage.removeItem('flexpod_seen_welcome');
 
+    // Clear TanStack Query cache
     queryClient.clear();
 
-    // Redirect the entire window to allow the OIDC redirect flow
+    // Clear all service worker caches to prevent stale cached pages
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => {
+            console.log("🗑️ Clearing cache:", cacheName);
+            return caches.delete(cacheName);
+          })
+        );
+        console.log("✅ All caches cleared");
+      } catch (error) {
+        console.error("Failed to clear caches:", error);
+      }
+    }
+
+    // Unregister service worker to ensure fresh state
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+          console.log("✅ Service worker unregistered");
+        }
+      } catch (error) {
+        console.error("Failed to unregister service worker:", error);
+      }
+    }
+
+    // Redirect to logout endpoint
     window.location.href = '/api/auth/logout';
   };
 
