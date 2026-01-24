@@ -40,7 +40,6 @@ import {
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
 import * as client from "openid-client";
-import { getOidcConfig } from "./replitAuth";
 
 // Platform fee constants
 const DEFAULT_PLATFORM_FEE_PERCENTAGE = 5; // 5% default platform fee
