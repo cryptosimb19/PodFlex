@@ -236,6 +236,25 @@ export type InsertEmail2FAVerification = z.infer<typeof insertEmail2FAVerificati
 export type LeaveRequest = typeof leaveRequests.$inferSelect;
 export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
 
+// Pod reviews table
+export const podReviews = pgTable("pod_reviews", {
+  id: serial("id").primaryKey(),
+  podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade' }).notNull(),
+  reviewerId: varchar("reviewer_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  rating: integer("rating").notNull(), // 1-5
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPodReviewSchema = createInsertSchema(podReviews).omit({ id: true, createdAt: true, updatedAt: true }).extend({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(1000).optional(),
+});
+
+export type PodReview = typeof podReviews.$inferSelect;
+export type InsertPodReview = z.infer<typeof insertPodReviewSchema>;
+
 // Messaging tables
 export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),

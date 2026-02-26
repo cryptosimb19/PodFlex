@@ -10,6 +10,7 @@ import {
   podPayments,
   conversations,
   messages,
+  podReviews,
   type User,
   type Pod,
   type InsertUser,
@@ -32,6 +33,8 @@ import {
   type InsertConversation,
   type Message,
   type InsertMessage,
+  type PodReview,
+  type InsertPodReview,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, inArray, or, sql } from "drizzle-orm";
@@ -137,6 +140,13 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markConversationRead(conversationId: number, userId: string): Promise<void>;
   getUnreadCountForUser(userId: string): Promise<number>;
+
+  // Review operations
+  getReviewsForPod(podId: number): Promise<(PodReview & { reviewerName: string | null; reviewerImage: string | null })[]>;
+  getReviewByUserForPod(userId: string, podId: number): Promise<PodReview | undefined>;
+  createReview(review: InsertPodReview): Promise<PodReview>;
+  updateReview(id: number, userId: string, rating: number, comment?: string): Promise<PodReview | undefined>;
+  deleteReview(id: number, userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1346,6 +1356,57 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return result[0]?.count ?? 0;
+  }
+
+  // ── Review methods ──────────────────────────────────────────────────────────
+
+  async getReviewsForPod(podId: number): Promise<(PodReview & { reviewerName: string | null; reviewerImage: string | null })[]> {
+    const rows = await db
+      .select({
+        id: podReviews.id,
+        podId: podReviews.podId,
+        reviewerId: podReviews.reviewerId,
+        rating: podReviews.rating,
+        comment: podReviews.comment,
+        createdAt: podReviews.createdAt,
+        updatedAt: podReviews.updatedAt,
+        reviewerName: sql<string | null>`concat(${users.firstName}, ' ', ${users.lastName})`,
+        reviewerImage: users.profileImageUrl,
+      })
+      .from(podReviews)
+      .leftJoin(users, eq(podReviews.reviewerId, users.id))
+      .where(eq(podReviews.podId, podId))
+      .orderBy(sql`${podReviews.createdAt} DESC`);
+    return rows;
+  }
+
+  async getReviewByUserForPod(userId: string, podId: number): Promise<PodReview | undefined> {
+    const [review] = await db
+      .select()
+      .from(podReviews)
+      .where(and(eq(podReviews.reviewerId, userId), eq(podReviews.podId, podId)));
+    return review;
+  }
+
+  async createReview(review: InsertPodReview): Promise<PodReview> {
+    const [created] = await db.insert(podReviews).values(review).returning();
+    return created;
+  }
+
+  async updateReview(id: number, userId: string, rating: number, comment?: string): Promise<PodReview | undefined> {
+    const [updated] = await db
+      .update(podReviews)
+      .set({ rating, comment: comment ?? null, updatedAt: new Date() })
+      .where(and(eq(podReviews.id, id), eq(podReviews.reviewerId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async deleteReview(id: number, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(podReviews)
+      .where(and(eq(podReviews.id, id), eq(podReviews.reviewerId, userId)));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

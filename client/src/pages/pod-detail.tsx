@@ -34,6 +34,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import PaymentCard from "@/components/PaymentCard";
+import PodReviews from "@/components/PodReviews";
 import { useToast } from "@/hooks/use-toast";
 import type {
   Pod,
@@ -621,6 +622,14 @@ export default function PodDetail() {
                 </div>
               </>
             )}
+
+            {/* Reviews */}
+            <Separator />
+            <PodReviews
+              podId={pod.id}
+              currentUserId={currentUser?.id}
+              isMember={!!isMember}
+            />
 
             <Separator />
 

@@ -2997,6 +2997,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================
+  // REVIEWS ROUTES
+  // ============================================================
+
+  // Get reviews for a pod (public)
+  app.get("/api/pods/:id/reviews", async (req, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      if (isNaN(podId)) return res.status(400).json({ message: "Invalid pod ID" });
+      const reviews = await storage.getReviewsForPod(podId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  // Create a review — only active pod members can review
+  app.post("/api/pods/:id/reviews", isAuthenticated, async (req: any, res) => {
+    try {
+      const podId = parseInt(req.params.id);
+      if (isNaN(podId)) return res.status(400).json({ message: "Invalid pod ID" });
+      const userId = req.user.id;
+
+      // Check reviewer is an active member of this pod
+      const members = await storage.getPodMembers(podId);
+      const isMember = members.some(m => m.userId === userId && m.isActive);
+      if (!isMember) {
+        return res.status(403).json({ message: "Only active pod members can leave a review" });
+      }
+
+      // One review per user per pod
+      const existing = await storage.getReviewByUserForPod(userId, podId);
+      if (existing) {
+        return res.status(409).json({ message: "You have already reviewed this pod" });
+      }
+
+      const { rating, comment } = req.body;
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      const review = await storage.createReview({ podId, reviewerId: userId, rating, comment });
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  // Update own review
+  app.patch("/api/reviews/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const reviewId = parseInt(req.params.id);
+      if (isNaN(reviewId)) return res.status(400).json({ message: "Invalid review ID" });
+      const userId = req.user.id;
+      const { rating, comment } = req.body;
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+      const updated = await storage.updateReview(reviewId, userId, rating, comment);
+      if (!updated) return res.status(404).json({ message: "Review not found or not yours" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating review:", error);
+      res.status(500).json({ message: "Failed to update review" });
+    }
+  });
+
+  // Delete own review
+  app.delete("/api/reviews/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const reviewId = parseInt(req.params.id);
+      if (isNaN(reviewId)) return res.status(400).json({ message: "Invalid review ID" });
+      const userId = req.user.id;
+      const deleted = await storage.deleteReview(reviewId, userId);
+      if (!deleted) return res.status(404).json({ message: "Review not found or not yours" });
+      res.json({ message: "Review deleted" });
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      res.status(500).json({ message: "Failed to delete review" });
+    }
+  });
+
+  // ============================================================
   // MESSAGING ROUTES
   // ============================================================
 

@@ -29,7 +29,8 @@ Preferred communication style: Simple, everyday language.
     - **Internal Messaging**: Pod leaders can send direct messages to individual members or broadcast group messages to all pod members. Members can view and reply to conversations. Unread message count badge shown in navigation.
     - **Smart Pod Matching**: AI-powered feature on the seeker dashboard. Users set preferences (region, city, ZIP, budget, membership type, desired amenities, custom notes) and get top-5 pod recommendations with a match score (0-100) and AI-generated explanation. Uses OpenAI via Replit AI Integrations. Component: `client/src/components/SmartPodMatcher.tsx`. API: `POST /api/ai/match-pods`.
 - **Data Flow**: Structured for user onboarding, pod discovery, join request processing, and pod management.
-- **Database Schema**: Includes tables for Users, Pods, Join Requests, Pod Members, Leave Requests, Conversations, and Messages.
+- **Pod Reviews**: Active pod members can write a star rating (1–5) and optional comment reviewing the pod and leader. Reviews are public on the pod detail page with aggregate rating bar. Members can edit or delete their own review. One review per member per pod. Component: `client/src/components/PodReviews.tsx`. API: `GET/POST /api/pods/:id/reviews`, `PATCH/DELETE /api/reviews/:id`.
+- **Database Schema**: Includes tables for Users, Pods, Join Requests, Pod Members, Leave Requests, Conversations, Messages, and Pod Reviews.
 
 ### System Design Choices
 - **Full-stack TypeScript**: Ensures type safety across the application.
