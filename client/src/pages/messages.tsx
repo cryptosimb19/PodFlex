@@ -9,17 +9,19 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Users, User, MessageSquare, Plus, ChevronLeft } from "lucide-react";
-import type { Pod, User as UserType } from "@shared/schema";
+import { Send, Users, User, MessageSquare, Plus, ChevronLeft, Crown } from "lucide-react";
+import type { Pod, User as UserType, PodMember } from "@shared/schema";
 
 interface EnrichedConversation {
   id: number;
   podId: number;
   type: "direct" | "group";
   memberId: string | null;
+  participant2Id: string | null;
   createdAt: string;
   pod: Pod | null;
-  memberInfo: UserType | null;
+  participant1Info: UserType | null;
+  participant2Info: UserType | null;
   lastMessage: EnrichedMessage | null;
   unreadCount: number;
 }
@@ -35,6 +37,12 @@ interface EnrichedMessage {
   senderAvatar: string | null;
 }
 
+interface MemberWithUser extends PodMember {
+  userName: string;
+  userEmail: string | null;
+  user: UserType | null;
+}
+
 function formatTime(dateStr: string) {
   const d = new Date(dateStr);
   const now = new Date();
@@ -47,18 +55,27 @@ function formatTime(dateStr: string) {
 }
 
 function getInitials(name: string) {
-  return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  return name.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+}
+
+function getUserName(user: UserType | null): string {
+  if (!user) return "Unknown";
+  const name = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+  return name || user.email;
+}
+
+// Returns the "other person" in a direct conversation from current user's perspective
+function getOtherParticipant(conv: EnrichedConversation, currentUserId: string): UserType | null {
+  if (conv.memberId === currentUserId) return conv.participant2Info;
+  return conv.participant1Info;
 }
 
 function ConversationName({ conv, currentUserId }: { conv: EnrichedConversation; currentUserId: string }) {
   if (conv.type === "group") {
     return <span>{conv.pod?.title ?? "Group Chat"} — All Members</span>;
   }
-  if (conv.memberInfo) {
-    const name = `${conv.memberInfo.firstName ?? ""} ${conv.memberInfo.lastName ?? ""}`.trim();
-    return <span>{name || conv.memberInfo.email}</span>;
-  }
-  return <span>Direct Message</span>;
+  const other = getOtherParticipant(conv, currentUserId);
+  return <span>{getUserName(other)}</span>;
 }
 
 export default function MessagesPage() {
@@ -90,11 +107,35 @@ export default function MessagesPage() {
   });
   const leaderPod = leaderPodData?.[0];
 
-  // Members of leader's pod
-  const { data: podMembersData } = useQuery<any[]>({
+  // For leaders: members of their pod
+  const { data: leaderPodMembers } = useQuery<MemberWithUser[]>({
     queryKey: ["/api/pods", leaderPod?.id, "members"],
     enabled: isLeader && !!leaderPod?.id,
   });
+
+  // For members: find what pod they belong to and who else is in it
+  const { data: memberJoinRequests } = useQuery<any[]>({
+    queryKey: ["/api/join-requests/user", currentUser?.id],
+    enabled: !isLeader && !!currentUser?.id,
+  });
+
+  // Get the accepted pod for a member
+  const acceptedPodId = !isLeader && memberJoinRequests
+    ? memberJoinRequests.find(r => r.status === "accepted")?.podId
+    : null;
+
+  const { data: memberPod } = useQuery<Pod>({
+    queryKey: ["/api/pods", acceptedPodId],
+    enabled: !isLeader && !!acceptedPodId,
+  });
+
+  const { data: memberPodMembers } = useQuery<MemberWithUser[]>({
+    queryKey: ["/api/pods", acceptedPodId, "members"],
+    enabled: !isLeader && !!acceptedPodId,
+  });
+
+  const activePodId = isLeader ? leaderPod?.id : acceptedPodId;
+  const podForNewChat = isLeader ? leaderPod : memberPod;
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
@@ -122,8 +163,11 @@ export default function MessagesPage() {
   });
 
   const startDirectChat = useMutation({
-    mutationFn: async (memberId: string) => {
-      const res = await apiRequest("POST", "/api/conversations/direct", { podId: leaderPod!.id, memberId });
+    mutationFn: async (recipientId: string) => {
+      const res = await apiRequest("POST", "/api/conversations/direct", {
+        podId: activePodId,
+        recipientId,
+      });
       return res.json();
     },
     onSuccess: (conv) => {
@@ -151,6 +195,50 @@ export default function MessagesPage() {
     queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
   };
 
+  // Build list of people user can start a new direct chat with
+  const existingDirectPartnerIds = conversations
+    .filter(c => c.type === "direct")
+    .flatMap(c => [c.memberId, c.participant2Id])
+    .filter(Boolean) as string[];
+
+  const newChatOptions: { id: string; name: string; avatar: string | null; isLeader: boolean }[] = [];
+
+  if (isLeader && leaderPodMembers) {
+    // Leader sees their members
+    leaderPodMembers.forEach(m => {
+      const memberUser = m.user;
+      if (!memberUser) return;
+      const alreadyHasChat = existingDirectPartnerIds.includes(memberUser.id);
+      if (!alreadyHasChat) {
+        newChatOptions.push({ id: memberUser.id, name: getUserName(memberUser), avatar: memberUser.profileImageUrl ?? null, isLeader: false });
+      }
+    });
+  } else if (!isLeader && memberPodMembers && memberPod) {
+    // Member sees pod leader + other members
+    const leaderId = memberPod.leadId;
+    const alreadyHasLeaderChat = existingDirectPartnerIds.includes(leaderId);
+    if (!alreadyHasLeaderChat) {
+      // Fetch leader info from participant2Info of existing convos or load from members
+      const leaderInfo = memberPodMembers.find(m => m.userId === leaderId)?.user ?? null;
+      newChatOptions.push({
+        id: leaderId,
+        name: leaderInfo ? getUserName(leaderInfo) : "Pod Leader",
+        avatar: leaderInfo?.profileImageUrl ?? null,
+        isLeader: true,
+      });
+    }
+    // Other members
+    memberPodMembers.forEach(m => {
+      if (m.userId === currentUser?.id) return; // skip self
+      const memberUser = m.user;
+      if (!memberUser) return;
+      const alreadyHasChat = existingDirectPartnerIds.includes(memberUser.id);
+      if (!alreadyHasChat) {
+        newChatOptions.push({ id: memberUser.id, name: getUserName(memberUser), avatar: memberUser.profileImageUrl ?? null, isLeader: false });
+      }
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Navigation userType={currentUser?.userType} />
@@ -165,10 +253,12 @@ export default function MessagesPage() {
             </h1>
           </div>
 
-          {/* New conversation buttons (leader only) */}
-          {isLeader && leaderPod && (
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-1">Start New Chat</p>
+          {/* New conversation buttons */}
+          <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-1">Start New Chat</p>
+
+            {/* Group chat button (leaders only) */}
+            {isLeader && leaderPod && (
               <Button
                 variant="outline"
                 size="sm"
@@ -179,33 +269,36 @@ export default function MessagesPage() {
                 <Users className="w-4 h-4" />
                 Message All Members
               </Button>
-              {podMembersData && podMembersData.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 px-1">Direct messages:</p>
-                  {podMembersData.map((member: any) => {
-                    const memberUser = member.user || member;
-                    const name = `${memberUser.firstName ?? ""} ${memberUser.lastName ?? ""}`.trim() || memberUser.email;
-                    const alreadyExists = conversations.some(c => c.type === "direct" && c.memberId === memberUser.id);
-                    if (alreadyExists) return null;
-                    return (
-                      <Button
-                        key={memberUser.id}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start gap-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => startDirectChat.mutate(memberUser.id)}
-                        disabled={startDirectChat.isPending}
-                      >
-                        <Plus className="w-3 h-3" />
-                        <User className="w-3 h-3" />
-                        <span className="truncate text-xs">{name}</span>
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+            )}
+
+            {/* Direct chat options */}
+            {newChatOptions.length > 0 ? (
+              <div className="space-y-1">
+                {newChatOptions.map(person => (
+                  <Button
+                    key={person.id}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => startDirectChat.mutate(person.id)}
+                    disabled={startDirectChat.isPending}
+                  >
+                    <Plus className="w-3 h-3 flex-shrink-0" />
+                    <Avatar className="w-5 h-5 flex-shrink-0">
+                      {person.avatar && <AvatarImage src={person.avatar} />}
+                      <AvatarFallback className="text-[8px] bg-purple-100 text-purple-700">{getInitials(person.name)}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-xs">{person.name}</span>
+                    {person.isLeader && <Crown className="w-3 h-3 text-amber-500 flex-shrink-0 ml-auto" />}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              !isLeader && activePodId === null && (
+                <p className="text-xs text-gray-400 px-1">You need to be an active pod member to send messages.</p>
+              )
+            )}
+          </div>
 
           {/* Conversation list */}
           <div className="flex-1 overflow-y-auto">
@@ -217,53 +310,56 @@ export default function MessagesPage() {
               <div className="flex flex-col items-center justify-center h-48 text-center p-6">
                 <MessageSquare className="w-10 h-10 text-gray-300 dark:text-gray-600 mb-3" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {isLeader ? "Start a conversation with your pod members above." : "No messages yet. Your pod leader will reach out here."}
+                  No messages yet. Start a new conversation above.
                 </p>
               </div>
             ) : (
-              conversations.map(conv => (
-                <button
-                  key={conv.id}
-                  onClick={() => handleSelectConv(conv.id)}
-                  className={`w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 transition-colors ${selectedConvId === conv.id ? "bg-purple-50 dark:bg-purple-900/20 border-l-4 border-l-purple-500" : ""}`}
-                >
-                  <div className="relative flex-shrink-0">
-                    {conv.type === "group" ? (
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-white" />
-                      </div>
-                    ) : (
-                      <Avatar className="w-10 h-10">
-                        {conv.memberInfo?.profileImageUrl && <AvatarImage src={conv.memberInfo.profileImageUrl} />}
-                        <AvatarFallback className="bg-purple-100 text-purple-700 text-sm">
-                          {conv.memberInfo ? getInitials(`${conv.memberInfo.firstName ?? ""} ${conv.memberInfo.lastName ?? ""}`.trim() || conv.memberInfo.email) : "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    {conv.unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                        {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className={`text-sm font-medium truncate ${conv.unreadCount > 0 ? "text-gray-900 dark:text-white font-semibold" : "text-gray-700 dark:text-gray-300"}`}>
-                        <ConversationName conv={conv} currentUserId={currentUser?.id} />
-                      </span>
-                      {conv.lastMessage && (
-                        <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                          {formatTime(conv.lastMessage.createdAt)}
+              conversations.map(conv => {
+                const other = getOtherParticipant(conv, currentUser?.id);
+                return (
+                  <button
+                    key={conv.id}
+                    onClick={() => handleSelectConv(conv.id)}
+                    className={`w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 transition-colors ${selectedConvId === conv.id ? "bg-purple-50 dark:bg-purple-900/20 border-l-4 border-l-purple-500" : ""}`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      {conv.type === "group" ? (
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <Users className="w-5 h-5 text-white" />
+                        </div>
+                      ) : (
+                        <Avatar className="w-10 h-10">
+                          {other?.profileImageUrl && <AvatarImage src={other.profileImageUrl} />}
+                          <AvatarFallback className="bg-purple-100 text-purple-700 text-sm">
+                            {getInitials(getUserName(other))}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      {conv.unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                          {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {conv.type === "group" && <span className="text-purple-400 font-medium">Group · </span>}
-                      {conv.lastMessage ? conv.lastMessage.content : "No messages yet"}
-                    </p>
-                  </div>
-                </button>
-              ))
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className={`text-sm font-medium truncate ${conv.unreadCount > 0 ? "text-gray-900 dark:text-white font-semibold" : "text-gray-700 dark:text-gray-300"}`}>
+                          <ConversationName conv={conv} currentUserId={currentUser?.id} />
+                        </span>
+                        {conv.lastMessage && (
+                          <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                            {formatTime(conv.lastMessage.createdAt)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {conv.type === "group" && <span className="text-purple-400 font-medium">Group · </span>}
+                        {conv.lastMessage ? conv.lastMessage.content : "No messages yet"}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
@@ -286,14 +382,17 @@ export default function MessagesPage() {
                   <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                     <Users className="w-4 h-4 text-white" />
                   </div>
-                ) : (
-                  <Avatar className="w-9 h-9">
-                    {selectedConv.memberInfo?.profileImageUrl && <AvatarImage src={selectedConv.memberInfo.profileImageUrl} />}
-                    <AvatarFallback className="bg-purple-100 text-purple-700 text-sm">
-                      {selectedConv.memberInfo ? getInitials(`${selectedConv.memberInfo.firstName ?? ""} ${selectedConv.memberInfo.lastName ?? ""}`.trim() || selectedConv.memberInfo.email) : "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+                ) : (() => {
+                  const other = getOtherParticipant(selectedConv, currentUser?.id);
+                  return (
+                    <Avatar className="w-9 h-9">
+                      {other?.profileImageUrl && <AvatarImage src={other.profileImageUrl} />}
+                      <AvatarFallback className="bg-purple-100 text-purple-700 text-sm">
+                        {getInitials(getUserName(other))}
+                      </AvatarFallback>
+                    </Avatar>
+                  );
+                })()}
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-white text-sm">
                     <ConversationName conv={selectedConv} currentUserId={currentUser?.id} />
@@ -378,9 +477,7 @@ export default function MessagesPage() {
               </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Your Messages</h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs">
-                {isLeader
-                  ? "Select a conversation or start a new one with your pod members."
-                  : "Select a conversation to view your messages with your pod leader."}
+                Select a conversation or start a new one using the panel on the left.
               </p>
             </div>
           )}

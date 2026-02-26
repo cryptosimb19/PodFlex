@@ -130,7 +130,7 @@ export interface IStorage {
 
   // Messaging operations
   getOrCreateGroupConversation(podId: number): Promise<Conversation>;
-  getOrCreateDirectConversation(podId: number, memberId: string): Promise<Conversation>;
+  getOrCreateDirectConversation(podId: number, participant1Id: string, participant2Id: string): Promise<Conversation>;
   getConversationsForUser(userId: string): Promise<Conversation[]>;
   getConversation(id: number): Promise<Conversation | undefined>;
   getMessagesForConversation(conversationId: number): Promise<Message[]>;
@@ -1246,15 +1246,20 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getOrCreateDirectConversation(podId: number, memberId: string): Promise<Conversation> {
-    const [existing] = await db
+  async getOrCreateDirectConversation(podId: number, participant1Id: string, participant2Id: string): Promise<Conversation> {
+    // Look for existing conversation between these two participants in either order
+    const all = await db
       .select()
       .from(conversations)
-      .where(and(eq(conversations.podId, podId), eq(conversations.type, 'direct'), eq(conversations.memberId, memberId)));
+      .where(and(eq(conversations.podId, podId), eq(conversations.type, 'direct')));
+    const existing = all.find(c =>
+      (c.memberId === participant1Id && c.participant2Id === participant2Id) ||
+      (c.memberId === participant2Id && c.participant2Id === participant1Id)
+    );
     if (existing) return existing;
     const [created] = await db
       .insert(conversations)
-      .values({ podId, type: 'direct', memberId })
+      .values({ podId, type: 'direct', memberId: participant1Id, participant2Id })
       .returning();
     return created;
   }
@@ -1276,12 +1281,20 @@ export class DatabaseStorage implements IStorage {
       .from(conversations)
       .where(inArray(conversations.podId, allPodIds));
 
-    // Leaders see all conversations; members only see group convos + their own direct convos
+    // User sees a conversation if:
+    // - They're the pod leader (sees all convos in their pod)
+    // - It's a group chat in a pod they belong to
+    // - They're participant1 (memberId) in a direct chat
+    // - They're participant2 (participant2Id) in a direct chat
+    // - They're the pod leader and participant2Id is null (legacy: leader is implicit)
     return allConversations.filter(conv => {
       const isLeaderPod = leaderPodIds.includes(conv.podId);
-      if (isLeaderPod) return true; // leader sees all
-      if (conv.type === 'group') return true; // members see group
-      return conv.memberId === userId; // member sees their direct
+      if (conv.type === 'group') {
+        return isLeaderPod || memberPodIds.includes(conv.podId);
+      }
+      // Direct chat access
+      if (isLeaderPod && conv.participant2Id === null) return true; // legacy leader chats
+      return conv.memberId === userId || conv.participant2Id === userId;
     });
   }
 

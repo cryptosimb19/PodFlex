@@ -241,7 +241,8 @@ export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),
   podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade' }).notNull(),
   type: varchar("type").notNull(), // 'direct' | 'group'
-  memberId: varchar("member_id").references(() => users.id, { onDelete: 'cascade' }), // null for group chats
+  memberId: varchar("member_id").references(() => users.id, { onDelete: 'cascade' }), // participant 1 for direct chats
+  participant2Id: varchar("participant_2_id").references(() => users.id, { onDelete: 'cascade' }), // participant 2 for direct chats (explicit, replaces implicit pod leader)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

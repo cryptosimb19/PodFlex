@@ -2985,14 +2985,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enriched = await Promise.all(
         convos.map(async (conv) => {
           const pod = await storage.getPod(conv.podId);
-          let memberInfo = null;
-          if (conv.type === 'direct' && conv.memberId) {
-            memberInfo = await storage.getUser(conv.memberId);
+          // For direct chats, load both participant infos
+          let participant1Info = conv.memberId ? await storage.getUser(conv.memberId) : null;
+          let participant2Info = conv.participant2Id ? await storage.getUser(conv.participant2Id) : null;
+          // Legacy support: if participant2Id is null, the other party is the pod leader
+          if (conv.type === 'direct' && !conv.participant2Id && pod) {
+            participant2Info = await storage.getUser(pod.leadId);
           }
           const msgs = await storage.getMessagesForConversation(conv.id);
           const lastMessage = msgs[msgs.length - 1] || null;
           const unread = msgs.filter(m => m.senderId !== userId && !m.readAt).length;
-          return { ...conv, pod, memberInfo, lastMessage, unreadCount: unread };
+          return { ...conv, pod, participant1Info, participant2Info, lastMessage, unreadCount: unread };
         })
       );
 
@@ -3021,17 +3024,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get or create a direct conversation (leader to member)
+  // Get or create a direct conversation between any two pod participants (leader, member, or member-to-member)
   app.post("/api/conversations/direct", isAuthenticated, async (req: any, res) => {
     try {
-      const { podId, memberId } = req.body;
-      if (!podId || !memberId) return res.status(400).json({ message: "podId and memberId required" });
+      const { podId, recipientId } = req.body;
+      if (!podId || !recipientId) return res.status(400).json({ message: "podId and recipientId required" });
 
       const pod = await storage.getPod(podId);
       if (!pod) return res.status(404).json({ message: "Pod not found" });
-      if (pod.leadId !== req.user.id) return res.status(403).json({ message: "Only pod leaders can start direct conversations" });
 
-      const conv = await storage.getOrCreateDirectConversation(podId, memberId);
+      const currentUserId = req.user.id;
+
+      // Verify the current user is a participant of this pod (leader or active member)
+      const podMemberList = await storage.getPodMembers(podId);
+      const activeMemberIds = podMemberList.filter(m => m.isActive).map(m => m.userId);
+      const isLeader = pod.leadId === currentUserId;
+      const isMember = activeMemberIds.includes(currentUserId);
+      if (!isLeader && !isMember) {
+        return res.status(403).json({ message: "You must be a pod participant to start a conversation" });
+      }
+
+      // Verify the recipient is also a participant of this pod
+      const recipientIsLeader = pod.leadId === recipientId;
+      const recipientIsMember = activeMemberIds.includes(recipientId);
+      if (!recipientIsLeader && !recipientIsMember) {
+        return res.status(403).json({ message: "Recipient must be a pod participant" });
+      }
+
+      // Cannot message yourself
+      if (currentUserId === recipientId) {
+        return res.status(400).json({ message: "Cannot start a conversation with yourself" });
+      }
+
+      const conv = await storage.getOrCreateDirectConversation(podId, currentUserId, recipientId);
       res.json(conv);
     } catch (error) {
       console.error("Error creating direct conversation:", error);
