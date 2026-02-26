@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { findMatchingPods } from "./aiPodMatching";
 import { storage } from "./storage";
 import { db } from "./db";
 import { joinRequests } from "@shared/schema";
@@ -2970,6 +2971,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
+  // ============================================================
+  // AI POD MATCHING ROUTE
+  // ============================================================
+
+  app.post("/api/ai/match-pods", isAuthenticated, async (req: any, res) => {
+    try {
+      const { region, city, zipCode, maxBudget, membershipType, amenities, notes } = req.body;
+
+      // Get all active pods with available spots
+      const allPods = await storage.getPods();
+      const availablePods = allPods.filter(p => p.isActive && p.availableSpots > 0 && !p.deletedAt);
+
+      const result = await findMatchingPods(
+        { region, city, zipCode, maxBudget, membershipType, amenities, notes },
+        availablePods
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error in AI pod matching:", error);
+      res.status(500).json({ message: "Failed to get pod recommendations" });
+    }
+  });
 
   // ============================================================
   // MESSAGING ROUTES

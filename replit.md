@@ -27,6 +27,7 @@ Preferred communication style: Simple, everyday language.
     - **Member Leave Requests**: Structured workflow for members to request leaving a pod, with leader approval, billing cycle constraints, pending payment validation, and configurable exit timelines.
     - **Auto-Cancel Pending Requests**: When a join request is accepted, other pending requests from that user are automatically cancelled.
     - **Internal Messaging**: Pod leaders can send direct messages to individual members or broadcast group messages to all pod members. Members can view and reply to conversations. Unread message count badge shown in navigation.
+    - **Smart Pod Matching**: AI-powered feature on the seeker dashboard. Users set preferences (region, city, ZIP, budget, membership type, desired amenities, custom notes) and get top-5 pod recommendations with a match score (0-100) and AI-generated explanation. Uses OpenAI via Replit AI Integrations. Component: `client/src/components/SmartPodMatcher.tsx`. API: `POST /api/ai/match-pods`.
 - **Data Flow**: Structured for user onboarding, pod discovery, join request processing, and pod management.
 - **Database Schema**: Includes tables for Users, Pods, Join Requests, Pod Members, Leave Requests, Conversations, and Messages.
 
