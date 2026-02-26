@@ -2971,6 +2971,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // ============================================================
+  // MESSAGING ROUTES
+  // ============================================================
+
+  // Get all conversations for the current user
+  app.get("/api/conversations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const convos = await storage.getConversationsForUser(userId);
+
+      // Enrich each conversation with pod info, participant info, last message, and unread count
+      const enriched = await Promise.all(
+        convos.map(async (conv) => {
+          const pod = await storage.getPod(conv.podId);
+          let memberInfo = null;
+          if (conv.type === 'direct' && conv.memberId) {
+            memberInfo = await storage.getUser(conv.memberId);
+          }
+          const msgs = await storage.getMessagesForConversation(conv.id);
+          const lastMessage = msgs[msgs.length - 1] || null;
+          const unread = msgs.filter(m => m.senderId !== userId && !m.readAt).length;
+          return { ...conv, pod, memberInfo, lastMessage, unreadCount: unread };
+        })
+      );
+
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  // Get or create a group conversation for a pod (leader only)
+  app.post("/api/conversations/group", isAuthenticated, async (req: any, res) => {
+    try {
+      const { podId } = req.body;
+      if (!podId) return res.status(400).json({ message: "podId required" });
+
+      const pod = await storage.getPod(podId);
+      if (!pod) return res.status(404).json({ message: "Pod not found" });
+      if (pod.leadId !== req.user.id) return res.status(403).json({ message: "Only pod leaders can start group conversations" });
+
+      const conv = await storage.getOrCreateGroupConversation(podId);
+      res.json(conv);
+    } catch (error) {
+      console.error("Error creating group conversation:", error);
+      res.status(500).json({ message: "Failed to create conversation" });
+    }
+  });
+
+  // Get or create a direct conversation (leader to member)
+  app.post("/api/conversations/direct", isAuthenticated, async (req: any, res) => {
+    try {
+      const { podId, memberId } = req.body;
+      if (!podId || !memberId) return res.status(400).json({ message: "podId and memberId required" });
+
+      const pod = await storage.getPod(podId);
+      if (!pod) return res.status(404).json({ message: "Pod not found" });
+      if (pod.leadId !== req.user.id) return res.status(403).json({ message: "Only pod leaders can start direct conversations" });
+
+      const conv = await storage.getOrCreateDirectConversation(podId, memberId);
+      res.json(conv);
+    } catch (error) {
+      console.error("Error creating direct conversation:", error);
+      res.status(500).json({ message: "Failed to create conversation" });
+    }
+  });
+
+  // Get messages for a conversation
+  app.get("/api/conversations/:id/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const convId = parseInt(req.params.id);
+      const conv = await storage.getConversation(convId);
+      if (!conv) return res.status(404).json({ message: "Conversation not found" });
+
+      // Check access
+      const userId = req.user.id;
+      const userConvos = await storage.getConversationsForUser(userId);
+      const hasAccess = userConvos.some(c => c.id === convId);
+      if (!hasAccess) return res.status(403).json({ message: "Access denied" });
+
+      const msgs = await storage.getMessagesForConversation(convId);
+
+      // Enrich messages with sender info
+      const enriched = await Promise.all(
+        msgs.map(async (msg) => {
+          const sender = await storage.getUser(msg.senderId);
+          return {
+            ...msg,
+            senderName: sender ? `${sender.firstName} ${sender.lastName}`.trim() : "Unknown",
+            senderAvatar: sender?.profileImageUrl || null,
+          };
+        })
+      );
+
+      // Mark as read
+      await storage.markConversationRead(convId, userId);
+
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Send a message in a conversation
+  app.post("/api/conversations/:id/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const convId = parseInt(req.params.id);
+      const { content } = req.body;
+      if (!content?.trim()) return res.status(400).json({ message: "Message content required" });
+
+      const conv = await storage.getConversation(convId);
+      if (!conv) return res.status(404).json({ message: "Conversation not found" });
+
+      // Check access
+      const userId = req.user.id;
+      const userConvos = await storage.getConversationsForUser(userId);
+      const hasAccess = userConvos.some(c => c.id === convId);
+      if (!hasAccess) return res.status(403).json({ message: "Access denied" });
+
+      const msg = await storage.createMessage({
+        conversationId: convId,
+        senderId: userId,
+        content: content.trim(),
+      });
+
+      const sender = await storage.getUser(userId);
+      res.json({
+        ...msg,
+        senderName: sender ? `${sender.firstName} ${sender.lastName}`.trim() : "Unknown",
+        senderAvatar: sender?.profileImageUrl || null,
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Get unread message count for current user
+  app.get("/api/conversations/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const count = await storage.getUnreadCountForUser(req.user.id);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      res.status(500).json({ message: "Failed to fetch unread count" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

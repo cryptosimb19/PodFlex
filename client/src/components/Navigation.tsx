@@ -8,7 +8,8 @@ import {
   Menu,
   X,
   Zap,
-  LogIn
+  LogIn,
+  MessageSquare
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -80,6 +81,13 @@ export default function Navigation({ userType }: NavigationProps) {
     window.location.href = '/api/auth/logout';
   };
 
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ['/api/conversations/unread-count'],
+    enabled: isAuthenticated,
+    refetchInterval: 15000,
+  });
+  const unreadCount = unreadData?.count ?? 0;
+
   // Build nav items based on authentication status
   const navItems = [
     // Only show Dashboard for authenticated users
@@ -87,14 +95,23 @@ export default function Navigation({ userType }: NavigationProps) {
       label: 'Dashboard',
       path: userType === 'pod_leader' ? '/pod-leader-dashboard' : '/dashboard',
       icon: <Home className="w-4 h-4" />,
-      testId: 'nav-dashboard'
+      testId: 'nav-dashboard',
+      badge: 0,
     }] : []),
     {
       label: 'Browse Pods',
       path: '/pods',
       icon: <Search className="w-4 h-4" />,
-      testId: 'nav-browse-pods'
-    }
+      testId: 'nav-browse-pods',
+      badge: 0,
+    },
+    ...(isAuthenticated ? [{
+      label: 'Messages',
+      path: '/messages',
+      icon: <MessageSquare className="w-4 h-4" />,
+      testId: 'nav-messages',
+      badge: unreadCount,
+    }] : []),
   ];
 
   const isActive = (path: string) => location === path;
@@ -134,14 +151,21 @@ export default function Navigation({ userType }: NavigationProps) {
                 key={item.path}
                 variant={isActive(item.path) ? "default" : "ghost"}
                 onClick={() => navigate(item.path)}
-                className={`flex items-center space-x-2 ${
+                className={`flex items-center space-x-2 relative ${
                   isActive(item.path) 
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
                     : 'text-gray-700 dark:text-gray-300'
                 }`}
                 data-testid={item.testId}
               >
-                {item.icon}
+                <span className="relative">
+                  {item.icon}
+                  {item.badge > 0 && (
+                    <span className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-bold leading-none">
+                      {item.badge > 9 ? "9+" : item.badge}
+                    </span>
+                  )}
+                </span>
                 <span>{item.label}</span>
               </Button>
             ))}
@@ -202,7 +226,14 @@ export default function Navigation({ userType }: NavigationProps) {
                 }`}
                 data-testid={`${item.testId}-mobile`}
               >
-                {item.icon}
+                <span className="relative">
+                  {item.icon}
+                  {item.badge > 0 && (
+                    <span className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-bold leading-none">
+                      {item.badge > 9 ? "9+" : item.badge}
+                    </span>
+                  )}
+                </span>
                 <span>{item.label}</span>
               </Button>
             ))}

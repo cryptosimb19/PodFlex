@@ -24,6 +24,7 @@ import EditProfile from "@/pages/edit-profile";
 import CheckEmailPage from "@/pages/check-email";
 import VerifyEmailPage from "@/pages/verify-email";
 import PaymentSuccess from "@/pages/payment-success";
+import MessagesPage from "@/pages/messages";
 import { useEffect } from "react";
 
 function LoginRedirect() {
@@ -264,6 +265,12 @@ function Router() {
       <Route path="/payment-success">
         <ProtectedRoute>
           <PaymentSuccess />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/messages">
+        <ProtectedRoute requireOnboarding>
+          <MessagesPage />
         </ProtectedRoute>
       </Route>
       

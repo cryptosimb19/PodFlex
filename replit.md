@@ -26,8 +26,9 @@ Preferred communication style: Simple, everyday language.
     - **Privacy Controls**: Pod leader details are hidden for guests, and fellow pod members' sensitive information (email, phone) is hidden.
     - **Member Leave Requests**: Structured workflow for members to request leaving a pod, with leader approval, billing cycle constraints, pending payment validation, and configurable exit timelines.
     - **Auto-Cancel Pending Requests**: When a join request is accepted, other pending requests from that user are automatically cancelled.
+    - **Internal Messaging**: Pod leaders can send direct messages to individual members or broadcast group messages to all pod members. Members can view and reply to conversations. Unread message count badge shown in navigation.
 - **Data Flow**: Structured for user onboarding, pod discovery, join request processing, and pod management.
-- **Database Schema**: Includes tables for Users, Pods, and Join Requests.
+- **Database Schema**: Includes tables for Users, Pods, Join Requests, Pod Members, Leave Requests, Conversations, and Messages.
 
 ### System Design Choices
 - **Full-stack TypeScript**: Ensures type safety across the application.

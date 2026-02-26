@@ -8,6 +8,8 @@ import {
   leaveRequests,
   platformSettings,
   podPayments,
+  conversations,
+  messages,
   type User,
   type Pod,
   type InsertUser,
@@ -26,6 +28,10 @@ import {
   type InsertPlatformSetting,
   type PodPayment,
   type InsertPodPayment,
+  type Conversation,
+  type InsertConversation,
+  type Message,
+  type InsertMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, inArray, or, sql } from "drizzle-orm";
@@ -121,6 +127,16 @@ export interface IStorage {
   
   // Enhanced leave request operations
   updateLeaveRequestWithExitDate(id: number, status: "approved" | "rejected", exitDate: Date | null, leaderResponse?: string): Promise<LeaveRequest | undefined>;
+
+  // Messaging operations
+  getOrCreateGroupConversation(podId: number): Promise<Conversation>;
+  getOrCreateDirectConversation(podId: number, memberId: string): Promise<Conversation>;
+  getConversationsForUser(userId: string): Promise<Conversation[]>;
+  getConversation(id: number): Promise<Conversation | undefined>;
+  getMessagesForConversation(conversationId: number): Promise<Message[]>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  markConversationRead(conversationId: number, userId: string): Promise<void>;
+  getUnreadCountForUser(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1214,6 +1230,109 @@ export class DatabaseStorage implements IStorage {
       .where(eq(leaveRequests.id, id))
       .returning();
     return request;
+  }
+
+  // Messaging operations
+  async getOrCreateGroupConversation(podId: number): Promise<Conversation> {
+    const [existing] = await db
+      .select()
+      .from(conversations)
+      .where(and(eq(conversations.podId, podId), eq(conversations.type, 'group')));
+    if (existing) return existing;
+    const [created] = await db
+      .insert(conversations)
+      .values({ podId, type: 'group', memberId: null })
+      .returning();
+    return created;
+  }
+
+  async getOrCreateDirectConversation(podId: number, memberId: string): Promise<Conversation> {
+    const [existing] = await db
+      .select()
+      .from(conversations)
+      .where(and(eq(conversations.podId, podId), eq(conversations.type, 'direct'), eq(conversations.memberId, memberId)));
+    if (existing) return existing;
+    const [created] = await db
+      .insert(conversations)
+      .values({ podId, type: 'direct', memberId })
+      .returning();
+    return created;
+  }
+
+  async getConversationsForUser(userId: string): Promise<Conversation[]> {
+    // Get pods where user is a leader
+    const leaderPods = await db.select().from(pods).where(and(eq(pods.leadId, userId), eq(pods.isActive, true)));
+    const leaderPodIds = leaderPods.map(p => p.id);
+
+    // Get pods where user is an active member
+    const memberEntries = await db.select().from(podMembers).where(and(eq(podMembers.userId, userId), eq(podMembers.isActive, true)));
+    const memberPodIds = memberEntries.map(m => m.podId);
+
+    const allPodIds = [...new Set([...leaderPodIds, ...memberPodIds])];
+    if (allPodIds.length === 0) return [];
+
+    const allConversations = await db
+      .select()
+      .from(conversations)
+      .where(inArray(conversations.podId, allPodIds));
+
+    // Leaders see all conversations; members only see group convos + their own direct convos
+    return allConversations.filter(conv => {
+      const isLeaderPod = leaderPodIds.includes(conv.podId);
+      if (isLeaderPod) return true; // leader sees all
+      if (conv.type === 'group') return true; // members see group
+      return conv.memberId === userId; // member sees their direct
+    });
+  }
+
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    const [conv] = await db.select().from(conversations).where(eq(conversations.id, id));
+    return conv;
+  }
+
+  async getMessagesForConversation(conversationId: number): Promise<Message[]> {
+    return db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(messages.createdAt);
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [msg] = await db.insert(messages).values(message).returning();
+    return msg;
+  }
+
+  async markConversationRead(conversationId: number, userId: string): Promise<void> {
+    await db
+      .update(messages)
+      .set({ readAt: new Date() })
+      .where(
+        and(
+          eq(messages.conversationId, conversationId),
+          sql`${messages.senderId} != ${userId}`,
+          sql`${messages.readAt} IS NULL`
+        )
+      );
+  }
+
+  async getUnreadCountForUser(userId: string): Promise<number> {
+    // Get all conversations the user can see
+    const userConvos = await this.getConversationsForUser(userId);
+    if (userConvos.length === 0) return 0;
+    const convoIds = userConvos.map(c => c.id);
+
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(messages)
+      .where(
+        and(
+          inArray(messages.conversationId, convoIds),
+          sql`${messages.senderId} != ${userId}`,
+          sql`${messages.readAt} IS NULL`
+        )
+      );
+    return result[0]?.count ?? 0;
   }
 }
 

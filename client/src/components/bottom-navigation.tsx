@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Search, LayoutDashboard, Users, User } from "lucide-react";
+import { Search, LayoutDashboard, User, MessageSquare } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface BottomNavigationProps {
   currentPage: string;
@@ -9,13 +10,10 @@ interface BottomNavigationProps {
 export function BottomNavigation({ currentPage }: BottomNavigationProps) {
   const [, navigate] = useLocation();
 
-  // Check if user is a pod leader based on localStorage
   const getUserType = () => {
     try {
-      const userData = localStorage.getItem('userData');
-      if (userData) {
-        return 'leader'; // Can be enhanced to detect actual user type
-      }
+      const userType = localStorage.getItem('flexpod_user_type');
+      if (userType === 'pod_leader') return 'leader';
     } catch (error) {
       console.error('Failed to load user type:', error);
     }
@@ -24,15 +22,23 @@ export function BottomNavigation({ currentPage }: BottomNavigationProps) {
 
   const userType = getUserType();
 
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ['/api/conversations/unread-count'],
+    refetchInterval: 15000,
+  });
+  const unreadCount = unreadData?.count ?? 0;
+
   const navItems = [
-    { id: 'pods', label: 'Pods', icon: Search, path: '/pods' },
+    { id: 'pods', label: 'Pods', icon: Search, path: '/pods', badge: 0 },
     { 
       id: 'dashboard', 
       label: 'Dashboard', 
       icon: LayoutDashboard, 
-      path: userType === 'leader' ? '/pod-leader-dashboard' : '/dashboard' 
+      path: userType === 'leader' ? '/pod-leader-dashboard' : '/dashboard',
+      badge: 0,
     },
-    { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: unreadCount },
+    { id: 'profile', label: 'Profile', icon: User, path: '/profile', badge: 0 },
   ];
 
   return (
@@ -49,7 +55,14 @@ export function BottomNavigation({ currentPage }: BottomNavigationProps) {
               onClick={() => navigate(item.path)}
               className="flex flex-col items-center py-2 px-4 touch-target hover:bg-transparent"
             >
-              <Icon className={`w-6 h-6 ${isActive ? 'text-primary' : 'text-neutral-400'}`} />
+              <span className="relative">
+                <Icon className={`w-6 h-6 ${isActive ? 'text-primary' : 'text-neutral-400'}`} />
+                {item.badge > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-bold leading-none">
+                    {item.badge > 9 ? "9+" : item.badge}
+                  </span>
+                )}
+              </span>
               <span className={`text-xs mt-1 ${isActive ? 'text-primary font-medium' : 'text-neutral-400'}`}>
                 {item.label}
               </span>

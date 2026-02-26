@@ -236,6 +236,32 @@ export type InsertEmail2FAVerification = z.infer<typeof insertEmail2FAVerificati
 export type LeaveRequest = typeof leaveRequests.$inferSelect;
 export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
 
+// Messaging tables
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  podId: integer("pod_id").references(() => pods.id, { onDelete: 'cascade' }).notNull(),
+  type: varchar("type").notNull(), // 'direct' | 'group'
+  memberId: varchar("member_id").references(() => users.id, { onDelete: 'cascade' }), // null for group chats
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => conversations.id, { onDelete: 'cascade' }).notNull(),
+  senderId: varchar("sender_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  content: text("content").notNull(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });
+export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
+
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
 // Platform settings for configurable fees
 export const platformSettings = pgTable("platform_settings", {
   id: serial("id").primaryKey(),
