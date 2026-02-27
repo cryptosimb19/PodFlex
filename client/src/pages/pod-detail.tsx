@@ -997,27 +997,22 @@ export default function PodDetail() {
                                   )}
                                 </button>
                               </div>
-                              <div className="relative">
+                              {isGeneratingMessage ? (
+                                <div className="min-h-[100px] rounded-md border border-input bg-muted/40 flex items-center justify-center gap-2 text-sm text-purple-600">
+                                  <svg className="animate-spin w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                                  </svg>
+                                  Writing your message...
+                                </div>
+                              ) : (
                                 <Textarea
                                   value={joinMessage}
                                   onChange={(e) => setJoinMessage(e.target.value)}
-                                  placeholder={isGeneratingMessage ? "" : "Hi! I'd love to join your Bay Club pod. I'm interested in..."}
+                                  placeholder="Hi! I'd love to join your Bay Club pod. I'm interested in..."
                                   rows={4}
-                                  disabled={isGeneratingMessage}
-                                  className={isGeneratingMessage ? "opacity-60" : ""}
                                 />
-                                {isGeneratingMessage && (
-                                  <div className="absolute inset-0 flex items-center justify-center bg-white/60 rounded-md pointer-events-none">
-                                    <div className="flex items-center gap-2 text-sm text-purple-600">
-                                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                                      </svg>
-                                      Writing your message...
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
+                              )}
                               <p className="text-xs text-gray-400">AI-generated — feel free to edit before sending</p>
                             </div>
                             <div className="bg-gray-50 p-3 rounded-lg">
