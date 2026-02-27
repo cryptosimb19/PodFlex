@@ -137,12 +137,15 @@ export default function SmartPodMatcher() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Region</Label>
-                  <Select value={region} onValueChange={setRegion}>
+                  <Select
+                    value={region || "any"}
+                    onValueChange={v => setRegion(v === "any" ? "" : v)}
+                  >
                     <SelectTrigger className="h-9 text-sm">
                       <SelectValue placeholder="Any region" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any region</SelectItem>
+                      <SelectItem value="any">Any region</SelectItem>
                       {BAY_AREA_REGIONS.map(r => (
                         <SelectItem key={r} value={r}>{r}</SelectItem>
                       ))}
@@ -192,12 +195,15 @@ export default function SmartPodMatcher() {
               {/* Membership type */}
               <div>
                 <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Membership Type</Label>
-                <Select value={membershipType} onValueChange={setMembershipType}>
+                <Select
+                  value={membershipType || "any"}
+                  onValueChange={v => setMembershipType(v === "any" ? "" : v)}
+                >
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Any type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any type</SelectItem>
+                    <SelectItem value="any">Any type</SelectItem>
                     {MEMBERSHIP_TYPES.map(t => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
