@@ -239,12 +239,15 @@ export default function SearchScreen() {
                 <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                   Membership Type
                 </label>
-                <Select value={selectedMembershipType} onValueChange={setSelectedMembershipType}>
+                <Select
+                  value={selectedMembershipType || "any"}
+                  onValueChange={v => setSelectedMembershipType(v === "any" ? "" : v)}
+                >
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Any type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any type</SelectItem>
+                    <SelectItem value="any">Any type</SelectItem>
                     {MEMBERSHIP_TYPES.map(t => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
