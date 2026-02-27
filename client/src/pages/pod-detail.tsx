@@ -60,6 +60,7 @@ export default function PodDetail() {
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [joinMessage, setJoinMessage] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
+  const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
   const [userInfo, setUserInfo] = useState({
     name: "",
     email: "",
@@ -78,7 +79,7 @@ export default function PodDetail() {
     },
   });
 
-  // Prepopulate form when dialog opens with authenticated user data
+  // Prepopulate form + AI-generate message when dialog opens
   useEffect(() => {
     if (isJoinDialogOpen && currentUser) {
       const fullName = [currentUser.firstName, currentUser.lastName]
@@ -89,8 +90,23 @@ export default function PodDetail() {
         email: currentUser.email || "",
         phone: currentUser.phone || "",
       });
+      // Auto-generate personalized message
+      if (id) {
+        setJoinMessage("");
+        setIsGeneratingMessage(true);
+        fetch("/api/ai/generate-join-message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ podId: id }),
+        })
+          .then(r => r.json())
+          .then(data => { if (data.message) setJoinMessage(data.message); })
+          .catch(() => {})
+          .finally(() => setIsGeneratingMessage(false));
+      }
     }
-  }, [isJoinDialogOpen, currentUser]);
+  }, [isJoinDialogOpen, currentUser, id]);
 
   // Fetch pod details (includes leader info)
   const { data: pod, isLoading: podLoading } = useQuery<PodWithLeader>({
@@ -939,15 +955,70 @@ export default function PodDetail() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-sm font-medium">
-                                Message to Pod Leader *
-                              </label>
-                              <Textarea
-                                value={joinMessage}
-                                onChange={(e) => setJoinMessage(e.target.value)}
-                                placeholder="Hi! I'd love to join your Bay Club pod. I'm interested in..."
-                                rows={3}
-                              />
+                              <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium">
+                                  Message to Pod Leader *
+                                </label>
+                                <button
+                                  type="button"
+                                  disabled={isGeneratingMessage}
+                                  onClick={() => {
+                                    if (!id) return;
+                                    setIsGeneratingMessage(true);
+                                    setJoinMessage("");
+                                    fetch("/api/ai/generate-join-message", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      credentials: "include",
+                                      body: JSON.stringify({ podId: id }),
+                                    })
+                                      .then(r => r.json())
+                                      .then(data => { if (data.message) setJoinMessage(data.message); })
+                                      .catch(() => {})
+                                      .finally(() => setIsGeneratingMessage(false));
+                                  }}
+                                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {isGeneratingMessage ? (
+                                    <>
+                                      <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                                      </svg>
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                                      </svg>
+                                      Regenerate with AI
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                              <div className="relative">
+                                <Textarea
+                                  value={joinMessage}
+                                  onChange={(e) => setJoinMessage(e.target.value)}
+                                  placeholder={isGeneratingMessage ? "" : "Hi! I'd love to join your Bay Club pod. I'm interested in..."}
+                                  rows={4}
+                                  disabled={isGeneratingMessage}
+                                  className={isGeneratingMessage ? "opacity-60" : ""}
+                                />
+                                {isGeneratingMessage && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-white/60 rounded-md pointer-events-none">
+                                    <div className="flex items-center gap-2 text-sm text-purple-600">
+                                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                                      </svg>
+                                      Writing your message...
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-400">AI-generated — feel free to edit before sending</p>
                             </div>
                             <div className="bg-gray-50 p-3 rounded-lg">
                               <p className="text-sm text-gray-600">

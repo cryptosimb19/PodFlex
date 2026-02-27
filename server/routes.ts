@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { findMatchingPods } from "./aiPodMatching";
+import { findMatchingPods, generateJoinMessage } from "./aiPodMatching";
 import { storage } from "./storage";
 import { db } from "./db";
 import { joinRequests } from "@shared/schema";
@@ -2975,6 +2975,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
   // AI POD MATCHING ROUTE
   // ============================================================
+
+  // Generate a personalized join request message using AI
+  app.post("/api/ai/generate-join-message", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { podId } = req.body;
+      if (!podId) return res.status(400).json({ message: "podId is required" });
+
+      const [user, pod] = await Promise.all([
+        storage.getUser(userId),
+        storage.getPod(parseInt(podId)),
+      ]);
+      if (!pod) return res.status(404).json({ message: "Pod not found" });
+
+      const message = await generateJoinMessage(user ?? {}, pod);
+      res.json({ message });
+    } catch (error) {
+      console.error("Error generating join message:", error);
+      res.status(500).json({ message: "Failed to generate message" });
+    }
+  });
 
   app.post("/api/ai/match-pods", isAuthenticated, async (req: any, res) => {
     try {
