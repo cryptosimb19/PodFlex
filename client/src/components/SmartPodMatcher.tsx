@@ -294,7 +294,7 @@ export default function SmartPodMatcher() {
                             </span>
                             <span className="flex items-center gap-1">
                               <DollarSign className="w-3 h-3" />
-                              ${(pod.costPerPerson / 100).toFixed(0)}/mo
+                              ${pod.costPerPerson.toLocaleString()}/mo
                             </span>
                             <span className="flex items-center gap-1">
                               <Users className="w-3 h-3" />

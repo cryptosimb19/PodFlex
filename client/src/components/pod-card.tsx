@@ -45,7 +45,7 @@ export function PodCard({ pod, onClick }: PodCardProps) {
               </div>
               <div className="flex items-center gap-1">
                 <DollarSign className="w-4 h-4 text-primary/70" />
-                <span className="font-semibold text-foreground">${pod.monthlyFee}/month</span>
+                <span className="font-semibold text-foreground">${pod.costPerPerson}/month</span>
               </div>
             </div>
           </div>

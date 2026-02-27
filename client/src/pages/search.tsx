@@ -79,13 +79,11 @@ export default function SearchScreen() {
     }
 
     if (minPrice !== "") {
-      const minCents = parseFloat(minPrice) * 100;
-      result = result.filter(p => p.costPerPerson >= minCents);
+      result = result.filter(p => p.costPerPerson >= parseFloat(minPrice));
     }
 
     if (maxPrice !== "") {
-      const maxCents = parseFloat(maxPrice) * 100;
-      result = result.filter(p => p.costPerPerson <= maxCents);
+      result = result.filter(p => p.costPerPerson <= parseFloat(maxPrice));
     }
 
     if (selectedMembershipType) {
@@ -112,7 +110,7 @@ export default function SearchScreen() {
     setSelectedMembershipType("");
   };
 
-  const formatPrice = (cents: number) => `$${(cents / 100).toLocaleString()}/mo`;
+  const formatPrice = (amount: number) => `$${amount.toLocaleString()}/mo`;
 
   const userType = (
     localStorage.getItem("flexpod_user_type") === "pod_leader" ? "pod_leader" : "pod_seeker"
