@@ -37,7 +37,6 @@ import {
 import { useLocation } from "wouter";
 import type { Pod, JoinRequest, LeaveRequest } from "@shared/schema";
 import PaymentHistory from "@/components/PaymentHistory";
-import SmartPodMatcher from "@/components/SmartPodMatcher";
 
 // Phone number formatting utility
 const formatPhoneNumber = (value: string): string => {
@@ -449,11 +448,6 @@ export default function Dashboard() {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Smart Pod Matcher */}
-            <div className="mb-4 sm:mb-6">
-              <SmartPodMatcher />
-            </div>
-
             <Tabs defaultValue="requests" className="w-full">
               <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                 <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-4 h-10 sm:h-11 gap-1 sm:gap-0">

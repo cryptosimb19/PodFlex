@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { findMatchingPods, generateJoinMessage } from "./aiPodMatching";
+import { processAgentMessage } from "./podAgent";
 import { storage } from "./storage";
 import { db } from "./db";
 import { joinRequests } from "@shared/schema";
@@ -3005,6 +3006,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in AI pod matching:", error);
       res.status(500).json({ message: "Failed to get pod recommendations" });
+    }
+  });
+
+  // ============================================================
+  // PODAGENT CONVERSATIONAL AI
+  // ============================================================
+
+  app.post("/api/agent/chat", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { messages } = req.body;
+
+      if (!Array.isArray(messages)) {
+        return res.status(400).json({ message: "messages array is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      const userName =
+        [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+        user?.email ||
+        "User";
+
+      const context = {
+        userId,
+        userType: (user as any)?.userType ?? null,
+        userName,
+      };
+
+      const response = await processAgentMessage(messages, context);
+      res.json(response);
+    } catch (error) {
+      console.error("[PodAgent] Error:", error);
+      res.status(500).json({ message: "Agent unavailable. Please try again." });
     }
   });
 

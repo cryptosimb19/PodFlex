@@ -25,6 +25,7 @@ import CheckEmailPage from "@/pages/check-email";
 import VerifyEmailPage from "@/pages/verify-email";
 import PaymentSuccess from "@/pages/payment-success";
 import MessagesPage from "@/pages/messages";
+import PodAgent from "@/components/PodAgent";
 import { useEffect } from "react";
 
 function LoginRedirect() {
@@ -206,7 +207,16 @@ function Router() {
     );
   }
 
+  const userData = user as any;
+  const showAgent =
+    isAuthenticated &&
+    !isLoading &&
+    userData?.hasCompletedOnboarding &&
+    userData?.userType;
+
   return (
+    <>
+    {showAgent && <PodAgent userType={userData?.userType} />}
     <Switch>
       <Route path="/" component={isAuthenticated ? RootRouter : Welcome} />
       <Route path="/signin" component={Welcome} />
@@ -276,6 +286,7 @@ function Router() {
       
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 
