@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { Zap, Users, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -45,11 +45,14 @@ export default function UserTypeSelection() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Save to localStorage for immediate UI updates
       const userTypeValue = selectedType === "join" ? "pod_seeker" : "pod_leader";
       localStorage.setItem('flexpod_user_type', userTypeValue);
-      
+
+      // Refresh auth cache so the updated userType is available on the next page
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+
       if (selectedType === "join") {
         navigate("/onboarding?type=seeker");
       } else if (selectedType === "fill") {

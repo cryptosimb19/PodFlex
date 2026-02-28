@@ -2369,39 +2369,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName,
       } = req.body;
 
-      // Update user with all onboarding information
-      // Use request body values if provided, otherwise fall back to existing session values
-      // For firstName/lastName: use body value if it's a non-empty string, otherwise keep existing
-      const updatedUser = await storage.upsertUser({
-        id: userId,
-        email: req.user.email,
-        firstName:
-          firstName !== undefined && firstName !== ""
-            ? firstName
-            : req.user.firstName,
-        lastName:
-          lastName !== undefined && lastName !== ""
-            ? lastName
-            : req.user.lastName,
-        profileImageUrl:
-          profileImageUrl !== undefined
-            ? profileImageUrl
-            : req.user.profileImageUrl,
-        ...(membershipId !== undefined && { membershipId }),
-        ...(preferredRegion !== undefined && { preferredRegion }),
-        ...(primaryClub !== undefined && { primaryClub }),
-        ...(membershipLevel !== undefined && { membershipLevel }),
-        ...(phone !== undefined && { phone }),
-        ...(street !== undefined && { street }),
-        ...(aptUnit !== undefined && { aptUnit }),
-        ...(city !== undefined && { city }),
-        ...(state !== undefined && { state }),
-        ...(zipCode !== undefined && { zipCode }),
-        ...(country !== undefined && { country }),
-        ...(dateOfBirth !== undefined && { dateOfBirth }),
-        ...(userType !== undefined && { userType }),
-        ...(hasCompletedOnboarding !== undefined && { hasCompletedOnboarding }),
-      });
+      // Build only the fields that were explicitly provided in the request
+      const updateFields: Record<string, any> = {};
+      if (firstName !== undefined && firstName !== "") updateFields.firstName = firstName;
+      if (lastName !== undefined && lastName !== "") updateFields.lastName = lastName;
+      if (profileImageUrl !== undefined) updateFields.profileImageUrl = profileImageUrl;
+      if (membershipId !== undefined) updateFields.membershipId = membershipId;
+      if (preferredRegion !== undefined) updateFields.preferredRegion = preferredRegion;
+      if (primaryClub !== undefined) updateFields.primaryClub = primaryClub;
+      if (membershipLevel !== undefined) updateFields.membershipLevel = membershipLevel;
+      if (phone !== undefined) updateFields.phone = phone;
+      if (street !== undefined) updateFields.street = street;
+      if (aptUnit !== undefined) updateFields.aptUnit = aptUnit;
+      if (city !== undefined) updateFields.city = city;
+      if (state !== undefined) updateFields.state = state;
+      if (zipCode !== undefined) updateFields.zipCode = zipCode;
+      if (country !== undefined) updateFields.country = country;
+      if (dateOfBirth !== undefined) updateFields.dateOfBirth = dateOfBirth;
+      if (userType !== undefined) updateFields.userType = userType;
+      if (hasCompletedOnboarding !== undefined) updateFields.hasCompletedOnboarding = hasCompletedOnboarding;
+
+      const updatedUser = await storage.updateUser(userId, updateFields);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
       // Update the session with the new user data
       req.user = updatedUser;
