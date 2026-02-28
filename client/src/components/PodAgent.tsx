@@ -53,23 +53,28 @@ function PodCard({ pod, onView }: { pod: Pod; onView: (id: number) => void }) {
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{pod.title}</p>
+          <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+            {pod.title}
+          </p>
           <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1">
               <MapPin className="w-3 h-3" />
               {pod.city || pod.clubRegion}
             </span>
             <span className="flex items-center gap-1">
-              <DollarSign className="w-3 h-3" />
-              ${pod.costPerPerson}/mo
+              <DollarSign className="w-3 h-3" />${pod.costPerPerson}/mo
             </span>
             <span className="flex items-center gap-1">
               <Users className="w-3 h-3" />
-              {pod.availableSpots} spot{pod.availableSpots !== 1 ? "s" : ""} left
+              {pod.availableSpots} spot{pod.availableSpots !== 1 ? "s" : ""}{" "}
+              left
             </span>
           </div>
         </div>
-        <Badge variant="outline" className="text-xs shrink-0 border-purple-200 text-purple-600">
+        <Badge
+          variant="outline"
+          className="text-xs shrink-0 border-purple-200 text-purple-600"
+        >
           {pod.membershipType}
         </Badge>
       </div>
@@ -84,7 +89,11 @@ function PodCard({ pod, onView }: { pod: Pod; onView: (id: number) => void }) {
   );
 }
 
-function RequestCard({ request }: { request: JoinRequest & { podTitle?: string } }) {
+function RequestCard({
+  request,
+}: {
+  request: JoinRequest & { podTitle?: string };
+}) {
   const statusColor: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
     accepted: "bg-green-100 text-green-700 border-green-200",
@@ -97,13 +106,19 @@ function RequestCard({ request }: { request: JoinRequest & { podTitle?: string }
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
-            {(request as any).userInfo?.name || (request as any).podTitle || `Request #${request.id}`}
+            {(request as any).userInfo?.name ||
+              (request as any).podTitle ||
+              `Request #${request.id}`}
           </p>
           {(request as any).podTitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{(request as any).podTitle}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {(request as any).podTitle}
+            </p>
           )}
         </div>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${color}`}>
+        <span
+          className={`text-xs font-medium px-2 py-0.5 rounded-full border ${color}`}
+        >
           {request.status}
         </span>
       </div>
@@ -128,15 +143,17 @@ function MessageBubble({
     msg.richContent?.type === "pods"
       ? (msg.richContent.data as Pod[])
       : msg.richContent?.type === "pod"
-      ? [msg.richContent.data as Pod]
-      : [];
+        ? [msg.richContent.data as Pod]
+        : [];
   const requests =
     msg.richContent?.type === "requests"
       ? (msg.richContent.data as (JoinRequest & { podTitle?: string })[])
       : [];
 
   return (
-    <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} gap-1`}>
+    <div
+      className={`flex flex-col ${isUser ? "items-end" : "items-start"} gap-1`}
+    >
       <div
         className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
           isUser
@@ -206,7 +223,10 @@ export default function PodAgent({ userType }: PodAgentProps) {
   const chatMutation = useMutation({
     mutationFn: async (userMessages: ChatMessage[]) => {
       const res = await apiRequest("POST", "/api/agent/chat", {
-        messages: userMessages.map((m) => ({ role: m.role, content: m.content })),
+        messages: userMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
       });
       return res.json() as Promise<AgentResponse>;
     },
@@ -238,7 +258,10 @@ export default function PodAgent({ userType }: PodAgentProps) {
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      setTimeout(
+        () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+        50,
+      );
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [messages, isOpen]);
@@ -273,20 +296,25 @@ export default function PodAgent({ userType }: PodAgentProps) {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setIsOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
       )}
 
       <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
         {isOpen && (
-          <div className="w-[340px] sm:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
-            style={{ maxHeight: "calc(100vh - 100px)", height: "560px" }}>
+          <div
+            className="w-[340px] sm:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
+            style={{ maxHeight: "calc(100vh - 100px)", height: "560px" }}
+          >
             <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 shrink-0">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <Bot className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-white text-sm">PodAgent</p>
-                <p className="text-xs text-white/70">Your FlexPod AI assistant</p>
+                <p className="text-xs text-white/70">Your FlexPod AI Agent</p>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
