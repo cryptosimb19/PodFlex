@@ -96,6 +96,11 @@ export default function MessagesPage() {
 
   const { data: messages = [], isLoading: msgsLoading } = useQuery<EnrichedMessage[]>({
     queryKey: ["/api/conversations", selectedConvId, "messages"],
+    queryFn: async () => {
+      const res = await fetch(`/api/conversations/${selectedConvId}/messages`, { credentials: "include" });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
     enabled: selectedConvId !== null,
     refetchInterval: 3000,
   });
@@ -103,6 +108,11 @@ export default function MessagesPage() {
   // Leader's pod for creating conversations
   const { data: leaderPodData } = useQuery<Pod[]>({
     queryKey: ["/api/pods/leader", currentUser?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/pods/leader/${currentUser?.id}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
     enabled: isLeader && !!currentUser?.id,
   });
   const leaderPod = leaderPodData?.[0];
@@ -110,12 +120,22 @@ export default function MessagesPage() {
   // For leaders: members of their pod
   const { data: leaderPodMembers } = useQuery<MemberWithUser[]>({
     queryKey: ["/api/pods", leaderPod?.id, "members"],
+    queryFn: async () => {
+      const res = await fetch(`/api/pods/${leaderPod?.id}/members`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
     enabled: isLeader && !!leaderPod?.id,
   });
 
   // For members: find what pod they belong to and who else is in it
   const { data: memberJoinRequests } = useQuery<any[]>({
     queryKey: ["/api/join-requests/user", currentUser?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/join-requests/user/${currentUser?.id}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
     enabled: !isLeader && !!currentUser?.id,
   });
 
@@ -126,11 +146,21 @@ export default function MessagesPage() {
 
   const { data: memberPod } = useQuery<Pod>({
     queryKey: ["/api/pods", acceptedPodId],
+    queryFn: async () => {
+      const res = await fetch(`/api/pods/${acceptedPodId}`, { credentials: "include" });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
     enabled: !isLeader && !!acceptedPodId,
   });
 
   const { data: memberPodMembers } = useQuery<MemberWithUser[]>({
     queryKey: ["/api/pods", acceptedPodId, "members"],
+    queryFn: async () => {
+      const res = await fetch(`/api/pods/${acceptedPodId}/members`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
     enabled: !isLeader && !!acceptedPodId,
   });
 
