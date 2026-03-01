@@ -9,7 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Users, User, MessageSquare, Plus, ChevronLeft, Crown } from "lucide-react";
+import { Send, Users, MessageSquare, ChevronLeft, Crown } from "lucide-react";
 import type { Pod, User as UserType, PodMember } from "@shared/schema";
 
 interface EnrichedConversation {
@@ -184,10 +184,12 @@ export default function MessagesPage() {
       const res = await apiRequest("POST", "/api/conversations/group", { podId: leaderPod!.id });
       return res.json();
     },
-    onSuccess: (conv) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      setSelectedConvId(conv.id);
-      setShowMobileChat(true);
+    onSuccess: async (conv) => {
+      await queryClient.refetchQueries({ queryKey: ["/api/conversations"], type: "active" });
+      setTimeout(() => {
+        setSelectedConvId(conv.id);
+        setShowMobileChat(true);
+      }, 0);
     },
     onError: () => toast({ title: "Failed to start group chat", variant: "destructive" }),
   });
@@ -200,13 +202,16 @@ export default function MessagesPage() {
       });
       return res.json();
     },
-    onSuccess: (conv) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      setSelectedConvId(conv.id);
-      setShowMobileChat(true);
+    onSuccess: async (conv) => {
+      await queryClient.refetchQueries({ queryKey: ["/api/conversations"], type: "active" });
+      setTimeout(() => {
+        setSelectedConvId(conv.id);
+        setShowMobileChat(true);
+      }, 0);
     },
     onError: () => toast({ title: "Failed to start conversation", variant: "destructive" }),
   });
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -225,47 +230,41 @@ export default function MessagesPage() {
     queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
   };
 
-  // Build list of people user can start a new direct chat with
-  const existingDirectPartnerIds = conversations
-    .filter(c => c.type === "direct")
-    .flatMap(c => [c.memberId, c.participant2Id])
-    .filter(Boolean) as string[];
-
-  const newChatOptions: { id: string; name: string; avatar: string | null; isLeader: boolean }[] = [];
+  // Build list of all contacts the user can message directly.
+  // Always shows everyone — clicking opens existing conversation or creates new one.
+  const contactOptions: { id: string; name: string; avatar: string | null; isLeader: boolean }[] = [];
 
   if (isLeader && leaderPodMembers) {
-    // Leader sees their members
     leaderPodMembers.forEach(m => {
       const memberUser = m.user;
       if (!memberUser) return;
-      const alreadyHasChat = existingDirectPartnerIds.includes(memberUser.id);
-      if (!alreadyHasChat) {
-        newChatOptions.push({ id: memberUser.id, name: getUserName(memberUser), avatar: memberUser.profileImageUrl ?? null, isLeader: false });
-      }
+      contactOptions.push({
+        id: memberUser.id,
+        name: getUserName(memberUser),
+        avatar: memberUser.profileImageUrl ?? null,
+        isLeader: false,
+      });
     });
   } else if (!isLeader && memberPodMembers && memberPod) {
-    // Member sees pod leader + other members
+    // Member sees pod leader first, then other members
     const leaderId = memberPod.leadId;
-    const alreadyHasLeaderChat = existingDirectPartnerIds.includes(leaderId);
-    if (!alreadyHasLeaderChat) {
-      // Fetch leader info from participant2Info of existing convos or load from members
-      const leaderInfo = memberPodMembers.find(m => m.userId === leaderId)?.user ?? null;
-      newChatOptions.push({
-        id: leaderId,
-        name: leaderInfo ? getUserName(leaderInfo) : "Pod Leader",
-        avatar: leaderInfo?.profileImageUrl ?? null,
-        isLeader: true,
-      });
-    }
-    // Other members
+    const leaderInfo = memberPodMembers.find(m => m.userId === leaderId)?.user ?? null;
+    contactOptions.push({
+      id: leaderId,
+      name: leaderInfo ? getUserName(leaderInfo) : "Pod Leader",
+      avatar: leaderInfo?.profileImageUrl ?? null,
+      isLeader: true,
+    });
     memberPodMembers.forEach(m => {
-      if (m.userId === currentUser?.id) return; // skip self
+      if (m.userId === currentUser?.id || m.userId === leaderId) return;
       const memberUser = m.user;
       if (!memberUser) return;
-      const alreadyHasChat = existingDirectPartnerIds.includes(memberUser.id);
-      if (!alreadyHasChat) {
-        newChatOptions.push({ id: memberUser.id, name: getUserName(memberUser), avatar: memberUser.profileImageUrl ?? null, isLeader: false });
-      }
+      contactOptions.push({
+        id: memberUser.id,
+        name: getUserName(memberUser),
+        avatar: memberUser.profileImageUrl ?? null,
+        isLeader: false,
+      });
     });
   }
 
@@ -283,50 +282,63 @@ export default function MessagesPage() {
             </h1>
           </div>
 
-          {/* New conversation buttons */}
+          {/* Contacts + group chat */}
           <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-1">Start New Chat</p>
-
             {/* Group chat button (leaders only) */}
             {isLeader && leaderPod && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
-                onClick={() => startGroupChat.mutate()}
-                disabled={startGroupChat.isPending}
-              >
-                <Users className="w-4 h-4" />
-                Message All Members
-              </Button>
+              <>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-1">Group</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start gap-2 text-purple-600 border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-900/30"
+                  onClick={() => startGroupChat.mutate()}
+                  disabled={startGroupChat.isPending}
+                >
+                  <Users className="w-4 h-4" />
+                  {startGroupChat.isPending ? "Starting..." : "Message All Members"}
+                </Button>
+              </>
             )}
 
-            {/* Direct chat options */}
-            {newChatOptions.length > 0 ? (
-              <div className="space-y-1">
-                {newChatOptions.map(person => (
-                  <Button
-                    key={person.id}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start gap-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => startDirectChat.mutate(person.id)}
-                    disabled={startDirectChat.isPending}
-                  >
-                    <Plus className="w-3 h-3 flex-shrink-0" />
-                    <Avatar className="w-5 h-5 flex-shrink-0">
-                      {person.avatar && <AvatarImage src={person.avatar} />}
-                      <AvatarFallback className="text-[8px] bg-purple-100 text-purple-700">{getInitials(person.name)}</AvatarFallback>
-                    </Avatar>
-                    <span className="truncate text-xs">{person.name}</span>
-                    {person.isLeader && <Crown className="w-3 h-3 text-amber-500 flex-shrink-0 ml-auto" />}
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              !isLeader && activePodId === null && (
-                <p className="text-xs text-gray-400 px-1">You need to be an active pod member to send messages.</p>
-              )
+            {/* Contact list */}
+            {contactOptions.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-1 pt-1">
+                  {isLeader ? "Members" : "Contacts"}
+                </p>
+                <div className="space-y-0.5">
+                  {contactOptions.map(person => (
+                    <Button
+                      key={person.id}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 h-9"
+                      onClick={() => startDirectChat.mutate(person.id)}
+                      disabled={startDirectChat.isPending}
+                    >
+                      <Avatar className="w-6 h-6 flex-shrink-0">
+                        {person.avatar && <AvatarImage src={person.avatar} />}
+                        <AvatarFallback className="text-[9px] bg-purple-100 text-purple-700">{getInitials(person.name)}</AvatarFallback>
+                      </Avatar>
+                      <span className="truncate text-xs flex-1 text-left">{person.name}</span>
+                      {person.isLeader && <Crown className="w-3 h-3 text-amber-500 flex-shrink-0" />}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* No pod/members state */}
+            {!isLeader && activePodId === null && !memberJoinRequests?.length && (
+              <p className="text-xs text-gray-400 px-1 py-2">
+                You need to be an active pod member to send messages.
+              </p>
+            )}
+            {isLeader && !leaderPod && (
+              <p className="text-xs text-gray-400 px-1 py-2">
+                Create a pod to start messaging members.
+              </p>
             )}
           </div>
 
@@ -396,7 +408,7 @@ export default function MessagesPage() {
 
         {/* Chat Panel */}
         <div className={`flex-1 flex flex-col bg-white dark:bg-gray-800 ${!showMobileChat ? "hidden md:flex" : "flex"}`}>
-          {selectedConv ? (
+          {selectedConvId !== null ? (
             <>
               {/* Chat header */}
               <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -408,31 +420,44 @@ export default function MessagesPage() {
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </Button>
-                {selectedConv.type === "group" ? (
-                  <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <Users className="w-4 h-4 text-white" />
-                  </div>
-                ) : (() => {
-                  const other = getOtherParticipant(selectedConv, currentUser?.id);
-                  return (
-                    <Avatar className="w-9 h-9">
-                      {other?.profileImageUrl && <AvatarImage src={other.profileImageUrl} />}
-                      <AvatarFallback className="bg-purple-100 text-purple-700 text-sm">
-                        {getInitials(getUserName(other))}
-                      </AvatarFallback>
-                    </Avatar>
-                  );
-                })()}
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm">
-                    <ConversationName conv={selectedConv} currentUserId={currentUser?.id} />
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {selectedConv.pod?.clubName}
-                    {selectedConv.type === "group" && " · Group chat"}
-                  </p>
+                {selectedConv ? (
+                  selectedConv.type === "group" ? (
+                    <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <Users className="w-4 h-4 text-white" />
+                    </div>
+                  ) : (() => {
+                    const other = getOtherParticipant(selectedConv, currentUser?.id);
+                    return (
+                      <Avatar className="w-9 h-9">
+                        {other?.profileImageUrl && <AvatarImage src={other.profileImageUrl} />}
+                        <AvatarFallback className="bg-purple-100 text-purple-700 text-sm">
+                          {getInitials(getUserName(other))}
+                        </AvatarFallback>
+                      </Avatar>
+                    );
+                  })()
+                ) : (
+                  <Skeleton className="w-9 h-9 rounded-full" />
+                )}
+                <div className="flex-1 min-w-0">
+                  {selectedConv ? (
+                    <>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                        <ConversationName conv={selectedConv} currentUserId={currentUser?.id} />
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {selectedConv.pod?.clubName}
+                        {selectedConv.type === "group" && " · Group chat"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Skeleton className="h-4 w-32 mb-1" />
+                      <Skeleton className="h-3 w-20" />
+                    </>
+                  )}
                 </div>
-                {selectedConv.type === "group" && (
+                {selectedConv?.type === "group" && (
                   <Badge variant="secondary" className="ml-auto text-xs">
                     Group
                   </Badge>
