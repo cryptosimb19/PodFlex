@@ -21,7 +21,24 @@ import {
 import { useLocation } from "wouter";
 import type { Pod } from "@shared/schema";
 
-const MEMBERSHIP_TYPES = ["Single-Club", "Multi-Club", "Family"];
+const MEMBERSHIP_TYPES = [
+  "Campus",
+  "Club West Gold",
+  "East Bay Campus",
+  "Executive Club East Bay",
+  "Executive Club LA",
+  "Executive Club North Bay",
+  "Executive Club South Bay",
+  "Executive Club Southern CA",
+  "Santa Clara Campus",
+  "Single Site",
+  "Bay Club",
+  "Campus Bay Area",
+  "Campus Washington",
+  "Executive Club Bay Area",
+  "Premium",
+  "Single-Club",
+];
 
 const BAY_AREA_REGIONS = [
   "San Francisco",
