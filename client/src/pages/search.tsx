@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import Navigation from "@/components/Navigation";
 import {
@@ -17,7 +17,6 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
-  Sparkles,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Pod } from "@shared/schema";
@@ -56,7 +55,7 @@ export default function SearchScreen() {
   const [region, setRegion] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [zipFilter, setZipFilter] = useState("");
-  const [maxBudget, setMaxBudget] = useState<number[]>([600]);
+  const [maxBudget, setMaxBudget] = useState<number[]>([300]);
   const [budgetEnabled, setBudgetEnabled] = useState(false);
   const [selectedMembershipType, setSelectedMembershipType] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -147,7 +146,7 @@ export default function SearchScreen() {
     setRegion("");
     setCityFilter("");
     setZipFilter("");
-    setMaxBudget([600]);
+    setMaxBudget([300]);
     setBudgetEnabled(false);
     setSelectedMembershipType("");
     setSelectedAmenities([]);
@@ -169,17 +168,17 @@ export default function SearchScreen() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation userType={userType} />
 
-      {/* Search bar + filter toggle */}
+      {/* Sticky search bar */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-4xl mx-auto flex gap-2 items-center">
-          <div className="relative flex-1">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="text"
               placeholder="Search pods, clubs, cities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 h-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg text-sm"
+              className="pl-9 pr-9 h-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg text-sm"
             />
             {searchQuery && (
               <button
@@ -190,220 +189,188 @@ export default function SearchScreen() {
               </button>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters((v) => !v)}
-            className={`flex items-center gap-1.5 h-10 px-3 flex-shrink-0 transition-colors ${
-              activeFilterCount > 0
-                ? "border-purple-400 text-purple-600 bg-purple-50 dark:bg-purple-900/30"
-                : "border-gray-200 dark:border-gray-600"
-            }`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            <span className="hidden sm:inline text-sm">Filters</span>
-            {activeFilterCount > 0 && (
-              <span className="bg-purple-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                {activeFilterCount}
-              </span>
-            )}
-            {showFilters ? (
-              <ChevronUp className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5" />
-            )}
-          </Button>
         </div>
       </div>
 
-      {/* SmartPodMatcher-style filter panel */}
-      {showFilters && (
-        <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 px-4 py-5">
-          <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
+      {/* Main content */}
+      <div className="max-w-4xl mx-auto px-4 py-5 space-y-5">
+
+        {/* SmartPodMatcher-style filter card */}
+        <Card className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 shadow-lg">
+          <CardHeader className="pb-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <SlidersHorizontal className="w-4 h-4 text-white" />
                 </div>
-                <span className="font-semibold text-purple-700 dark:text-purple-300 text-sm">
-                  Filter Pods
-                </span>
+                <span>Filter Pods</span>
                 {activeFilterCount > 0 && (
-                  <Badge className="bg-purple-500 text-white text-xs">
+                  <Badge className="bg-purple-500 text-white text-xs ml-1">
                     {activeFilterCount} active
                   </Badge>
                 )}
+              </CardTitle>
+              <div className="flex items-center gap-2 text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
+                  Refine your search
+                </span>
+                {showFilters ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
               </div>
-              {activeFilterCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-xs text-gray-500 hover:text-red-500 h-7"
-                >
-                  <X className="w-3 h-3 mr-1" />
-                  Clear all
-                </Button>
-              )}
-            </div>
+            </button>
+            {!showFilters && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Filter by region, budget, membership type, and amenities.
+              </p>
+            )}
+          </CardHeader>
 
-            {/* Location row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          {showFilters && (
+            <CardContent className="space-y-5 pt-0">
+
+              {/* Location row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">
+                    Region
+                  </Label>
+                  <Select
+                    value={region || "any"}
+                    onValueChange={(v) => setRegion(v === "any" ? "" : v)}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Any region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Any region</SelectItem>
+                      {BAY_AREA_REGIONS.map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">
+                    City
+                  </Label>
+                  <Input
+                    placeholder="e.g. Palo Alto"
+                    value={cityFilter}
+                    onChange={(e) => setCityFilter(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">
+                    ZIP Code
+                  </Label>
+                  <Input
+                    placeholder="e.g. 94301"
+                    value={zipFilter}
+                    onChange={(e) => setZipFilter(e.target.value)}
+                    className="h-9 text-sm"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+
+              {/* Budget */}
               <div>
-                <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">
-                  Region
+                <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block flex items-center gap-1">
+                  <DollarSign className="w-3 h-3" />
+                  Max Monthly Budget:{" "}
+                  <span className="text-purple-600 dark:text-purple-400 font-bold ml-1">
+                    ${maxBudget[0]}/mo
+                  </span>
+                </Label>
+                <Slider
+                  value={maxBudget}
+                  onValueChange={(v) => {
+                    setMaxBudget(v);
+                    setBudgetEnabled(true);
+                  }}
+                  min={50}
+                  max={600}
+                  step={10}
+                  className="py-1"
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>$50</span>
+                  <span>$600</span>
+                </div>
+              </div>
+
+              {/* Membership type */}
+              <div>
+                <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">
+                  Membership Type
                 </Label>
                 <Select
-                  value={region || "any"}
-                  onValueChange={(v) => setRegion(v === "any" ? "" : v)}
+                  value={selectedMembershipType || "any"}
+                  onValueChange={(v) =>
+                    setSelectedMembershipType(v === "any" ? "" : v)
+                  }
                 >
-                  <SelectTrigger className="h-9 text-sm bg-white dark:bg-gray-800">
-                    <SelectValue placeholder="Any region" />
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Any type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any">Any region</SelectItem>
-                    {BAY_AREA_REGIONS.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
+                    <SelectItem value="any">Any type</SelectItem>
+                    {MEMBERSHIP_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Amenities */}
               <div>
-                <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">
-                  City
+                <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                  Desired Amenities{" "}
+                  <span className="font-normal text-gray-400">(optional)</span>
                 </Label>
-                <div className="relative">
-                  <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                  <Input
-                    placeholder="e.g. Palo Alto"
-                    value={cityFilter}
-                    onChange={(e) => setCityFilter(e.target.value)}
-                    className="pl-8 h-9 text-sm bg-white dark:bg-gray-800"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">
-                  ZIP Code
-                </Label>
-                <div className="relative">
-                  <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                  <Input
-                    placeholder="e.g. 94301"
-                    value={zipFilter}
-                    onChange={(e) => setZipFilter(e.target.value)}
-                    className="pl-8 h-9 text-sm bg-white dark:bg-gray-800"
-                    maxLength={10}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Budget slider */}
-            <div className="mb-4">
-              <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1">
-                <DollarSign className="w-3 h-3" />
-                Max Monthly Budget
-                {budgetEnabled ? (
-                  <span className="text-purple-600 dark:text-purple-400 font-bold ml-1">
-                    ${maxBudget[0]}/mo
-                  </span>
-                ) : (
-                  <span className="text-gray-400 font-normal ml-1">(any)</span>
-                )}
-              </Label>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setBudgetEnabled((v) => !v)}
-                  className={`shrink-0 w-9 h-5 rounded-full transition-colors relative ${
-                    budgetEnabled ? "bg-purple-500" : "bg-gray-300 dark:bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                      budgetEnabled ? "translate-x-4" : "translate-x-0.5"
-                    }`}
-                  />
-                </button>
-                <div className="flex-1">
-                  <Slider
-                    value={maxBudget}
-                    onValueChange={(v) => {
-                      setMaxBudget(v);
-                      setBudgetEnabled(true);
-                    }}
-                    min={50}
-                    max={600}
-                    step={10}
-                    className={`py-1 ${!budgetEnabled ? "opacity-40" : ""}`}
-                    disabled={!budgetEnabled}
-                  />
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>$50</span>
-                    <span>$600</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Membership type */}
-            <div className="mb-4">
-              <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">
-                Membership Type
-              </Label>
-              <Select
-                value={selectedMembershipType || "any"}
-                onValueChange={(v) =>
-                  setSelectedMembershipType(v === "any" ? "" : v)
-                }
-              >
-                <SelectTrigger className="h-9 text-sm bg-white dark:bg-gray-800 max-w-xs">
-                  <SelectValue placeholder="Any type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any type</SelectItem>
-                  {MEMBERSHIP_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
+                <div className="flex flex-wrap gap-2">
+                  {AMENITY_OPTIONS.map((amenity) => (
+                    <button
+                      key={amenity}
+                      onClick={() => toggleAmenity(amenity)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                        selectedAmenities.includes(amenity)
+                          ? "bg-purple-500 text-white border-purple-500"
+                          : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-purple-300"
+                      }`}
+                    >
+                      {amenity}
+                    </button>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Amenities */}
-            <div>
-              <Label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
-                Amenities{" "}
-                <span className="font-normal text-gray-400">(optional)</span>
-              </Label>
-              <div className="flex flex-wrap gap-2">
-                {AMENITY_OPTIONS.map((amenity) => (
-                  <button
-                    key={amenity}
-                    onClick={() => toggleAmenity(amenity)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
-                      selectedAmenities.includes(amenity)
-                        ? "bg-purple-500 text-white border-purple-500"
-                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-purple-300"
-                    }`}
-                  >
-                    {amenity}
-                  </button>
-                ))}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Results */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+              {/* Clear filters */}
+              {activeFilterCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-xs text-gray-500 hover:text-red-500 h-7 px-0"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Clear all filters
+                </Button>
+              )}
+            </CardContent>
+          )}
+        </Card>
+
+        {/* Results */}
         {isLoading ? (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto" />
@@ -437,7 +404,7 @@ export default function SearchScreen() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               <span className="font-semibold text-gray-800 dark:text-gray-200">
                 {filteredPods.length}
               </span>{" "}
