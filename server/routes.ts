@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { findMatchingPods, generateJoinMessage } from "./aiPodMatching";
 import { processAgentMessage } from "./podAgent";
+import { addSSEClient, notifyUsers } from "./messagingSSE";
 import { storage } from "./storage";
 import { db } from "./db";
 import { joinRequests } from "@shared/schema";
@@ -3131,6 +3132,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================
 
   // Get all conversations for the current user
+  // SSE endpoint for real-time message delivery
+  app.get("/api/messages/stream", isAuthenticated, (req: any, res) => {
+    const cleanup = addSSEClient(req.user.id, res);
+    req.on("close", cleanup);
+  });
+
   app.get("/api/conversations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -3279,11 +3286,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const sender = await storage.getUser(userId);
-      res.json({
+      const enrichedMsg = {
         ...msg,
         senderName: sender ? `${sender.firstName} ${sender.lastName}`.trim() : "Unknown",
         senderAvatar: sender?.profileImageUrl || null,
-      });
+      };
+
+      // Determine all participants to notify via SSE
+      let participantIds: string[] = [];
+      if (conv.type === "group") {
+        const pod = await storage.getPod(conv.podId);
+        if (pod) {
+          const members = await storage.getPodMembers(conv.podId);
+          participantIds = [pod.leadId, ...members.filter(m => m.isActive).map(m => m.userId)];
+        }
+      } else {
+        if (conv.memberId) participantIds.push(conv.memberId);
+        if (conv.participant2Id) participantIds.push(conv.participant2Id);
+        else {
+          const pod = await storage.getPod(conv.podId);
+          if (pod) participantIds.push(pod.leadId);
+        }
+      }
+      const uniqueParticipants = [...new Set(participantIds)];
+      notifyUsers(uniqueParticipants, { type: "new_message", conversationId: convId });
+
+      res.json(enrichedMsg);
     } catch (error) {
       console.error("Error sending message:", error);
       res.status(500).json({ message: "Failed to send message" });

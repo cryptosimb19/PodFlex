@@ -102,8 +102,26 @@ export default function MessagesPage() {
       return res.json();
     },
     enabled: selectedConvId !== null,
-    refetchInterval: 3000,
+    refetchInterval: 10000,
   });
+
+  // SSE subscription for real-time message delivery
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const es = new EventSource("/api/messages/stream");
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "new_message") {
+          queryClient.invalidateQueries({ queryKey: ["/api/conversations", data.conversationId, "messages"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+        }
+      } catch {
+        // ignore parse errors
+      }
+    };
+    return () => es.close();
+  }, [currentUser?.id]);
 
   // Leader's pod for creating conversations
   const { data: leaderPodData } = useQuery<Pod[]>({
