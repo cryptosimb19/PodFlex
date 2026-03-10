@@ -113,8 +113,8 @@ export default function MessagesPage() {
       try {
         const data = JSON.parse(event.data);
         if (data.type === "new_message") {
-          queryClient.invalidateQueries({ queryKey: ["/api/conversations", data.conversationId, "messages"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+          queryClient.refetchQueries({ queryKey: ["/api/conversations", data.conversationId, "messages"], type: "active" });
+          queryClient.refetchQueries({ queryKey: ["/api/conversations"], type: "active" });
         }
       } catch {
         // ignore parse errors
@@ -187,14 +187,39 @@ export default function MessagesPage() {
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
-      return apiRequest("POST", `/api/conversations/${selectedConvId}/messages`, { content });
+      const res = await apiRequest("POST", `/api/conversations/${selectedConvId}/messages`, { content });
+      return res.json();
     },
-    onSuccess: () => {
+    onMutate: async (content: string) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/conversations", selectedConvId, "messages"] });
+      const previous = queryClient.getQueryData<EnrichedMessage[]>(["/api/conversations", selectedConvId, "messages"]);
+      const optimistic: EnrichedMessage = {
+        id: -Date.now(),
+        conversationId: selectedConvId!,
+        senderId: currentUser?.id ?? "",
+        content,
+        createdAt: new Date().toISOString(),
+        readAt: null,
+        senderName: `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() || "You",
+        senderAvatar: currentUser?.profileImageUrl ?? null,
+      };
+      queryClient.setQueryData<EnrichedMessage[]>(
+        ["/api/conversations", selectedConvId, "messages"],
+        (old = []) => [...old, optimistic]
+      );
+      return { previous };
+    },
+    onError: (_err, _content, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["/api/conversations", selectedConvId, "messages"], context.previous);
+      }
+      toast({ title: "Failed to send message", variant: "destructive" });
+    },
+    onSettled: () => {
       setMessageText("");
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations", selectedConvId, "messages"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      queryClient.refetchQueries({ queryKey: ["/api/conversations", selectedConvId, "messages"], type: "active" });
+      queryClient.refetchQueries({ queryKey: ["/api/conversations"], type: "active" });
     },
-    onError: () => toast({ title: "Failed to send message", variant: "destructive" }),
   });
 
   const startGroupChat = useMutation({
