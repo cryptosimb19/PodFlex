@@ -43,9 +43,11 @@ import {
   Shield,
   ShieldCheck,
   Send,
+  CalendarDays,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -91,6 +93,7 @@ interface LeaveRequestWithDetails extends LeaveRequest {
   userName?: string;
   userEmail?: string;
   podName?: string;
+  podExitTimelineDays?: number;
 }
 
 export default function PodLeaderDashboard() {
@@ -126,6 +129,10 @@ export default function PodLeaderDashboard() {
   const [verifyingRequest, setVerifyingRequest] = useState<JoinRequestWithUser | null>(null);
   const [bayClubEmail, setBayClubEmail] = useState("");
   const [membershipIdInput, setMembershipIdInput] = useState("");
+  // Leave approval configurator state
+  const [approvalConfigLeaveId, setApprovalConfigLeaveId] = useState<number | null>(null);
+  const [approvalExitDays, setApprovalExitDays] = useState<number>(30);
+  const [approvalResponse, setApprovalResponse] = useState<string>("");
 
   // Image upload hook for editing pods
   const { uploadFile, isUploading } = useUpload({
@@ -276,6 +283,7 @@ export default function PodLeaderDashboard() {
           return podRequests.map((req: LeaveRequest) => ({
             ...req,
             podName: pod.clubName,
+            podExitTimelineDays: pod.exitTimelineDays ?? 30,
             userName: req.userInfo?.name || "Unknown User",
             userEmail: req.userInfo?.email || "",
           }));
@@ -352,18 +360,28 @@ export default function PodLeaderDashboard() {
     mutationFn: async ({
       requestId,
       action,
+      exitTimelineDaysOverride,
+      leaderResponse,
     }: {
       requestId: number;
       action: "approve" | "reject";
+      exitTimelineDaysOverride?: number;
+      leaderResponse?: string;
     }) => {
       const endpoint =
         action === "approve"
           ? `/api/leave-requests/${requestId}/approve`
           : `/api/leave-requests/${requestId}/reject`;
+      const body: Record<string, unknown> = {};
+      if (action === "approve") {
+        if (exitTimelineDaysOverride !== undefined) body.exitTimelineDays = exitTimelineDaysOverride;
+        if (leaderResponse) body.response = leaderResponse;
+      }
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify(body),
       });
       if (!response.ok) {
         const error = await response.json();
@@ -371,7 +389,7 @@ export default function PodLeaderDashboard() {
       }
       return response.json();
     },
-    onSuccess: (_, { action }) => {
+    onSuccess: (data, { action }) => {
       toast({
         title:
           action === "approve"
@@ -379,7 +397,7 @@ export default function PodLeaderDashboard() {
             : "Leave request rejected",
         description:
           action === "approve"
-            ? "The member has been removed from the pod."
+            ? data.message || "The member's exit date has been set."
             : "The member will remain in the pod.",
       });
       queryClient.invalidateQueries({
@@ -387,6 +405,9 @@ export default function PodLeaderDashboard() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
       setSelectedLeaveRequest(null);
+      setApprovalConfigLeaveId(null);
+      setApprovalExitDays(30);
+      setApprovalResponse("");
     },
     onError: (error: Error) => {
       toast({
@@ -398,11 +419,17 @@ export default function PodLeaderDashboard() {
     },
   });
 
-  const handleLeaveRequestAction = (
-    requestId: number,
-    action: "approve" | "reject",
-  ) => {
-    updateLeaveRequestMutation.mutate({ requestId, action });
+  const handleLeaveRequestReject = (requestId: number) => {
+    updateLeaveRequestMutation.mutate({ requestId, action: "reject" });
+  };
+
+  const handleLeaveRequestApprove = (requestId: number) => {
+    updateLeaveRequestMutation.mutate({
+      requestId,
+      action: "approve",
+      exitTimelineDaysOverride: approvalExitDays,
+      leaderResponse: approvalResponse || undefined,
+    });
   };
 
   // Mutation to send membership verification email
@@ -1387,40 +1414,101 @@ export default function PodLeaderDashboard() {
                                         </div>
                                       )}
                                       {request.status === "pending" && (
-                                        <div className="flex space-x-2 pt-4">
-                                          <Button
-                                            onClick={() =>
-                                              handleLeaveRequestAction(
-                                                request.id,
-                                                "approve",
-                                              )
-                                            }
-                                            disabled={
-                                              updateLeaveRequestMutation.isPending
-                                            }
-                                            className="flex-1 bg-green-600 hover:bg-green-700"
-                                            data-testid={`button-approve-leave-${request.id}`}
-                                          >
-                                            <UserCheck className="w-4 h-4 mr-2" />
-                                            Approve
-                                          </Button>
-                                          <Button
-                                            onClick={() =>
-                                              handleLeaveRequestAction(
-                                                request.id,
-                                                "reject",
-                                              )
-                                            }
-                                            disabled={
-                                              updateLeaveRequestMutation.isPending
-                                            }
-                                            variant="destructive"
-                                            className="flex-1"
-                                            data-testid={`button-reject-leave-${request.id}`}
-                                          >
-                                            <UserX className="w-4 h-4 mr-2" />
-                                            Reject
-                                          </Button>
+                                        <div className="pt-4 space-y-3">
+                                          {/* Approval configurator */}
+                                          {approvalConfigLeaveId === request.id ? (
+                                            <div className="border rounded-lg p-4 bg-green-50 border-green-200 space-y-4">
+                                              <div className="flex items-center space-x-2 text-green-800">
+                                                <CalendarDays className="w-4 h-4" />
+                                                <span className="font-semibold text-sm">Configure Exit Timeline</span>
+                                              </div>
+                                              <div className="space-y-2">
+                                                <Label className="text-sm font-medium">
+                                                  Days after billing cycle end
+                                                </Label>
+                                                <Input
+                                                  type="number"
+                                                  min={0}
+                                                  max={180}
+                                                  value={approvalExitDays}
+                                                  onChange={(e) => setApprovalExitDays(Math.max(0, Math.min(180, parseInt(e.target.value) || 0)))}
+                                                  className="w-full"
+                                                />
+                                                <p className="text-xs text-green-700">
+                                                  <strong>Estimated exit date:</strong>{" "}
+                                                  {(() => {
+                                                    const now = new Date();
+                                                    const billingEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                                                    const exitDate = new Date(billingEnd);
+                                                    exitDate.setDate(exitDate.getDate() + approvalExitDays);
+                                                    return exitDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+                                                  })()}
+                                                  {request.podExitTimelineDays !== undefined && (
+                                                    <span className="ml-1 text-green-600">(pod default: {request.podExitTimelineDays} days)</span>
+                                                  )}
+                                                </p>
+                                              </div>
+                                              <div className="space-y-2">
+                                                <Label className="text-sm font-medium">
+                                                  Message to member <span className="text-gray-400 font-normal">(optional)</span>
+                                                </Label>
+                                                <Textarea
+                                                  placeholder="Add a note for the member about their departure..."
+                                                  value={approvalResponse}
+                                                  onChange={(e) => setApprovalResponse(e.target.value)}
+                                                  rows={2}
+                                                  className="resize-none text-sm"
+                                                />
+                                              </div>
+                                              <div className="flex space-x-2">
+                                                <Button
+                                                  onClick={() => handleLeaveRequestApprove(request.id)}
+                                                  disabled={updateLeaveRequestMutation.isPending}
+                                                  className="flex-1 bg-green-600 hover:bg-green-700"
+                                                  data-testid={`button-confirm-approve-leave-${request.id}`}
+                                                >
+                                                  <UserCheck className="w-4 h-4 mr-2" />
+                                                  {updateLeaveRequestMutation.isPending ? "Approving..." : "Confirm Approval"}
+                                                </Button>
+                                                <Button
+                                                  variant="outline"
+                                                  onClick={() => {
+                                                    setApprovalConfigLeaveId(null);
+                                                    setApprovalExitDays(30);
+                                                    setApprovalResponse("");
+                                                  }}
+                                                  disabled={updateLeaveRequestMutation.isPending}
+                                                >
+                                                  Cancel
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className="flex space-x-2">
+                                              <Button
+                                                onClick={() => {
+                                                  setApprovalExitDays(request.podExitTimelineDays ?? 30);
+                                                  setApprovalResponse("");
+                                                  setApprovalConfigLeaveId(request.id);
+                                                }}
+                                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                                data-testid={`button-approve-leave-${request.id}`}
+                                              >
+                                                <UserCheck className="w-4 h-4 mr-2" />
+                                                Approve
+                                              </Button>
+                                              <Button
+                                                onClick={() => handleLeaveRequestReject(request.id)}
+                                                disabled={updateLeaveRequestMutation.isPending}
+                                                variant="destructive"
+                                                className="flex-1"
+                                                data-testid={`button-reject-leave-${request.id}`}
+                                              >
+                                                <UserX className="w-4 h-4 mr-2" />
+                                                {updateLeaveRequestMutation.isPending ? "Rejecting..." : "Reject"}
+                                              </Button>
+                                            </div>
+                                          )}
                                         </div>
                                       )}
                                     </div>

@@ -1845,7 +1845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const leaveRequestId = parseInt(req.params.id);
         const userId = req.user.id;
-        const { response } = req.body; // Optional leader response
+        const { response, exitTimelineDays: exitTimelineDaysOverride } = req.body; // Optional leader overrides
 
         // Get the leave request
         const leaveRequest = await storage.getLeaveRequest(leaveRequestId);
@@ -1888,8 +1888,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           59,
         );
 
-        // Add exit timeline days (default 30 if not set)
-        const exitTimelineDays = pod.exitTimelineDays ?? 30;
+        // Add exit timeline days — use leader's per-approval override, else pod default, else 30
+        let exitTimelineDays = pod.exitTimelineDays ?? 30;
+        if (
+          typeof exitTimelineDaysOverride === "number" &&
+          exitTimelineDaysOverride >= 0 &&
+          exitTimelineDaysOverride <= 180
+        ) {
+          exitTimelineDays = exitTimelineDaysOverride;
+        }
         const exitDate = new Date(billingCycleEnd);
         exitDate.setDate(exitDate.getDate() + exitTimelineDays);
 
