@@ -1393,3 +1393,91 @@ export async function sendMembershipVerificationRequest(
     return false;
   }
 }
+
+// Template for outstanding balance notification when leaving a pod
+export async function sendOutstandingBalanceNotification(
+  memberEmail: string,
+  memberName: string,
+  podTitle: string,
+  balanceAmountCents: number,
+  exitDate: Date,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Action Required: Outstanding Balance for ${podTitle} - FlexPod`;
+  const baseUrl = "https://podmembership.com";
+  const balanceDollars = (balanceAmountCents / 100).toFixed(2);
+  const exitDateStr = exitDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #7C3AED, #DB2777); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Outstanding Balance Notice</p>
+      </div>
+
+      <div style="padding: 30px; background: #fdf4ff;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${memberName},</h2>
+
+        <p style="color: #4b5563; margin-bottom: 20px;">
+          Your leave request for <strong>"${podTitle}"</strong> has been approved. Before you can join a new pod,
+          you have an outstanding balance that needs to be settled.
+        </p>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #7C3AED;">
+          <h3 style="color: #7C3AED; margin-top: 0;">Balance Summary</h3>
+          <p style="color: #4b5563; margin: 8px 0;"><strong>Pod:</strong> ${podTitle}</p>
+          <p style="color: #4b5563; margin: 8px 0;"><strong>Outstanding Amount:</strong>
+            <span style="color: #DC2626; font-size: 20px; font-weight: bold;">$${balanceDollars}</span>
+          </p>
+          <p style="color: #4b5563; margin: 8px 0;"><strong>Your exit date:</strong> ${exitDateStr}</p>
+        </div>
+
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+          <h4 style="color: #92400E; margin: 0 0 8px 0;">⚠️ Important</h4>
+          <p style="color: #78350F; margin: 0; font-size: 14px;">
+            You will not be able to join a new pod until this balance is paid. Once settled, you can apply to
+            a new pod and your membership will begin at the end of your current billing cycle (${exitDateStr}).
+          </p>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${baseUrl}/pods"
+             style="background: linear-gradient(135deg, #7C3AED, #DB2777); color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            Pay Balance &amp; Browse Pods
+          </a>
+        </div>
+
+        <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+          If you believe this balance is incorrect, please contact the pod leader or FlexPod support.
+        </p>
+      </div>
+
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>This email was sent by FlexPod regarding your pod membership.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Outstanding Balance Notice - FlexPod
+
+    Hi ${memberName},
+
+    Your leave request for "${podTitle}" has been approved.
+    However, you have an outstanding balance of $${balanceDollars} that must be paid before you can join a new pod.
+
+    Your exit date: ${exitDateStr}
+
+    Once your balance is cleared, you can apply to a new pod and your membership will begin at the end of your current billing cycle.
+
+    Visit FlexPod to pay your balance: ${baseUrl}/pods
+  `;
+
+  return await sendEmail({
+    to: memberEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}

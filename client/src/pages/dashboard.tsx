@@ -21,6 +21,7 @@ import {
   CheckCircle, 
   XCircle, 
   AlertCircle,
+  AlertTriangle,
   DollarSign,
   Phone,
   Mail,
@@ -32,7 +33,8 @@ import {
   ArrowRight,
   Plus,
   LogOut,
-  CalendarDays
+  CalendarDays,
+  CreditCard
 } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Pod, JoinRequest, LeaveRequest } from "@shared/schema";
@@ -272,6 +274,35 @@ export default function Dashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to cancel request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mark outstanding balance as paid mutation
+  const markBalancePaidMutation = useMutation({
+    mutationFn: async (leaveRequestId: number) => {
+      const response = await fetch(`/api/leave-requests/${leaveRequestId}/mark-balance-paid`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to mark balance as paid');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Balance confirmed",
+        description: "Your balance has been marked as paid. You can now apply to join a new pod.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests/user'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update balance status. Please try again.",
         variant: "destructive",
       });
     },
@@ -534,19 +565,63 @@ export default function Dashboard() {
                                     
                                     {/* Leave Request Status */}
                                     {leaveRequest && (
-                                      <div className="mt-3 p-2 rounded-md bg-amber-50 border border-amber-200">
-                                        {leaveRequest.status === 'pending' && (
-                                          <div className="flex items-center space-x-2 text-amber-700">
-                                            <Clock className="w-4 h-4" />
-                                            <span className="text-sm font-medium">Leave request pending approval</span>
+                                      <div className="mt-3 space-y-2">
+                                        <div className="p-2 rounded-md bg-amber-50 border border-amber-200">
+                                          {leaveRequest.status === 'pending' && (
+                                            <div className="flex items-center space-x-2 text-amber-700">
+                                              <Clock className="w-4 h-4" />
+                                              <span className="text-sm font-medium">Leave request pending approval</span>
+                                            </div>
+                                          )}
+                                          {leaveRequest.status === 'approved' && leaveRequest.exitDate && (
+                                            <div className="flex items-center space-x-2 text-green-700">
+                                              <CalendarDays className="w-4 h-4" />
+                                              <span className="text-sm font-medium">
+                                                Leaving on {new Date(leaveRequest.exitDate).toLocaleDateString()}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        {/* Outstanding Balance Notice */}
+                                        {leaveRequest.status === 'approved' &&
+                                          leaveRequest.outstandingBalance > 0 &&
+                                          !leaveRequest.balancePaidAt && (
+                                          <div className="p-3 rounded-md bg-red-50 border border-red-200">
+                                            <div className="flex items-start space-x-2">
+                                              <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                              <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-red-700">Outstanding Balance</p>
+                                                <p className="text-sm text-red-600 mt-0.5">
+                                                  You owe <span className="font-bold">${(leaveRequest.outstandingBalance / 100).toFixed(2)}</span> before you can join a new pod.
+                                                </p>
+                                                <p className="text-xs text-red-500 mt-1">
+                                                  Once paid, your new pod membership will start on {leaveRequest.exitDate ? new Date(leaveRequest.exitDate).toLocaleDateString() : 'your exit date'}.
+                                                </p>
+                                              </div>
+                                            </div>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="mt-2 w-full border-red-300 text-red-700 hover:bg-red-100"
+                                              onClick={() => markBalancePaidMutation.mutate(leaveRequest.id)}
+                                              disabled={markBalancePaidMutation.isPending}
+                                            >
+                                              <CreditCard className="w-3.5 h-3.5 mr-1.5" />
+                                              {markBalancePaidMutation.isPending ? "Confirming..." : "Confirm Balance Paid"}
+                                            </Button>
                                           </div>
                                         )}
-                                        {leaveRequest.status === 'approved' && leaveRequest.exitDate && (
-                                          <div className="flex items-center space-x-2 text-green-700">
-                                            <CalendarDays className="w-4 h-4" />
-                                            <span className="text-sm font-medium">
-                                              Leaving on {new Date(leaveRequest.exitDate).toLocaleDateString()}
-                                            </span>
+                                        {/* Balance cleared notice */}
+                                        {leaveRequest.status === 'approved' &&
+                                          leaveRequest.outstandingBalance > 0 &&
+                                          leaveRequest.balancePaidAt && (
+                                          <div className="p-2 rounded-md bg-green-50 border border-green-200">
+                                            <div className="flex items-center space-x-2 text-green-700">
+                                              <CheckCircle className="w-4 h-4" />
+                                              <span className="text-sm font-medium">
+                                                Balance paid — you can now join a new pod
+                                              </span>
+                                            </div>
                                           </div>
                                         )}
                                       </div>
@@ -692,6 +767,16 @@ export default function Dashboard() {
                                   <p className="text-sm text-orange-800">
                                     <strong>Notification not sent:</strong> The pod leader was not notified about your request. Click the "Resend Email" button above to notify them.
                                   </p>
+                                </div>
+                              )}
+                              {request.scheduledStartDate && request.status === 'pending' && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-3">
+                                  <div className="flex items-center space-x-2 text-blue-700">
+                                    <CalendarDays className="w-4 h-4 flex-shrink-0" />
+                                    <p className="text-sm">
+                                      <strong>Scheduled start:</strong> {new Date(request.scheduledStartDate).toLocaleDateString()} — pending balance clearance from previous pod.
+                                    </p>
+                                  </div>
                                 </div>
                               )}
                               {request.message && (

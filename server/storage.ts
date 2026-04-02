@@ -130,6 +130,9 @@ export interface IStorage {
   
   // Enhanced leave request operations
   updateLeaveRequestWithExitDate(id: number, status: "approved" | "rejected", exitDate: Date | null, leaderResponse?: string): Promise<LeaveRequest | undefined>;
+  updateLeaveRequestOutstandingBalance(id: number, outstandingBalance: number): Promise<LeaveRequest | undefined>;
+  markLeaveRequestBalancePaid(id: number): Promise<LeaveRequest | undefined>;
+  getUserApprovedLeaveRequest(userId: string): Promise<LeaveRequest | undefined>;
 
   // Messaging operations
   getOrCreateGroupConversation(podId: number): Promise<Conversation>;
@@ -1239,6 +1242,39 @@ export class DatabaseStorage implements IStorage {
       .set(updateData)
       .where(eq(leaveRequests.id, id))
       .returning();
+    return request;
+  }
+
+  async updateLeaveRequestOutstandingBalance(id: number, outstandingBalance: number): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .update(leaveRequests)
+      .set({ outstandingBalance, updatedAt: new Date() })
+      .where(eq(leaveRequests.id, id))
+      .returning();
+    return request;
+  }
+
+  async markLeaveRequestBalancePaid(id: number): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .update(leaveRequests)
+      .set({ balancePaidAt: new Date(), updatedAt: new Date() })
+      .where(eq(leaveRequests.id, id))
+      .returning();
+    return request;
+  }
+
+  async getUserApprovedLeaveRequest(userId: string): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(leaveRequests)
+      .where(
+        and(
+          eq(leaveRequests.userId, userId),
+          eq(leaveRequests.status, "approved")
+        )
+      )
+      .orderBy(leaveRequests.createdAt)
+      .limit(1);
     return request;
   }
 

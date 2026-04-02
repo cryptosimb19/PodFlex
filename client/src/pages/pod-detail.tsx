@@ -262,7 +262,9 @@ export default function PodDetail() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to create join request");
+        const err = new Error(error.message || "Failed to create join request");
+        (err as any).code = error.code;
+        throw err;
       }
       return response.json();
     },
@@ -292,10 +294,12 @@ export default function PodDetail() {
       await queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
     },
     onError: (error: Error) => {
+      const isBalanceError = (error as any).code === "OUTSTANDING_BALANCE";
       toast({
-        title: "Cannot Join Pod",
-        description:
-          error.message || "Failed to send join request. Please try again.",
+        title: isBalanceError ? "Outstanding Balance" : "Cannot Join Pod",
+        description: isBalanceError
+          ? `${error.message} Visit your dashboard to mark your balance as paid.`
+          : error.message || "Failed to send join request. Please try again.",
         variant: "destructive",
       });
     },

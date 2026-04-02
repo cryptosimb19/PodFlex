@@ -29,6 +29,7 @@ import {
   sendLeaveRequestNotification,
   sendLeaveRequestApprovedNotification,
   sendLeaveRequestRejectedNotification,
+  sendOutstandingBalanceNotification,
   FROM_EMAIL,
 } from "./emailService";
 import crypto from "crypto";
@@ -1286,6 +1287,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check if user has an approved leave request with unpaid outstanding balance
+      const activeLeaveRequest = await storage.getUserApprovedLeaveRequest(requestData.userId);
+      if (
+        activeLeaveRequest &&
+        activeLeaveRequest.outstandingBalance > 0 &&
+        !activeLeaveRequest.balancePaidAt
+      ) {
+        const balanceDollars = (activeLeaveRequest.outstandingBalance / 100).toFixed(2);
+        return res.status(400).json({
+          message: `You have an outstanding balance of $${balanceDollars} for your current pod. Please pay this balance before joining a new pod.`,
+          code: "OUTSTANDING_BALANCE",
+          outstandingBalance: activeLeaveRequest.outstandingBalance,
+          leaveRequestId: activeLeaveRequest.id,
+        });
+      }
+
       // Check if user already has a pending request for this pod
       const hasPendingRequest = existingRequests.some(
         (r) => r.podId === requestData.podId && r.status === "pending",
@@ -1297,10 +1314,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // If user has an approved leave request (balance cleared), set scheduled start date
+      let scheduledStartDate: Date | undefined;
+      if (activeLeaveRequest && activeLeaveRequest.exitDate) {
+        scheduledStartDate = new Date(activeLeaveRequest.exitDate);
+      }
+
       // Create the join request first
       const joinRequest = await storage.createJoinRequest({
         ...requestData,
         emailStatus: "pending",
+        ...(scheduledStartDate ? { scheduledStartDate } : {}),
       });
 
       // Send email notification to pod leader
@@ -1880,6 +1904,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Note: Member is NOT removed immediately - they will be removed on the exit date
         // The actual removal should be handled by a scheduled job or when the exit date passes
 
+        // Calculate outstanding balance from pending/failed payments for this member in this pod
+        let outstandingBalance = 0;
+        try {
+          const pendingPayments = await storage.getPendingPaymentsForUserInPod(
+            leaveRequest.userId,
+            leaveRequest.podId,
+          );
+          outstandingBalance = pendingPayments.reduce(
+            (sum, p) => sum + (p.status === "pending" || p.status === "failed" ? p.totalAmount : 0),
+            0,
+          );
+          if (outstandingBalance > 0) {
+            await storage.updateLeaveRequestOutstandingBalance(leaveRequestId, outstandingBalance);
+          }
+        } catch (balanceError) {
+          console.error("Error calculating outstanding balance:", balanceError);
+        }
+
         // Send email notification to member with exit date info
         try {
           const member = await storage.getUser(leaveRequest.userId);
@@ -1899,6 +1941,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 : `Your exit date is: ${exitDate.toLocaleDateString()}`,
               FROM_EMAIL,
             );
+
+            // Also send outstanding balance email if balance > 0
+            if (outstandingBalance > 0) {
+              console.log(
+                `Sending outstanding balance notification to: ${member.email} - $${(outstandingBalance / 100).toFixed(2)}`,
+              );
+              await sendOutstandingBalanceNotification(
+                member.email,
+                memberName,
+                pod.title,
+                outstandingBalance,
+                exitDate,
+                FROM_EMAIL,
+              );
+            }
           }
         } catch (emailError) {
           console.error(
@@ -1915,6 +1972,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error approving leave request:", error);
         res.status(500).json({ message: "Failed to approve leave request" });
+      }
+    },
+  );
+
+  // Mark outstanding balance as paid (called by member after payment)
+  app.post(
+    "/api/leave-requests/:id/mark-balance-paid",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const leaveRequestId = parseInt(req.params.id);
+        const userId = req.user.id;
+
+        const leaveRequest = await storage.getLeaveRequest(leaveRequestId);
+        if (!leaveRequest) {
+          return res.status(404).json({ message: "Leave request not found" });
+        }
+
+        // Only the member themselves (or admin) can mark balance as paid
+        if (leaveRequest.userId !== userId) {
+          return res.status(403).json({ message: "You can only update your own leave request" });
+        }
+
+        if (leaveRequest.outstandingBalance === 0) {
+          return res.status(400).json({ message: "No outstanding balance on this leave request" });
+        }
+
+        if (leaveRequest.balancePaidAt) {
+          return res.status(400).json({ message: "Balance has already been marked as paid" });
+        }
+
+        const updated = await storage.markLeaveRequestBalancePaid(leaveRequestId);
+
+        res.json({
+          message: "Balance marked as paid. You can now apply to join a new pod.",
+          leaveRequest: updated,
+        });
+      } catch (error) {
+        console.error("Error marking balance as paid:", error);
+        res.status(500).json({ message: "Failed to mark balance as paid" });
       }
     },
   );

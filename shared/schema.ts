@@ -94,6 +94,7 @@ export const joinRequests = pgTable("join_requests", {
   emailStatus: text("email_status").notNull().default("sent"), // "sent", "failed", "pending"
   membershipVerificationStatus: text("membership_verification_status").notNull().default("not_sent"), // "not_sent", "sent", "confirmed"
   membershipVerificationSentAt: timestamp("membership_verification_sent_at"),
+  scheduledStartDate: timestamp("scheduled_start_date"), // When membership will effectively start (set when transitioning from another pod)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -145,6 +146,8 @@ export const leaveRequests = pgTable("leave_requests", {
   exitDate: timestamp("exit_date"), // Calculated based on billing cycle end + exit timeline
   approvedAt: timestamp("approved_at"), // When the request was approved
   emailStatus: text("email_status").notNull().default("sent"), // "sent", "failed", "pending"
+  outstandingBalance: integer("outstanding_balance").notNull().default(0), // Outstanding balance in cents
+  balancePaidAt: timestamp("balance_paid_at"), // When the outstanding balance was paid
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
