@@ -580,39 +580,19 @@ export default function PodDetail() {
                     )}
                     <div>
                       {currentUser ? (
-                        <>
-                          <p
-                            className="font-semibold"
-                            data-testid="text-leader-name"
-                          >
-                            {pod.leaderName || "Pod Leader"}
-                          </p>
-                          {pod.leaderEmail && (
-                            <p
-                              className="text-sm text-muted-foreground flex items-center gap-1"
-                              data-testid="text-leader-email"
-                            >
-                              <Mail className="w-3 h-3" />
-                              {pod.leaderEmail}
-                            </p>
-                          )}
-                          {pod.leaderPhone && (
-                            <p
-                              className="text-sm text-muted-foreground flex items-center gap-1"
-                              data-testid="text-leader-phone"
-                            >
-                              <Phone className="w-3 h-3" />
-                              {pod.leaderPhone}
-                            </p>
-                          )}
-                        </>
+                        <p
+                          className="font-semibold"
+                          data-testid="text-leader-name"
+                        >
+                          {pod.leaderName || "Pod Leader"}
+                        </p>
                       ) : (
                         <div>
                           <p className="font-semibold text-muted-foreground" data-testid="text-leader-hidden">
                             Sign in to view leader details
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Register or sign in to see the pod leader's contact information
+                            Register or sign in to see pod details
                           </p>
                         </div>
                       )}
