@@ -27,6 +27,7 @@ import {
   send2FAVerificationEmail,
   sendEmailVerification,
   sendLeaveRequestNotification,
+  sendLeaveRequestConfirmation,
   sendLeaveRequestApprovedNotification,
   sendLeaveRequestRejectedNotification,
   sendOutstandingBalanceNotification,
@@ -1754,6 +1755,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           leaveRequest.id,
           emailStatus,
         );
+
+        // Send confirmation email to the member
+        if (memberEmail) {
+          try {
+            await sendLeaveRequestConfirmation(
+              memberEmail,
+              memberName,
+              pod.title,
+              reason || null,
+              FROM_EMAIL,
+            );
+          } catch (confirmErr) {
+            console.error("Failed to send leave request confirmation to member:", confirmErr);
+          }
+        }
 
         res.status(201).json({
           ...leaveRequest,
