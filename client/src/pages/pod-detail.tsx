@@ -156,6 +156,11 @@ export default function PodDetail() {
     (r) => r.podId === parseInt(id || "0") && r.status === "pending",
   );
 
+  // Check if user has an approved leave request for this pod
+  const approvedLeaveRequest = userLeaveRequests?.find(
+    (r) => r.podId === parseInt(id || "0") && r.status === "approved",
+  );
+
   // Create leave request mutation
   const leaveRequestMutation = useMutation({
     mutationFn: async (reason: string) => {
@@ -664,22 +669,72 @@ export default function PodDetail() {
             {isMember ? (
               // Member view - show leave request option and fellow members
               <>
-                <div className="bg-amber-50 p-6 rounded-lg border border-amber-200">
+                <div className={`p-6 rounded-lg border ${
+                  approvedLeaveRequest
+                    ? "bg-blue-50 border-blue-200"
+                    : pendingLeaveRequest
+                    ? "bg-amber-50 border-amber-200"
+                    : "bg-amber-50 border-amber-200"
+                }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        <h3 className="font-semibold text-green-800">
-                          You're a Member
-                        </h3>
-                      </div>
-                      <p className="text-muted-foreground">
-                        You are currently a member of this pod. If you need to
-                        leave, you can submit a leave request.
-                      </p>
+                      {approvedLeaveRequest ? (
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <CalendarDays className="w-5 h-5 text-blue-600" />
+                            <h3 className="font-semibold text-blue-800">
+                              Leave Approved
+                            </h3>
+                          </div>
+                          <p className="text-blue-700">
+                            Your leave request has been approved. You will be removed from this pod on{" "}
+                            <strong>
+                              {approvedLeaveRequest.exitDate
+                                ? new Date(approvedLeaveRequest.exitDate).toLocaleDateString(undefined, {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })
+                                : "your scheduled exit date"}
+                            </strong>.
+                          </p>
+                        </>
+                      ) : pendingLeaveRequest ? (
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="w-5 h-5 text-amber-600" />
+                            <h3 className="font-semibold text-amber-800">
+                              Leave Request Pending
+                            </h3>
+                          </div>
+                          <p className="text-amber-700">
+                            Your request to leave this pod is awaiting approval from the pod leader.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <h3 className="font-semibold text-green-800">
+                              You're a Member
+                            </h3>
+                          </div>
+                          <p className="text-muted-foreground">
+                            You are currently a member of this pod. If you need to
+                            leave, you can submit a leave request.
+                          </p>
+                        </>
+                      )}
                     </div>
                     <div className="ml-6">
-                      {pendingLeaveRequest ? (
+                      {approvedLeaveRequest ? (
+                        <Button variant="outline" disabled className="border-blue-300 text-blue-700">
+                          <CalendarDays className="w-4 h-4 mr-2" />
+                          Leaving{approvedLeaveRequest.exitDate
+                            ? ` ${new Date(approvedLeaveRequest.exitDate).toLocaleDateString()}`
+                            : " Soon"}
+                        </Button>
+                      ) : pendingLeaveRequest ? (
                         <Button
                           variant="outline"
                           disabled
