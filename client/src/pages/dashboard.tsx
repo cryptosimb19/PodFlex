@@ -481,7 +481,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2">
             <Tabs defaultValue="requests" className="w-full">
               <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-4 h-10 sm:h-11 gap-1 sm:gap-0">
+                <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-5 h-10 sm:h-11 gap-1 sm:gap-0">
                   <TabsTrigger value="requests" className="flex-shrink-0 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap" data-testid="tab-join-requests">
                     <Clock className="w-3.5 h-3.5 mr-1.5 sm:hidden" />
                     <span className="hidden sm:inline">Join Requests</span>
@@ -501,6 +501,11 @@ export default function Dashboard() {
                     <DollarSign className="w-3.5 h-3.5 mr-1.5 sm:hidden" />
                     <span className="hidden sm:inline">Payments</span>
                     <span className="sm:hidden">Pay</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="leave-history" className="flex-shrink-0 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap" data-testid="tab-leave-history">
+                    <LogOut className="w-3.5 h-3.5 mr-1.5 sm:hidden" />
+                    <span className="hidden sm:inline">Leave History</span>
+                    <span className="sm:hidden">Leaves</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -912,6 +917,119 @@ export default function Dashboard() {
 
               <TabsContent value="payments" className="mt-4 sm:mt-6">
                 <PaymentHistory />
+              </TabsContent>
+
+              <TabsContent value="leave-history" className="mt-4 sm:mt-6">
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                      <LogOut className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span>Leave Request History</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {leaveRequestsLoading ? (
+                      <div className="text-center py-6 sm:py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-600 mx-auto"></div>
+                        <p className="text-sm sm:text-base text-gray-600 mt-2">Loading leave requests...</p>
+                      </div>
+                    ) : !leaveRequests || leaveRequests.length === 0 ? (
+                      <div className="text-center py-6 sm:py-8">
+                        <LogOut className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No Leave Requests</h3>
+                        <p className="text-sm sm:text-base text-gray-600">You haven't submitted any leave requests yet.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 sm:space-y-4">
+                        {leaveRequests.map((lr) => {
+                          const statusStyles: Record<string, string> = {
+                            pending: "bg-yellow-100 text-yellow-800",
+                            approved: "bg-green-100 text-green-800",
+                            rejected: "bg-red-100 text-red-800",
+                          };
+                          const statusIcons: Record<string, JSX.Element> = {
+                            pending: <Clock className="w-3.5 h-3.5" />,
+                            approved: <CheckCircle className="w-3.5 h-3.5" />,
+                            rejected: <XCircle className="w-3.5 h-3.5" />,
+                          };
+                          return (
+                            <div key={lr.id} className="border rounded-lg p-3 sm:p-4">
+                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-base sm:text-lg truncate">
+                                    {lr.pod?.title || lr.pod?.clubName || "Unknown Pod"}
+                                  </h3>
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    <Badge className={statusStyles[lr.status] ?? "bg-gray-100 text-gray-800"}>
+                                      <div className="flex items-center space-x-1">
+                                        {statusIcons[lr.status]}
+                                        <span className="capitalize">{lr.status}</span>
+                                      </div>
+                                    </Badge>
+                                    <span className="text-xs sm:text-sm text-gray-500">
+                                      Submitted {formatDate(lr.createdAt)}
+                                    </span>
+                                  </div>
+                                </div>
+                                {lr.pod && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => navigate(`/pods/${lr.pod!.id}`)}
+                                    className="w-full sm:w-auto flex-shrink-0 mt-1 sm:mt-0"
+                                  >
+                                    View Pod
+                                  </Button>
+                                )}
+                              </div>
+
+                              {lr.reason && (
+                                <div className="bg-gray-50 rounded-md p-3 mt-3">
+                                  <p className="text-sm text-gray-700">
+                                    <strong>Reason:</strong> {lr.reason}
+                                  </p>
+                                </div>
+                              )}
+
+                              {lr.status === "approved" && lr.exitDate && (
+                                <div className="bg-green-50 border border-green-200 rounded-md p-3 mt-3">
+                                  <div className="flex items-center space-x-2 text-green-700">
+                                    <CalendarDays className="w-4 h-4 flex-shrink-0" />
+                                    <p className="text-sm">
+                                      <strong>Exit date:</strong> {new Date(lr.exitDate).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {lr.status === "approved" && lr.outstandingBalance > 0 && (
+                                <div className={`rounded-md p-3 mt-3 border ${lr.balancePaidAt ? "bg-green-50 border-green-200 text-green-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
+                                  <div className="flex items-center space-x-2">
+                                    <DollarSign className="w-4 h-4 flex-shrink-0" />
+                                    <p className="text-sm">
+                                      <strong>Outstanding balance:</strong> ${(lr.outstandingBalance / 100).toFixed(2)}
+                                      {lr.balancePaidAt
+                                        ? ` — Paid on ${new Date(lr.balancePaidAt).toLocaleDateString()}`
+                                        : " — Unpaid"}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {lr.leaderResponse && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-3">
+                                  <p className="text-sm text-blue-800">
+                                    <strong>Leader response:</strong> {lr.leaderResponse}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
