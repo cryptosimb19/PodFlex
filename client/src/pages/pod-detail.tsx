@@ -897,18 +897,19 @@ export default function PodDetail() {
                         <Clock className="w-4 h-4 mr-2" />
                         Request Pending
                       </Button>
-                    ) : pod.availableSpots > 0 ? (
+                    ) : (
                       <Dialog
                         open={isJoinDialogOpen}
-                        onOpenChange={setIsJoinDialogOpen}
+                        onOpenChange={pod.availableSpots > 0 ? setIsJoinDialogOpen : undefined}
                       >
                         <DialogTrigger asChild>
                           <Button
                             className="bg-primary hover:bg-primary/90"
+                            disabled={pod.availableSpots <= 0}
                             data-testid="button-request-to-join"
                           >
                             <Send className="w-4 h-4 mr-2" />
-                            Request to Join
+                            {pod.availableSpots <= 0 ? "Pod Full" : "Request to Join"}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
@@ -1054,11 +1055,6 @@ export default function PodDetail() {
                           </div>
                         </DialogContent>
                       </Dialog>
-                    ) : (
-                      <Button disabled>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Pod Full
-                      </Button>
                     )}
                     {/* Message Leader button — visible to any authenticated non-leader non-member */}
                     {currentUser && !isUserPodLeader && !userIsMember && (
