@@ -172,8 +172,9 @@ export default function EditProfile() {
       }
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["/api/auth/user"], updatedUser);
+      queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Success",
         description: "Your profile has been updated successfully.",
