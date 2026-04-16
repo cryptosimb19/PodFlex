@@ -32,6 +32,7 @@ import {
   Copy,
   MessageSquare,
   CreditCard,
+  CalendarDays,
 } from "lucide-react";
 import PaymentCard from "@/components/PaymentCard";
 import PodReviews from "@/components/PodReviews";
@@ -1112,7 +1113,7 @@ export default function PodDetail() {
                       </Dialog>
                     )}
                     {/* Message Leader button — visible to any authenticated non-leader non-member */}
-                    {currentUser && !isUserPodLeader && !userIsMember && (
+                    {currentUser && !isUserPodLeader && !isMember && (
                       <Button
                         variant="outline"
                         size="sm"
