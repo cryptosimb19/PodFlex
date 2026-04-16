@@ -317,6 +317,33 @@ export default function PodDetail() {
     joinMutation.mutate({ message: joinMessage, userInfo });
   };
 
+  // Inquiry mutation — lets any authenticated non-member message the pod leader
+  const inquiryMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/conversations/inquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ podId: parseInt(id || "0") }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to start conversation");
+      }
+      return response.json();
+    },
+    onSuccess: (conv) => {
+      navigate(`/messages?convId=${conv.id}`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Could not open chat",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const formatPrice = (amount: number) => {
     return `$${amount}`;
   };
@@ -833,7 +860,7 @@ export default function PodDetail() {
                       </>
                     )}
                   </div>
-                  <div className="ml-6">
+                  <div className="ml-6 flex flex-col items-end gap-2">
                     {!currentUser ? (
                       <Button
                         className="bg-primary hover:bg-primary/90"
@@ -1031,6 +1058,19 @@ export default function PodDetail() {
                       <Button disabled>
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Pod Full
+                      </Button>
+                    )}
+                    {/* Message Leader button — visible to any authenticated non-leader non-member */}
+                    {currentUser && !isUserPodLeader && !userIsMember && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => inquiryMutation.mutate()}
+                        disabled={inquiryMutation.isPending}
+                        data-testid="button-message-leader"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        {inquiryMutation.isPending ? "Opening..." : "Message Leader"}
                       </Button>
                     )}
                   </div>

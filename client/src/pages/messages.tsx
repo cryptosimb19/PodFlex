@@ -82,9 +82,16 @@ export default function MessagesPage() {
   const { user } = useAuth();
   const currentUser = user as any;
   const { toast } = useToast();
-  const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
+  const [selectedConvId, setSelectedConvId] = useState<number | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const convId = params.get("convId");
+    return convId ? parseInt(convId) : null;
+  });
   const [messageText, setMessageText] = useState("");
-  const [showMobileChat, setShowMobileChat] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return !!params.get("convId");
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isLeader = currentUser?.userType === "pod_leader";

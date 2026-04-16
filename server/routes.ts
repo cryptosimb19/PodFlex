@@ -3330,6 +3330,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Start an inquiry conversation with a pod leader (open to any authenticated user)
+  app.post("/api/conversations/inquiry", isAuthenticated, async (req: any, res) => {
+    try {
+      const { podId } = req.body;
+      if (!podId) return res.status(400).json({ message: "podId is required" });
+
+      const pod = await storage.getPod(podId);
+      if (!pod) return res.status(404).json({ message: "Pod not found" });
+
+      const currentUserId = req.user.id;
+
+      // Pod leader cannot inquiry their own pod
+      if (pod.leadId === currentUserId) {
+        return res.status(400).json({ message: "You cannot message yourself as the pod leader" });
+      }
+
+      const conv = await storage.getOrCreateDirectConversation(podId, currentUserId, pod.leadId);
+      res.json(conv);
+    } catch (error) {
+      console.error("Error creating inquiry conversation:", error);
+      res.status(500).json({ message: "Failed to start conversation" });
+    }
+  });
+
   // Get messages for a conversation
   app.get("/api/conversations/:id/messages", isAuthenticated, async (req: any, res) => {
     try {

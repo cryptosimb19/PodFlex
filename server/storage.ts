@@ -1320,12 +1320,32 @@ export class DatabaseStorage implements IStorage {
     const memberPodIds = memberEntries.map(m => m.podId);
 
     const allPodIds = [...new Set([...leaderPodIds, ...memberPodIds])];
-    if (allPodIds.length === 0) return [];
 
-    const allConversations = await db
+    // Fetch pod-participant conversations (leader/member access)
+    const podConversations = allPodIds.length > 0
+      ? await db.select().from(conversations).where(inArray(conversations.podId, allPodIds))
+      : [];
+
+    // Also fetch direct conversations where user is an explicit participant (inquiry convos from non-members)
+    const directParticipantConvos = await db
       .select()
       .from(conversations)
-      .where(inArray(conversations.podId, allPodIds));
+      .where(
+        or(
+          eq(conversations.memberId, userId),
+          eq(conversations.participant2Id, userId),
+        ),
+      );
+
+    // Merge and deduplicate by conversation ID
+    const seen = new Set<number>();
+    const merged: Conversation[] = [];
+    for (const conv of [...podConversations, ...directParticipantConvos]) {
+      if (!seen.has(conv.id)) {
+        seen.add(conv.id);
+        merged.push(conv);
+      }
+    }
 
     // User sees a conversation if:
     // - They're the pod leader (sees all convos in their pod)
@@ -1333,7 +1353,7 @@ export class DatabaseStorage implements IStorage {
     // - They're participant1 (memberId) in a direct chat
     // - They're participant2 (participant2Id) in a direct chat
     // - They're the pod leader and participant2Id is null (legacy: leader is implicit)
-    return allConversations.filter(conv => {
+    return merged.filter(conv => {
       const isLeaderPod = leaderPodIds.includes(conv.podId);
       if (conv.type === 'group') {
         return isLeaderPod || memberPodIds.includes(conv.podId);
