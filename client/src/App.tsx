@@ -60,9 +60,10 @@ function ProtectedDashboard() {
     
     // Only redirect if we have user data but wrong conditions
     if (userData) {
-      if (!userData.hasCompletedOnboarding || !userData.userType) {
-        // User hasn't completed onboarding, redirect to appropriate flow
-        navigate('/', { replace: true });
+      if (!userData.userType) {
+        navigate('/user-type-selection', { replace: true });
+      } else if (!userData.hasCompletedOnboarding) {
+        navigate('/onboarding', { replace: true });
       } else if (userData.userType === 'pod_leader') {
         // Pod leader accessing pod seeker dashboard, redirect to their dashboard
         navigate('/pod-leader-dashboard', { replace: true });
@@ -96,9 +97,10 @@ function ProtectedPodLeaderDashboard() {
     
     // Only redirect if we have user data but wrong conditions
     if (userData) {
-      if (!userData.hasCompletedOnboarding || !userData.userType) {
-        // User hasn't completed onboarding, redirect to appropriate flow
-        navigate('/', { replace: true });
+      if (!userData.userType) {
+        navigate('/user-type-selection', { replace: true });
+      } else if (!userData.hasCompletedOnboarding) {
+        navigate('/pod-leader-registration', { replace: true });
       } else if (userData.userType === 'pod_seeker') {
         // Pod seeker accessing pod leader dashboard, redirect to their dashboard
         navigate('/dashboard', { replace: true });

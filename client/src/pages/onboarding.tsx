@@ -689,16 +689,14 @@ export default function OnboardingWizard() {
       localStorage.setItem("flexpod_onboarding_complete", "true");
       localStorage.setItem("flexpod_user_type", "pod_seeker");
 
-      // Wait for session to be fully persisted to PostgreSQL
-      console.log("⏳ Waiting for session persistence...");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Refetch auth data and wait for completion so the cache has fresh data
+      // before navigating (avoids redirect loops from stale userType/hasCompletedOnboarding)
+      console.log("🔄 Refreshing auth data...");
+      await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
 
-      // Invalidate auth cache to ensure fresh data on next page
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-
-      // Navigate using full page reload to ensure clean state
+      // Navigate using SPA navigation — cache already has fresh, correct data
       console.log("🚀 Navigating to dashboard...");
-      window.location.replace("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("❌ Error during onboarding completion:", error);
       toast({
