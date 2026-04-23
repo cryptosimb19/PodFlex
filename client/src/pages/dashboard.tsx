@@ -85,6 +85,8 @@ export default function Dashboard() {
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [selectedPodForLeave, setSelectedPodForLeave] = useState<number | null>(null);
   const [leaveReason, setLeaveReason] = useState("");
+  const [cancelLeaveDialogOpen, setCancelLeaveDialogOpen] = useState(false);
+  const [selectedLeaveRequestForCancel, setSelectedLeaveRequestForCancel] = useState<number | null>(null);
 
   // Fetch authenticated user with all profile data
   const { data: authUser, isLoading: authLoading } = useQuery({
@@ -302,6 +304,37 @@ export default function Dashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to update balance status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Cancel leave request mutation
+  const cancelLeaveRequestMutation = useMutation({
+    mutationFn: async (leaveRequestId: number) => {
+      const response = await fetch(`/api/leave-requests/${leaveRequestId}/cancel`, {
+        method: 'PATCH',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to cancel leave request');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Leave request cancelled",
+        description: "Your leave request has been cancelled. You remain a member of this pod.",
+      });
+      setCancelLeaveDialogOpen(false);
+      setSelectedLeaveRequestForCancel(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/leave-requests/user'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel leave request. Please try again.",
         variant: "destructive",
       });
     },
@@ -567,9 +600,23 @@ export default function Dashboard() {
                                       <div className="mt-3 space-y-2">
                                         <div className="p-2 rounded-md bg-amber-50 border border-amber-200">
                                           {leaveRequest.status === 'pending' && (
-                                            <div className="flex items-center space-x-2 text-amber-700">
-                                              <Clock className="w-4 h-4" />
-                                              <span className="text-sm font-medium">Leave request pending approval</span>
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex items-center space-x-2 text-amber-700">
+                                                <Clock className="w-4 h-4" />
+                                                <span className="text-sm font-medium">Leave request pending approval</span>
+                                              </div>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-2 text-xs"
+                                                onClick={() => {
+                                                  setSelectedLeaveRequestForCancel(leaveRequest.id);
+                                                  setCancelLeaveDialogOpen(true);
+                                                }}
+                                              >
+                                                <XCircle className="w-3.5 h-3.5 mr-1" />
+                                                Cancel
+                                              </Button>
                                             </div>
                                           )}
                                           {leaveRequest.status === 'approved' && leaveRequest.exitDate && (
@@ -937,12 +984,14 @@ export default function Dashboard() {
                             approved: "bg-green-100 text-green-800",
                             rejected: "bg-red-100 text-red-800",
                             completed: "bg-gray-100 text-gray-600",
+                            cancelled: "bg-red-50 text-red-700",
                           };
                           const statusIcons: Record<string, JSX.Element> = {
                             pending: <Clock className="w-3.5 h-3.5" />,
                             approved: <CheckCircle className="w-3.5 h-3.5" />,
                             rejected: <XCircle className="w-3.5 h-3.5" />,
                             completed: <CheckCircle className="w-3.5 h-3.5" />,
+                            cancelled: <XCircle className="w-3.5 h-3.5" />,
                           };
                           return (
                             <div key={lr.id} className="border rounded-lg p-3 sm:p-4">
@@ -1083,6 +1132,50 @@ export default function Dashboard() {
               data-testid="button-submit-leave-request"
             >
               {leaveRequestMutation.isPending ? 'Submitting...' : 'Submit Leave Request'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Leave Request Confirmation Dialog */}
+      <Dialog open={cancelLeaveDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setCancelLeaveDialogOpen(false);
+          setSelectedLeaveRequestForCancel(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Cancel Leave Request</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel your leave request? You will remain a member of this pod and the pod leader will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 my-2">
+            <p className="text-sm text-blue-800">
+              <strong>What happens next:</strong> Your leave request will be withdrawn and your membership will continue as normal. The pod leader will receive an email notification about the cancellation.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelLeaveDialogOpen(false);
+                setSelectedLeaveRequestForCancel(null);
+              }}
+            >
+              Keep Leave Request
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedLeaveRequestForCancel) {
+                  cancelLeaveRequestMutation.mutate(selectedLeaveRequestForCancel);
+                }
+              }}
+              disabled={cancelLeaveRequestMutation.isPending}
+            >
+              {cancelLeaveRequestMutation.isPending ? 'Cancelling...' : 'Yes, Cancel Request'}
             </Button>
           </DialogFooter>
         </DialogContent>

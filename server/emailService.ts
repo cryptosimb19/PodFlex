@@ -1278,6 +1278,80 @@ export async function sendLeaveRequestRejectedNotification(
   });
 }
 
+// Template for leave request cancellation notification to the pod leader
+export async function sendLeaveRequestCancelledNotification(
+  podLeaderEmail: string,
+  podTitle: string,
+  memberName: string,
+  memberEmail: string,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Leave Request Cancelled - ${podTitle} - FlexPod`;
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #8B5CF6, #EC4899); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Leave Request Cancelled</p>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">A leave request has been cancelled</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #8B5CF6;">
+          <h3 style="color: #8B5CF6; margin-top: 0;">Pod: ${podTitle}</h3>
+          <p style="color: #4b5563; margin: 10px 0;"><strong>Member:</strong> ${memberName}</p>
+          <p style="color: #4b5563; margin: 10px 0;"><strong>Email:</strong> ${memberEmail}</p>
+          <p style="color: #4b5563; margin: 10px 0;">This member has decided to cancel their leave request and will remain in your pod. No action is required on your part.</p>
+        </div>
+
+        <div style="background: #f0fdf4; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #22c55e;">
+          <p style="color: #15803d; margin: 0; font-weight: bold;">&#10003; Member remains in pod</p>
+          <p style="color: #166534; margin: 8px 0 0 0; font-size: 14px;">No changes have been made to their membership.</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="` +
+    baseUrl +
+    `/pod-leader-dashboard" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            View Dashboard
+          </a>
+        </div>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>This email was sent by FlexPod because you're a pod leader.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Leave Request Cancelled - FlexPod
+    
+    A leave request has been cancelled.
+    
+    Pod: ${podTitle}
+    Member: ${memberName}
+    Email: ${memberEmail}
+    
+    This member has decided to cancel their leave request and will remain in your pod.
+    No action is required on your part.
+    
+    Visit ${baseUrl}/pod-leader-dashboard to view your dashboard.
+  `;
+
+  return await sendEmail({
+    to: podLeaderEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}
+
 // Support team email for CC on membership verification
 export const SUPPORT_EMAIL = "support@podmembership.com";
 

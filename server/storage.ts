@@ -109,7 +109,7 @@ export interface IStorage {
   getLeaveRequestsForUser(userId: string): Promise<LeaveRequest[]>;
   getLeaveRequest(id: number): Promise<LeaveRequest | undefined>;
   getPendingLeaveRequestForUserInPod(userId: string, podId: number): Promise<LeaveRequest | undefined>;
-  updateLeaveRequestStatus(id: number, status: "approved" | "rejected" | "completed", leaderResponse?: string): Promise<LeaveRequest | undefined>;
+  updateLeaveRequestStatus(id: number, status: "approved" | "rejected" | "completed" | "cancelled", leaderResponse?: string): Promise<LeaveRequest | undefined>;
   updateLeaveRequestEmailStatus(id: number, emailStatus: string): Promise<LeaveRequest | undefined>;
   
   // Initialization
@@ -757,7 +757,7 @@ export class DatabaseStorage implements IStorage {
     return request;
   }
 
-  async updateLeaveRequestStatus(id: number, status: "approved" | "rejected" | "completed", leaderResponse?: string): Promise<LeaveRequest | undefined> {
+  async updateLeaveRequestStatus(id: number, status: "approved" | "rejected" | "completed" | "cancelled", leaderResponse?: string): Promise<LeaveRequest | undefined> {
     const [request] = await db
       .update(leaveRequests)
       .set({ 

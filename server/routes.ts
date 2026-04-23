@@ -30,6 +30,7 @@ import {
   sendLeaveRequestConfirmation,
   sendLeaveRequestApprovedNotification,
   sendLeaveRequestRejectedNotification,
+  sendLeaveRequestCancelledNotification,
   sendOutstandingBalanceNotification,
   FROM_EMAIL,
 } from "./emailService";
@@ -2243,6 +2244,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error rejecting leave request:", error);
         res.status(500).json({ message: "Failed to reject leave request" });
+      }
+    },
+  );
+
+  // Cancel leave request (member only, pending requests only)
+  app.patch(
+    "/api/leave-requests/:id/cancel",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const leaveRequestId = parseInt(req.params.id);
+        const userId = req.user.id;
+
+        const leaveRequest = await storage.getLeaveRequest(leaveRequestId);
+        if (!leaveRequest) {
+          return res.status(404).json({ message: "Leave request not found" });
+        }
+
+        // Only the member who submitted the request can cancel it
+        if (leaveRequest.userId !== userId) {
+          return res.status(403).json({ message: "You can only cancel your own leave requests" });
+        }
+
+        if (leaveRequest.status !== "pending") {
+          return res.status(400).json({ message: "Only pending leave requests can be cancelled" });
+        }
+
+        const pod = await storage.getPod(leaveRequest.podId);
+        if (!pod) {
+          return res.status(404).json({ message: "Pod not found" });
+        }
+
+        // Cancel the leave request
+        const updatedRequest = await storage.updateLeaveRequestStatus(leaveRequestId, "cancelled");
+
+        // Notify the pod leader by email
+        try {
+          const member = await storage.getUser(userId);
+          const podLead = await storage.getUser(pod.leadId);
+          if (podLead && podLead.email && member) {
+            const memberName = `${member.firstName || ""} ${member.lastName || ""}`.trim() || "Member";
+            const memberEmail = member.email || "";
+            console.log(`Sending leave request cancelled notification to pod leader: ${podLead.email}`);
+            await sendLeaveRequestCancelledNotification(
+              podLead.email,
+              pod.title,
+              memberName,
+              memberEmail,
+              FROM_EMAIL,
+            );
+          }
+        } catch (emailError) {
+          console.error("Failed to send leave request cancelled email:", emailError);
+        }
+
+        res.json({
+          message: "Leave request cancelled. You remain a member of this pod.",
+          leaveRequest: updatedRequest,
+        });
+      } catch (error) {
+        console.error("Error cancelling leave request:", error);
+        res.status(500).json({ message: "Failed to cancel leave request" });
       }
     },
   );
