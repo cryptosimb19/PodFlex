@@ -936,11 +936,13 @@ export default function Dashboard() {
                             pending: "bg-yellow-100 text-yellow-800",
                             approved: "bg-green-100 text-green-800",
                             rejected: "bg-red-100 text-red-800",
+                            completed: "bg-gray-100 text-gray-600",
                           };
                           const statusIcons: Record<string, JSX.Element> = {
                             pending: <Clock className="w-3.5 h-3.5" />,
                             approved: <CheckCircle className="w-3.5 h-3.5" />,
                             rejected: <XCircle className="w-3.5 h-3.5" />,
+                            completed: <CheckCircle className="w-3.5 h-3.5" />,
                           };
                           return (
                             <div key={lr.id} className="border rounded-lg p-3 sm:p-4">

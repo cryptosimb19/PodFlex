@@ -69,6 +69,49 @@ function sanitizeUser(user: User) {
   return sanitized;
 }
 
+// Automatically process leave requests whose exit date has passed for a given pod.
+// Removes the member from pod_members, marks the join request as "left",
+// updates pod availability, and marks the leave request as "completed".
+async function autoProcessLeaveExits(podId: number): Promise<void> {
+  try {
+    const podLeaveRequests = await storage.getLeaveRequestsForPod(podId);
+    const now = new Date();
+    const dueExits = podLeaveRequests.filter(
+      (lr) => lr.status === "approved" && lr.exitDate && new Date(lr.exitDate) <= now,
+    );
+    if (dueExits.length === 0) return;
+
+    const pod = await storage.getPod(podId);
+
+    for (const lr of dueExits) {
+      // Remove from pod_members (soft-delete)
+      const removed = await storage.removePodMember(podId, lr.userId, "system");
+      if (!removed) continue;
+
+      // Update the accepted join request → "left"
+      const userJoinRequests = await storage.getJoinRequestsForUser(lr.userId);
+      const acceptedJR = userJoinRequests.find(
+        (jr) => jr.podId === podId && jr.status === "accepted",
+      );
+      if (acceptedJR) {
+        await storage.updateJoinRequestStatus(acceptedJR.id, "left");
+      }
+
+      // Recalculate and update available spots
+      if (pod) {
+        const currentMembers = await storage.getPodMembers(podId);
+        const newAvailableSpots = pod.totalSpots - 1 - currentMembers.length;
+        await storage.updatePodAvailability(podId, Math.max(0, newAvailableSpots));
+      }
+
+      // Mark leave request as completed
+      await storage.updateLeaveRequestStatus(lr.id, "completed");
+    }
+  } catch (err) {
+    console.error(`autoProcessLeaveExits error for pod ${podId}:`, err);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -1545,6 +1588,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/pods/:id/members", async (req, res) => {
     try {
       const podId = parseInt(req.params.id);
+      // Auto-process any leave exits whose exit date has passed before returning the list
+      await autoProcessLeaveExits(podId);
       const members = await storage.getPodMembers(podId);
 
       // Fetch user details for each member
@@ -1617,10 +1662,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .json({ message: "Member not found in this pod" });
         }
 
+        // Update the accepted join request to "left" so the pod disappears from the member's dashboard
+        try {
+          const userJoinRequests = await storage.getJoinRequestsForUser(memberUserId);
+          const acceptedJR = userJoinRequests.find(
+            (jr) => jr.podId === podId && jr.status === "accepted",
+          );
+          if (acceptedJR) {
+            await storage.updateJoinRequestStatus(acceptedJR.id, "left");
+          }
+        } catch (jrErr) {
+          console.error("Failed to update join request status on member removal:", jrErr);
+        }
+
         // Update pod availability (add back the spot)
         const currentMembers = await storage.getPodMembers(podId);
-        const newAvailableSpots = pod.totalSpots - currentMembers.length;
-        await storage.updatePodAvailability(podId, newAvailableSpots);
+        const newAvailableSpots = pod.totalSpots - 1 - currentMembers.length;
+        await storage.updatePodAvailability(podId, Math.max(0, newAvailableSpots));
 
         // Send email notification to the removed member
         try {
@@ -2090,7 +2148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
 
             // Mark leave request as completed
-            await storage.updateLeaveRequestStatus(leaveRequest.id, "approved");
+            await storage.updateLeaveRequestStatus(leaveRequest.id, "completed");
 
             processedExits.push({
               leaveRequestId: leaveRequest.id,
@@ -2241,6 +2299,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/join-requests/user/:userId", async (req, res) => {
     try {
       const userId = req.params.userId;
+      // Auto-process leave exits for any pod this user has an approved leave request on
+      const userLeaveRequests = await storage.getLeaveRequestsForUser(userId);
+      const dueLeaves = userLeaveRequests.filter(
+        (lr) => lr.status === "approved" && lr.exitDate && new Date(lr.exitDate) <= new Date(),
+      );
+      const uniquePodIds = [...new Set(dueLeaves.map((lr) => lr.podId))];
+      for (const podId of uniquePodIds) {
+        await autoProcessLeaveExits(podId);
+      }
       const requests = await storage.getJoinRequestsForUser(userId);
       res.json(requests);
     } catch (error) {
