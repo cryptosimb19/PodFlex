@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { findMatchingPods, generateJoinMessage } from "./aiPodMatching";
 import { processAgentMessage } from "./podAgent";
-import { addSSEClient, notifyUsers } from "./messagingSSE";
+import { broadcastMessage } from "./messagingWS";
 import { storage } from "./storage";
 import { db } from "./db";
 import { joinRequests } from "@shared/schema";
@@ -3381,13 +3381,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // MESSAGING ROUTES
   // ============================================================
 
-  // Get all conversations for the current user
-  // SSE endpoint for real-time message delivery
-  app.get("/api/messages/stream", isAuthenticated, (req: any, res) => {
-    const cleanup = addSSEClient(req.user.id, res);
-    req.on("close", cleanup);
-  });
-
   app.get("/api/conversations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -3583,7 +3576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       const uniqueParticipants = [...new Set(participantIds)];
-      notifyUsers(uniqueParticipants, { type: "new_message", conversationId: convId });
+      broadcastMessage(uniqueParticipants, { type: "new_message", conversationId: convId, message: enrichedMsg });
 
       res.json(enrichedMsg);
     } catch (error) {

@@ -93,6 +93,8 @@ export default function MessagesPage() {
     return !!params.get("convId");
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const wsReconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isLeader = currentUser?.userType === "pod_leader";
 
@@ -112,22 +114,83 @@ export default function MessagesPage() {
     refetchInterval: 10000,
   });
 
-  // SSE subscription for real-time message delivery
+  // WebSocket connection for real-time message delivery
   useEffect(() => {
     if (!currentUser?.id) return;
-    const es = new EventSource("/api/messages/stream");
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "new_message") {
-          queryClient.refetchQueries({ queryKey: ["/api/conversations", data.conversationId, "messages"], type: "active" });
-          queryClient.refetchQueries({ queryKey: ["/api/conversations"], type: "active" });
+
+    const connect = () => {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${protocol}//${window.location.host}/ws/messages`);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: "auth", userId: currentUser.id }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "new_message" && data.message) {
+            const incomingMsg: EnrichedMessage = data.message;
+            const convId: number = data.conversationId;
+
+            // Inject the message directly into the cache — no HTTP round-trip needed
+            queryClient.setQueryData<EnrichedMessage[]>(
+              ["/api/conversations", convId, "messages"],
+              (old) => {
+                if (!old) return [incomingMsg];
+                // Deduplicate: replace optimistic placeholder (negative id) or ignore exact duplicates
+                const alreadyExists = old.some(m => m.id === incomingMsg.id);
+                if (alreadyExists) return old;
+                // Remove any optimistic placeholder from the same sender with same content
+                const withoutOptimistic = old.filter(
+                  m => !(m.id < 0 && m.senderId === incomingMsg.senderId && m.content === incomingMsg.content)
+                );
+                return [...withoutOptimistic, incomingMsg];
+              }
+            );
+
+            // Update the conversations sidebar (lastMessage preview)
+            queryClient.setQueryData<EnrichedConversation[]>(
+              ["/api/conversations"],
+              (old) => {
+                if (!old) return old;
+                return old.map(conv => {
+                  if (conv.id !== convId) return conv;
+                  const isMe = incomingMsg.senderId === currentUser.id;
+                  return {
+                    ...conv,
+                    lastMessage: incomingMsg,
+                    unreadCount: isMe ? conv.unreadCount : conv.unreadCount + 1,
+                  };
+                });
+              }
+            );
+          }
+        } catch {
+          // ignore parse errors
         }
-      } catch {
-        // ignore parse errors
-      }
+      };
+
+      ws.onclose = () => {
+        // Reconnect after 3 seconds if disconnected
+        wsReconnectTimer.current = setTimeout(() => {
+          if (currentUser?.id) connect();
+        }, 3000);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
     };
-    return () => es.close();
+
+    connect();
+
+    return () => {
+      if (wsReconnectTimer.current) clearTimeout(wsReconnectTimer.current);
+      wsRef.current?.close();
+      wsRef.current = null;
+    };
   }, [currentUser?.id]);
 
   // Leader's pod for creating conversations
@@ -222,10 +285,18 @@ export default function MessagesPage() {
       }
       toast({ title: "Failed to send message", variant: "destructive" });
     },
-    onSettled: () => {
-      setMessageText("");
-      queryClient.refetchQueries({ queryKey: ["/api/conversations", selectedConvId, "messages"], type: "active" });
-      queryClient.refetchQueries({ queryKey: ["/api/conversations"], type: "active" });
+    onSuccess: (realMsg: EnrichedMessage) => {
+      // Replace the optimistic placeholder with the confirmed server message
+      queryClient.setQueryData<EnrichedMessage[]>(
+        ["/api/conversations", selectedConvId, "messages"],
+        (old = []) => {
+          const withoutOptimistic = old.filter(
+            m => !(m.id < 0 && m.senderId === realMsg.senderId && m.content === realMsg.content)
+          );
+          const alreadyExists = withoutOptimistic.some(m => m.id === realMsg.id);
+          return alreadyExists ? withoutOptimistic : [...withoutOptimistic, realMsg];
+        }
+      );
     },
   });
 
@@ -270,8 +341,10 @@ export default function MessagesPage() {
   const selectedConv = conversations.find(c => c.id === selectedConvId);
 
   const handleSend = () => {
-    if (!messageText.trim() || !selectedConvId) return;
-    sendMessage.mutate(messageText);
+    const text = messageText.trim();
+    if (!text || !selectedConvId) return;
+    setMessageText(""); // Clear immediately so the user gets instant feedback
+    sendMessage.mutate(text);
   };
 
   const handleSelectConv = (id: number) => {
@@ -563,7 +636,6 @@ export default function MessagesPage() {
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                     placeholder="Type a message..."
                     className="flex-1 rounded-full bg-gray-100 dark:bg-gray-700 border-0 focus-visible:ring-1 focus-visible:ring-purple-400"
-                    disabled={sendMessage.isPending}
                   />
                   <Button
                     onClick={handleSend}

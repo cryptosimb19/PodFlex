@@ -3,6 +3,7 @@ import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
+import { setupWebSocketServer } from "./messagingWS";
 
 const corsOptions = {
   origin:
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
   await storage.initializeSamplePods();
 
   const server = await registerRoutes(app);
+  setupWebSocketServer(server);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
