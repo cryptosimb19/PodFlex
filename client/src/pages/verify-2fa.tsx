@@ -126,7 +126,7 @@ export default function Verify2FAPage() {
         
         if (userData.hasCompletedOnboarding && userData.userType) {
           if (userData.userType === 'pod_leader') {
-            navigate('/pod-leader-dashboard');
+            navigate('/dashboard-select');
           } else {
             navigate('/dashboard');
           }

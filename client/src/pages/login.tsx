@@ -171,7 +171,7 @@ export default function LoginPage() {
         if (userData.hasCompletedOnboarding && userData.userType) {
           // User has completed onboarding, go directly to dashboard
           if (userData.userType === 'pod_leader') {
-            navigate('/pod-leader-dashboard');
+            navigate('/dashboard-select');
           } else {
             navigate('/dashboard');
           }
@@ -363,7 +363,7 @@ export default function LoginPage() {
         // Redirect based on onboarding status
         if (userData.hasCompletedOnboarding && userData.userType) {
           if (userData.userType === 'pod_leader') {
-            navigate('/pod-leader-dashboard');
+            navigate('/dashboard-select');
           } else {
             navigate('/dashboard');
           }

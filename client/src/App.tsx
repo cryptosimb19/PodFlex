@@ -26,6 +26,7 @@ import VerifyEmailPage from "@/pages/verify-email";
 import PaymentSuccess from "@/pages/payment-success";
 import MessagesPage from "@/pages/messages";
 import PodAgent from "@/components/PodAgent";
+import DashboardSelect from "@/pages/dashboard-select";
 import { useEffect } from "react";
 
 function LoginRedirect() {
@@ -36,7 +37,7 @@ function LoginRedirect() {
     const userData = user as any;
     if (userData?.hasCompletedOnboarding && userData?.userType) {
       if (userData.userType === 'pod_leader') {
-        navigate('/pod-leader-dashboard', { replace: true });
+        navigate('/dashboard-select', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }
@@ -64,10 +65,8 @@ function ProtectedDashboard() {
         navigate('/user-type-selection', { replace: true });
       } else if (!userData.hasCompletedOnboarding) {
         navigate('/onboarding', { replace: true });
-      } else if (userData.userType === 'pod_leader') {
-        // Pod leader accessing pod seeker dashboard, redirect to their dashboard
-        navigate('/pod-leader-dashboard', { replace: true });
       }
+      // Pod leaders can also visit the member dashboard (dual-role support)
     }
   }, [user, isLoading, isSuccess, navigate]);
   
@@ -77,8 +76,8 @@ function ProtectedDashboard() {
   }
   
   const userData = user as any;
-  // Render dashboard if user is a pod_seeker with completed onboarding
-  if (userData?.hasCompletedOnboarding && userData?.userType === 'pod_seeker') {
+  // Render dashboard for any authenticated user with completed onboarding
+  if (userData?.hasCompletedOnboarding && userData?.userType) {
     return <Dashboard />;
   }
   
@@ -149,7 +148,7 @@ function RootRouter() {
     } else {
       // User has completed onboarding, redirect to appropriate dashboard
       if (userType === 'pod_leader') {
-        navigate('/pod-leader-dashboard', { replace: true });
+        navigate('/dashboard-select', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }
@@ -248,6 +247,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/dashboard-select">
+        <ProtectedRoute>
+          <DashboardSelect />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/pods">
         <ProtectedRoute requireOnboarding>
           <SearchScreen />

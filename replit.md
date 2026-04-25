@@ -22,7 +22,7 @@ Preferred communication style: Simple, everyday language.
     - **Pod Discovery**: Region-based filtering, membership type categorization, advanced search.
     - **Membership Management**: Pod creation/editing for leaders (with comprehensive fields), join request workflow with approval, member tracking, and rich pod profiles.
     - **User Experience**: Offline capability, push notifications.
-    - **Dual-Role Support**: Users can be both a pod member and a pod leader simultaneously, with distinct dashboard views.
+    - **Dual-Role Support**: Users can be both a pod member and a pod leader simultaneously, with distinct dashboard views. Pod leaders who are also pod members see a `/dashboard-select` page at login to choose which dashboard to enter. The "Switch to Member Dashboard" button in the leader dashboard navigates to `/dashboard` (which now allows pod leaders through). The member dashboard shows a "Switch to Leader Dashboard" button for pod leaders.
     - **Privacy Controls**: Pod leader details are hidden for guests, and fellow pod members' sensitive information (email, phone) is hidden.
     - **Member Leave Requests**: Structured workflow for members to request leaving a pod, with leader approval, billing cycle constraints, pending payment validation, and configurable exit timelines.
     - **Auto-Cancel Pending Requests**: When a join request is accepted, other pending requests from that user are automatically cancelled.
