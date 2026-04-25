@@ -214,7 +214,7 @@ export default function PodAgent({ userType }: PodAgentProps) {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
 
   const starters =
@@ -302,7 +302,7 @@ export default function PodAgent({ userType }: PodAgentProps) {
         />
       )}
 
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+      <div className={`fixed right-5 z-50 flex flex-col items-end gap-3 ${location === "/messages" ? "bottom-24" : "bottom-5"}`}>
         {isOpen && (
           <div
             className="w-[340px] sm:w-[380px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
