@@ -31,10 +31,8 @@ import {
   Share2,
   Copy,
   MessageSquare,
-  CreditCard,
   CalendarDays,
 } from "lucide-react";
-import PaymentCard from "@/components/PaymentCard";
 import PodReviews from "@/components/PodReviews";
 import { useToast } from "@/hooks/use-toast";
 import type {
@@ -809,16 +807,6 @@ export default function PodDetail() {
                       )}
                     </div>
                   </div>
-                </div>
-
-                {/* Payment Section for Members */}
-                <Separator />
-                <div>
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    Membership Payment
-                  </h3>
-                  <PaymentCard podId={pod.id} podTitle={pod.title} showTitle={false} />
                 </div>
 
                 {/* Fellow Pod Members Section */}
