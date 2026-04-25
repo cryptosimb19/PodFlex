@@ -45,13 +45,16 @@ export default function UserTypeSelection() {
       }
       return response.json();
     },
-    onSuccess: async () => {
+    onSuccess: async (updatedUser) => {
       // Save to localStorage for immediate UI updates
       const userTypeValue = selectedType === "join" ? "pod_seeker" : "pod_leader";
       localStorage.setItem('flexpod_user_type', userTypeValue);
 
-      // Refresh auth cache so the updated userType is available on the next page
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Seed the cache directly from the server response so the next page sees
+      // the correct userType immediately, without waiting for a background refetch
+      // that might have started before this mutation and carry stale data.
+      queryClient.setQueryData(["/api/auth/user"], updatedUser);
+      await queryClient.cancelQueries({ queryKey: ["/api/auth/user"] });
 
       if (selectedType === "join") {
         navigate("/onboarding?type=seeker");

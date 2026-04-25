@@ -684,17 +684,22 @@ export default function OnboardingWizard() {
 
       console.log("✅ Profile saved successfully to database");
 
+      // Parse the server's response which contains the updated user
+      const updatedUser = await response.json();
+
       // ONLY set localStorage after database confirms save
       localStorage.setItem("userData", JSON.stringify(userData));
       localStorage.setItem("flexpod_onboarding_complete", "true");
       localStorage.setItem("flexpod_user_type", "pod_seeker");
 
-      // Refetch auth data and wait for completion so the cache has fresh data
-      // before navigating (avoids redirect loops from stale userType/hasCompletedOnboarding)
-      console.log("🔄 Refreshing auth data...");
-      await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+      // Seed the cache directly from the server response — avoids any race condition
+      // where an in-flight background refetch (started before the PUT) could overwrite
+      // the cache with stale data right before we navigate.
+      queryClient.setQueryData(["/api/auth/user"], updatedUser);
 
-      // Navigate using SPA navigation — cache already has fresh, correct data
+      // Cancel any in-flight /api/auth/user requests so they cannot overwrite the cache
+      await queryClient.cancelQueries({ queryKey: ["/api/auth/user"] });
+
       console.log("🚀 Navigating to dashboard...");
       navigate("/dashboard", { replace: true });
     } catch (error) {
