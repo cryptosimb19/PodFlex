@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -44,6 +46,7 @@ import {
   ShieldCheck,
   Send,
   CalendarDays,
+  RotateCcw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,6 +136,9 @@ export default function PodLeaderDashboard() {
   const [approvalConfigLeaveId, setApprovalConfigLeaveId] = useState<number | null>(null);
   const [approvalExitDays, setApprovalExitDays] = useState<number>(30);
   const [approvalResponse, setApprovalResponse] = useState<string>("");
+  // Reverse approval state
+  const [reverseApprovalDialogOpen, setReverseApprovalDialogOpen] = useState(false);
+  const [selectedLeaveRequestForReversal, setSelectedLeaveRequestForReversal] = useState<number | null>(null);
 
   // Image upload hook for editing pods
   const { uploadFile, isUploading } = useUpload({
@@ -431,6 +437,37 @@ export default function PodLeaderDashboard() {
       leaderResponse: approvalResponse || undefined,
     });
   };
+
+  // Reverse leave request approval mutation
+  const reverseApprovalMutation = useMutation({
+    mutationFn: async (leaveRequestId: number) => {
+      const response = await fetch(`/api/leave-requests/${leaveRequestId}/reverse-approval`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to reverse leave request approval");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Approval reversed",
+        description: "The leave request approval has been reversed. The member will remain in the pod and has been notified by email.",
+      });
+      setReverseApprovalDialogOpen(false);
+      setSelectedLeaveRequestForReversal(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/leave-requests", "leader"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reverse approval. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Mutation to send membership verification email
   const verifyMembershipMutation = useMutation({
@@ -1360,6 +1397,23 @@ export default function PodLeaderDashboard() {
                                 </p>
                               </div>
                               <div className="flex space-x-2">
+                                {request.status === "approved" &&
+                                  request.exitDate &&
+                                  new Date(request.exitDate) > new Date() && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                                      onClick={() => {
+                                        setSelectedLeaveRequestForReversal(request.id);
+                                        setReverseApprovalDialogOpen(true);
+                                      }}
+                                      data-testid={`button-reverse-approval-${request.id}`}
+                                    >
+                                      <RotateCcw className="w-3 h-3 mr-1" />
+                                      Reverse
+                                    </Button>
+                                  )}
                                 <Dialog>
                                   <DialogTrigger asChild>
                                     <Button
@@ -1411,6 +1465,37 @@ export default function PodLeaderDashboard() {
                                           <p className="text-sm bg-gray-50 p-3 rounded-md">
                                             {request.reason}
                                           </p>
+                                        </div>
+                                      )}
+                                      {request.status === "approved" && (
+                                        <div className="pt-4 space-y-3">
+                                          <div className="border rounded-lg p-4 bg-blue-50 border-blue-200 space-y-3">
+                                            <h4 className="font-semibold text-blue-900 text-sm">Approved Exit Details</h4>
+                                            {request.exitDate && (
+                                              <p className="text-sm text-blue-800">
+                                                <strong>Exit Date:</strong>{" "}
+                                                {formatDate(request.exitDate.toString())}
+                                              </p>
+                                            )}
+                                            {request.leaderResponse && (
+                                              <p className="text-sm text-blue-800">
+                                                <strong>Your Message:</strong> {request.leaderResponse}
+                                              </p>
+                                            )}
+                                          </div>
+                                          {request.exitDate && new Date(request.exitDate) > new Date() && (
+                                            <Button
+                                              variant="outline"
+                                              className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+                                              onClick={() => {
+                                                setSelectedLeaveRequestForReversal(request.id);
+                                                setReverseApprovalDialogOpen(true);
+                                              }}
+                                            >
+                                              <RotateCcw className="w-4 h-4 mr-2" />
+                                              Reverse Approval
+                                            </Button>
+                                          )}
                                         </div>
                                       )}
                                       {request.status === "pending" && (
@@ -2697,6 +2782,56 @@ export default function PodLeaderDashboard() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reverse Approval Confirmation Dialog */}
+      <Dialog
+        open={reverseApprovalDialogOpen}
+        onOpenChange={(open) => {
+          setReverseApprovalDialogOpen(open);
+          if (!open) setSelectedLeaveRequestForReversal(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <RotateCcw className="w-5 h-5 mr-2 text-orange-600" />
+              Reverse Leave Approval
+            </DialogTitle>
+            <DialogDescription>
+              This will revert the leave request back to pending. The member's exit date will be cleared and they will remain an active member of your pod. The member will be notified by email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to reverse this approval? You can re-approve the request again later if needed.
+            </p>
+          </div>
+          <DialogFooter className="flex space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReverseApprovalDialogOpen(false);
+                setSelectedLeaveRequestForReversal(null);
+              }}
+              disabled={reverseApprovalMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                if (selectedLeaveRequestForReversal) {
+                  reverseApprovalMutation.mutate(selectedLeaveRequestForReversal);
+                }
+              }}
+              disabled={reverseApprovalMutation.isPending}
+            >
+              {reverseApprovalMutation.isPending ? "Reversing..." : "Yes, Reverse Approval"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

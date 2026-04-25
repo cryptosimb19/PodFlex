@@ -1352,6 +1352,92 @@ export async function sendLeaveRequestCancelledNotification(
   });
 }
 
+// Template for leave request approval reversal notification to the member
+export async function sendLeaveRequestApprovalReversedNotification(
+  memberEmail: string,
+  memberName: string,
+  podTitle: string,
+  fromEmail: string,
+): Promise<boolean> {
+  const subject = `Leave Request Approval Reversed - ${podTitle} - FlexPod`;
+  const baseUrl = "https://podmembership.com";
+
+  const html =
+    `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">FlexPod</h1>
+        <p style="color: white; margin: 5px 0;">Leave Request Update</p>
+      </div>
+      
+      <div style="padding: 30px; background: #fffbeb;">
+        <h2 style="color: #1f2937; margin-bottom: 20px;">Hi ${memberName},</h2>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+          <p style="color: #4b5563; margin: 0;">The pod leader has <strong>reversed their approval</strong> of your leave request for <strong>"${podTitle}"</strong>.</p>
+          <p style="color: #4b5563; margin: 15px 0 0 0;">Your previous exit date has been cancelled and you will <strong>remain a full member</strong> of the pod until this is resolved.</p>
+        </div>
+
+        <div style="background: #fff7ed; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <h4 style="color: #b45309; margin: 0 0 10px 0;">What This Means:</h4>
+          <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+            <li>Your leave request is no longer approved</li>
+            <li>You remain an active member of this pod</li>
+            <li>You may contact the pod leader to discuss next steps</li>
+            <li>You can submit a new leave request from your dashboard if you still wish to leave</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="` +
+    baseUrl +
+    `/dashboard" 
+             style="background: #8B5CF6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+            View My Dashboard
+          </a>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          If you have questions, please contact the pod leader directly to discuss your situation.
+        </p>
+      </div>
+      
+      <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>Thank you for being part of the FlexPod community.</p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+    Leave Request Update - FlexPod
+    
+    Hi ${memberName},
+    
+    The pod leader has reversed their approval of your leave request for "${podTitle}".
+    Your previous exit date has been cancelled and you will remain a full member of the pod.
+    
+    What This Means:
+    - Your leave request is no longer approved
+    - You remain an active member of this pod
+    - You may contact the pod leader to discuss next steps
+    - You can submit a new leave request from your dashboard if you still wish to leave
+    
+    Visit ${baseUrl}/dashboard to view your dashboard.
+    
+    If you have questions, please contact the pod leader directly.
+    
+    Thank you for being part of the FlexPod community.
+  `;
+
+  return await sendEmail({
+    to: memberEmail,
+    from: fromEmail,
+    subject,
+    html,
+    text,
+  });
+}
+
 // Support team email for CC on membership verification
 export const SUPPORT_EMAIL = "support@podmembership.com";
 

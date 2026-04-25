@@ -130,6 +130,7 @@ export interface IStorage {
   
   // Enhanced leave request operations
   updateLeaveRequestWithExitDate(id: number, status: "approved" | "rejected", exitDate: Date | null, leaderResponse?: string): Promise<LeaveRequest | undefined>;
+  reverseLeaveRequestApproval(id: number): Promise<LeaveRequest | undefined>;
   updateLeaveRequestOutstandingBalance(id: number, outstandingBalance: number): Promise<LeaveRequest | undefined>;
   markLeaveRequestBalancePaid(id: number): Promise<LeaveRequest | undefined>;
   getUserApprovedLeaveRequest(userId: string): Promise<LeaveRequest | undefined>;
@@ -1224,6 +1225,23 @@ export class DatabaseStorage implements IStorage {
           inArray(podPayments.status, ["pending", "processing"])
         )
       );
+  }
+
+  async reverseLeaveRequestApproval(id: number): Promise<LeaveRequest | undefined> {
+    const [request] = await db
+      .update(leaveRequests)
+      .set({
+        status: "pending",
+        exitDate: null,
+        approvedAt: null,
+        leaderResponse: null,
+        outstandingBalance: 0,
+        balancePaidAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(leaveRequests.id, id))
+      .returning();
+    return request;
   }
 
   async updateLeaveRequestWithExitDate(id: number, status: "approved" | "rejected", exitDate: Date | null, leaderResponse?: string): Promise<LeaveRequest | undefined> {

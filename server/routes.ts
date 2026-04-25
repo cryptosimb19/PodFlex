@@ -31,6 +31,7 @@ import {
   sendLeaveRequestApprovedNotification,
   sendLeaveRequestRejectedNotification,
   sendLeaveRequestCancelledNotification,
+  sendLeaveRequestApprovalReversedNotification,
   sendOutstandingBalanceNotification,
   FROM_EMAIL,
 } from "./emailService";
@@ -2306,6 +2307,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error cancelling leave request:", error);
         res.status(500).json({ message: "Failed to cancel leave request" });
+      }
+    },
+  );
+
+  // Reverse a previously approved leave request (leader only, future exit date only)
+  app.patch(
+    "/api/leave-requests/:id/reverse-approval",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const leaveRequestId = parseInt(req.params.id);
+        const userId = req.user.id;
+
+        const leaveRequest = await storage.getLeaveRequest(leaveRequestId);
+        if (!leaveRequest) {
+          return res.status(404).json({ message: "Leave request not found" });
+        }
+
+        if (leaveRequest.status !== "approved") {
+          return res.status(400).json({ message: "Only approved leave requests can be reversed" });
+        }
+
+        // Exit date must still be in the future
+        if (leaveRequest.exitDate && new Date(leaveRequest.exitDate) <= new Date()) {
+          return res.status(400).json({ message: "Cannot reverse a leave request whose exit date has already passed" });
+        }
+
+        const pod = await storage.getPod(leaveRequest.podId);
+        if (!pod) {
+          return res.status(404).json({ message: "Pod not found" });
+        }
+
+        // Only the pod leader can reverse the approval
+        if (pod.leadId !== userId) {
+          return res.status(403).json({ message: "Only the pod leader can reverse a leave request approval" });
+        }
+
+        // Reset back to pending — clears exitDate, approvedAt, leaderResponse, outstandingBalance
+        const updatedRequest = await storage.reverseLeaveRequestApproval(leaveRequestId);
+
+        // Email the member to inform them their approval was reversed
+        try {
+          const member = await storage.getUser(leaveRequest.userId);
+          if (member && member.email) {
+            const memberName = `${member.firstName || ""} ${member.lastName || ""}`.trim() || "Member";
+            console.log(`Sending leave request approval reversed notification to: ${member.email}`);
+            await sendLeaveRequestApprovalReversedNotification(
+              member.email,
+              memberName,
+              pod.title,
+              FROM_EMAIL,
+            );
+          }
+        } catch (emailError) {
+          console.error("Failed to send leave request approval reversed email:", emailError);
+        }
+
+        res.json({
+          message: "Leave request approval has been reversed. The member will remain in the pod.",
+          leaveRequest: updatedRequest,
+        });
+      } catch (error) {
+        console.error("Error reversing leave request approval:", error);
+        res.status(500).json({ message: "Failed to reverse leave request approval" });
       }
     },
   );
