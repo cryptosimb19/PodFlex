@@ -103,6 +103,8 @@ export interface IStorage {
   addPodMember(podId: number, userId: string): Promise<PodMember>;
   removePodMember(podId: number, userId: string, removedBy: string): Promise<PodMember | undefined>;
   
+  getActivePodMembershipsForUser(userId: string): Promise<{ podId: number; pod: Pod }[]>;
+
   // Leave request operations
   createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest>;
   getLeaveRequestsForPod(podId: number): Promise<LeaveRequest[]>;
@@ -709,6 +711,22 @@ export class DatabaseStorage implements IStorage {
       )
       .returning();
     return member;
+  }
+
+  async getActivePodMembershipsForUser(userId: string): Promise<{ podId: number; pod: Pod }[]> {
+    const memberEntries = await db
+      .select()
+      .from(podMembers)
+      .where(and(eq(podMembers.userId, userId), eq(podMembers.isActive, true)));
+
+    const results: { podId: number; pod: Pod }[] = [];
+    for (const entry of memberEntries) {
+      const pod = await this.getPod(entry.podId);
+      if (pod && pod.isActive) {
+        results.push({ podId: entry.podId, pod });
+      }
+    }
+    return results;
   }
 
   // Leave request operations

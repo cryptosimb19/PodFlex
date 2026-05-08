@@ -2731,6 +2731,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       });
 
+      // When a member transitions to pod leader, automatically submit leave requests
+      // for any pods they are currently an active member of.
+      if (userType === "pod_leader") {
+        try {
+          const activeMemberships = await storage.getActivePodMembershipsForUser(userId);
+          for (const { podId, pod } of activeMemberships) {
+            // Skip if a pending leave request already exists
+            const existing = await storage.getPendingLeaveRequestForUserInPod(userId, podId);
+            if (existing) continue;
+
+            const memberName = `${updatedUser.firstName || ""} ${updatedUser.lastName || ""}`.trim() || "Member";
+            const memberEmail = updatedUser.email || "";
+
+            const leaveRequest = await storage.createLeaveRequest({
+              podId,
+              userId,
+              status: "pending",
+              reason: "Member is transitioning to a pod leader role",
+              userInfo: {
+                name: memberName,
+                email: memberEmail,
+                phone: updatedUser.phone || undefined,
+              },
+              emailStatus: "pending",
+            });
+
+            // Notify the pod leader
+            let emailStatus = "sent";
+            try {
+              const podLead = await storage.getUser(pod.leadId);
+              if (podLead?.email) {
+                const sent = await sendLeaveRequestNotification(
+                  podLead.email,
+                  pod.title,
+                  memberName,
+                  memberEmail,
+                  "Member is transitioning to a pod leader role",
+                  FROM_EMAIL,
+                );
+                emailStatus = sent ? "sent" : "failed";
+              } else {
+                emailStatus = "failed";
+              }
+            } catch (emailErr) {
+              console.error("Failed to send auto-leave notification to pod leader:", emailErr);
+              emailStatus = "failed";
+            }
+
+            await storage.updateLeaveRequestEmailStatus(leaveRequest.id, emailStatus);
+
+            // Send confirmation to the member
+            if (memberEmail) {
+              try {
+                await sendLeaveRequestConfirmation(
+                  memberEmail,
+                  memberName,
+                  pod.title,
+                  "Member is transitioning to a pod leader role",
+                  FROM_EMAIL,
+                );
+              } catch (confirmErr) {
+                console.error("Failed to send auto-leave confirmation to member:", confirmErr);
+              }
+            }
+
+            console.log(`✅ Auto leave request created for user ${userId} in pod ${podId} (transitioning to pod leader)`);
+          }
+        } catch (leaveErr) {
+          // Non-fatal: log and continue — the profile update already succeeded
+          console.error("Failed to auto-create leave requests on pod leader transition:", leaveErr);
+        }
+      }
+
       res.json(sanitizeUser(updatedUser));
     } catch (error) {
       console.error("Error updating user profile:", error);
