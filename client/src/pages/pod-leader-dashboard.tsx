@@ -338,7 +338,10 @@ export default function PodLeaderDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (!response.ok) throw new Error("Failed to update join request");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to update join request");
+      }
       return response.json();
     },
     onSuccess: (_, { status }) => {
@@ -352,10 +355,10 @@ export default function PodLeaderDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/pods"] });
       setSelectedRequest(null);
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: "Failed to update join request. Please try again.",
+        title: "Cannot accept request",
+        description: error.message || "Failed to update join request. Please try again.",
         variant: "destructive",
       });
     },

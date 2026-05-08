@@ -355,7 +355,21 @@ async function executeTool(
           return {
             result: "You can only approve requests for your own pod.",
           };
+        // Guard: check applicant isn't already an active member of another pod
+        const activeMemberships = await storage.getActivePodMembershipsForUser(req.userId);
+        if (activeMemberships.length > 0) {
+          const podTitles = activeMemberships.map(({ pod }) => pod.title).join(", ");
+          return {
+            result: `Cannot approve this request — ${req.userInfo?.name || "The applicant"} is already an active member of another pod (${podTitles}). They must leave that pod first.`,
+          };
+        }
         await storage.updateJoinRequestStatus(requestId, "accepted");
+        await storage.addPodMember(req.podId, req.userId);
+        const targetPod = await storage.getPod(req.podId);
+        if (targetPod && targetPod.availableSpots > 0) {
+          await storage.updatePodAvailability(req.podId, targetPod.availableSpots - 1);
+        }
+        await storage.cancelOtherPendingRequests(req.userId, requestId);
         return {
           result: `Done! ${req.userInfo?.name || "The applicant"}'s request to join has been approved. They're now a member of your pod.`,
         };

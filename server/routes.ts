@@ -1441,6 +1441,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid status" });
       }
 
+      // Fetch the request first so we can run pre-acceptance guards
+      const existingRequest = await storage.getJoinRequest(id);
+      if (!existingRequest) {
+        return res.status(404).json({ message: "Join request not found" });
+      }
+
+      // Guard: if accepting, verify the applicant isn't already an active member of another pod
+      if (status === "accepted") {
+        const activeMemberships = await storage.getActivePodMembershipsForUser(existingRequest.userId);
+        if (activeMemberships.length > 0) {
+          const podTitles = activeMemberships.map(({ pod }) => pod.title).join(", ");
+          return res.status(409).json({
+            message: `This applicant is already an active member of another pod (${podTitles}). They must leave that pod before joining a new one.`,
+          });
+        }
+      }
+
       const updatedRequest = await storage.updateJoinRequestStatus(id, status);
       if (!updatedRequest) {
         return res.status(404).json({ message: "Join request not found" });
