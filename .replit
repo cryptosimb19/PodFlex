@@ -43,3 +43,7 @@ integrations = ["javascript_sendgrid:1.0.0", "javascript_log_in_with_replit:1.0.
 
 [userenv.production]
 APP_URL = "https://podmembership.com"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
